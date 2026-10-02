@@ -1,6 +1,6 @@
 """Export the catalogue to CSV + a self-contained HTML dashboard.
 
-  python -m hsa.export          -> exports/*.csv, dashboard/index.html
+  python -m hsa.export          -> exports/*.csv, docs/index.html (GitHub Pages)
 """
 import json
 import re
@@ -14,7 +14,7 @@ from . import db
 from .config import DATA, ROOT
 
 OUT = ROOT / "exports"
-DASH = ROOT / "dashboard"
+DASH = ROOT / "docs"          # served by GitHub Pages (main branch, /docs)
 TEMPLATE = Path(__file__).with_name("dashboard_template.html")
 
 TECH = [("visium hd", "Visium HD"), ("visium", "Visium"), ("xenium", "Xenium"), ("cosmx", "CosMx"),
@@ -112,7 +112,6 @@ def run():
                            .reset_index().to_dict("records") if len(xc) else []),
     }
     body = TEMPLATE.read_text().replace("__HSA_DATA__", json.dumps(payload, default=str).replace("</", "<\\/"))
-    (DASH / "body.html").write_text(body)    # body-only version (artifact publish)
     (DASH / "index.html").write_text(        # standalone page (GitHub / local)
         "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\"></head>\n<body>\n"

@@ -25,7 +25,7 @@ and per-transcript tables are linked in the catalogue but not downloaded.
 | `exports/hsa_files.csv` | one row per file: sample, URL, role (matrix / coords / matrix+coords / bundle), download status |
 | `exports/hsa_sources.csv` | database registry: URL, access method, estimated # human datasets |
 | `exports/hst_corpus_coverage.csv` | every human row of `pretraining_data_overview.xlsx` and its HSA status |
-| `dashboard/index.html` | self-contained dashboard (open in a browser) |
+| `docs/index.html` | self-contained dashboard — https://izu0421.github.io/humanspatialatlas/ |
 
 Verdicts: `ready` · `bundle_only` (matrix/coords only inside an archive; extracted by `bundles`) ·
 `restricted` (login / token / registration needed) · `no_processed_data` · `not_spatial` · `not_human`.

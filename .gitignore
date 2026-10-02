@@ -3,7 +3,6 @@ runs/
 *.sqlite*
 __pycache__/
 *.pyc
-dashboard/body.html
 notebooks/.ipynb_checkpoints/
 api.txt
 *.key
