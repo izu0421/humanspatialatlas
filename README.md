@@ -21,13 +21,15 @@ and per-transcript tables are linked in the catalogue but not downloaded.
 
 ## Outputs
 
+Catalogue tables are generated locally by `python -m hsa.export` and are not published in this repository.
+
 | file | content |
 |---|---|
 | `exports/hsa_datasets.csv` | one row per dataset: source, accession, technology, tissue, disease, verdict, samples, files, GB, links |
 | `exports/hsa_files.csv` | one row per file: sample, URL, role (matrix / coords / matrix+coords / bundle), download status |
 | `exports/hsa_sources.csv` | database registry: URL, access method, estimated # human datasets |
 | `exports/hsa_samples.csv` | one row per sample: harmonised species, tissue (UBERON), sex, age / development stage (HsapDv), disease levels 1-3 (MONDO), ethnicity (HANCESTRO), donor, provenance |
-| `index.html` | self-contained dashboard, served by GitHub Pages — https://www.yizhouyu.com/humanspatialatlas/ |
+| `index.html` | password-protected dashboard, served by GitHub Pages — https://www.yizhouyu.com/humanspatialatlas/ |
 
 Verdicts: `ready` · `bundle_only` (matrix/coords only inside an archive; extracted by `bundles`) ·
 `restricted` (login / token / registration needed) · `no_processed_data` · `not_spatial` · `not_human`.

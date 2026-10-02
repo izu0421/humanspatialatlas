@@ -1,3 +1,0 @@
-name,url,access_method,est_human_datasets,notes,updated
-CELLxGENE,https://cellxgene.cziscience.com/datasets,Curation API https://api.cellxgene.cziscience.com/curation/v1/datasets ; H5AD asset per dataset (obsm['spatial'] + counts in raw.X/X),399,harvested deterministically,2026-10-02
-GEO,https://www.ncbi.nlm.nih.gov/geo/,"Entrez E-utilities (db=gds) + HTTPS FTP mirror ftp.ncbi.nlm.nih.gov/geo/{series,samples}/.../suppl/",1542,candidates from deterministic keyword union; LLM curator decides spatial/human/files,2026-10-02
