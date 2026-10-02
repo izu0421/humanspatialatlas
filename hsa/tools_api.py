@@ -55,10 +55,10 @@ _RULES = [
     ("image", r"\.(tiff?|png|jpe?g|svs|ndpi|btf|czi|qptiff|ome\.tif)(\.gz)?$|morphology|_he_image|hires_image|lowres_image"),
     ("transcripts", r"transcripts?\.(csv|parquet|zarr)|detected_transcripts|tx_file|_tx\.csv|molecules|spots\.csv"),
     ("matrix+coords", r"\.h5ad(\.gz)?$|\.gef$|\.cellbin\.gef$|_seurat.*\.rds$|\.rds$|\.h5seurat$|\.zarr\.zip$|\.loom$"),
-    ("coords", r"tissue_positions|scalefactors_json|(^|[_\-.])cells\.(csv|parquet)|cell_metadata|metadata_file|"
+    ("coords", r"_coords\.|spot_coord|tissue_positions|scalefactors_json|(^|[_\-.])cells\.(csv|parquet)|cell_metadata|metadata_file|"
                r"beadlocations|bead_locations|coordinates|positions|centroids|spatial\.tar\.gz|spatial\.zip|"
                r"_spatial\.csv|xy\.csv|locations?\.csv"),
-    ("matrix", r"filtered_feature_bc_matrix|cell_feature_matrix|feature_bc_matrix|matrix\.mtx|barcodes\.tsv|"
+    ("matrix", r"stdata|_st_data|filtered_feature_bc_matrix|cell_feature_matrix|feature_bc_matrix|matrix\.mtx|barcodes\.tsv|"
                r"features\.tsv|genes\.tsv|exprmat|cell_by_gene|counts?[._\-]|_count\.|expression|\.mtx(\.gz)?$|"
                r"\.h5$|dge\.|_umi"),
     ("bundle", r"\.(tar|tar\.gz|tgz|zip|7z|rar)$"),
@@ -332,3 +332,22 @@ def zip_extract(member_url: str, dest):
     with zf.open(name) as src, open(dest, "wb") as out:
         while chunk := src.read(1 << 22):
             out.write(chunk)
+
+
+# ---------------------------------------------------------------- Mendeley Data
+def mendeley_files(dataset_id: str, version: int | None = None):
+    """Mendeley Data public API: metadata + every file (all folders) with direct download URLs."""
+    did = re.sub(r".*datasets/", "", str(dataset_id)).split("/")[0].replace("mendeley:", "")
+    meta = get(f"https://data.mendeley.com/public-api/datasets/{did}"
+               + (f"?version={version}" if version else "")).json()
+    if not meta.get("files") and version:      # some datasets only embed files in the unversioned record
+        meta = get(f"https://data.mendeley.com/public-api/datasets/{did}").json()
+    files = meta.get("files") or get(f"https://data.mendeley.com/public-api/datasets/{did}/files",
+                                     params={"folder_id": "root", "version": meta.get("version", 1)}).json()
+    out = []
+    for f in files:
+        cd = f.get("content_details", {})
+        name = (f"{f['folder_id'][:8]}/" if f.get("folder_id") not in (None, "root") else "") + f["filename"]
+        out.append({"name": name, "url": cd.get("download_url"), "size_bytes": cd.get("size"), "role": classify(f["filename"])})
+    return {"accession": f"mendeley:{did}", "version": meta.get("version"), "title": meta.get("name"),
+            "doi": (meta.get("doi") or {}).get("id"), "description": (meta.get("description") or "")[:3000], "files": out}

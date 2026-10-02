@@ -120,6 +120,12 @@ class Session:
         self._remember(r["files"])
         return r
 
+    def mendeley_files(self, dataset_id, version=None):
+        r = T.mendeley_files(dataset_id, version)
+        self._remember(r["files"])
+        r["files"] = [f for f in r["files"] if f["role"] != "image"]
+        return r
+
     def figshare_search(self, query, page=1):
         return T.figshare_search(query, int(page))
 
@@ -228,6 +234,9 @@ TOOL_SPECS = {
     "wayback_fetch": spec("wayback_fetch", "Fetch the Internet Archive snapshot of a page that is blocked live (429/403 bot checkpoints, "
                           "e.g. www.10xgenomics.com/datasets/...). File links in it become recordable (HEAD them to confirm they are live).",
                           {"url": S_STR}, ["url"]),
+    "mendeley_files": spec("mendeley_files", "Mendeley Data dataset metadata + ALL files (folders recursed) with direct download URLs. "
+                           "Use for data.mendeley.com/datasets/<id>/<version> links.",
+                           {"dataset_id": S_STR, "version": {"type": "integer"}}, ["dataset_id"]),
     "list_directory": spec("list_directory", "List an HTTP directory index (files, sizes, heuristic role).", {"url": S_STR}, ["url"]),
     "http_request": spec("http_request", "GET/POST/HEAD any URL or REST API. HTML is reduced to text + links; binaries are not downloaded (use HEAD for size).",
                          {"url": S_STR, "method": {"type": "string", "enum": ["GET", "POST", "HEAD"]},
@@ -289,7 +298,7 @@ def scout(lane, budget_usd):
 
 
 # ---------------------------------------------------------------- curator
-CURATE_TOOLS = ["geo_series", "geo_sample_files", "zenodo_files", "figshare_files", "zip_list", "wayback_fetch", "list_directory",
+CURATE_TOOLS = ["geo_series", "geo_sample_files", "zenodo_files", "figshare_files", "zip_list", "wayback_fetch", "mendeley_files", "list_directory",
                 "http_request", "record_dataset"]
 
 
@@ -310,7 +319,6 @@ def curate(cand, budget_usd):
             "Then reply in English with one line: verdict + n samples.")
     final, usage = run_agent(f"curate_{cand['source']}_{cand['accession']}".replace(":", "_").replace("/", "_"),
                              MISSION, user, tools, funcs, effort="medium", max_turns=25, budget_usd=budget_usd)
-    if not s.recorded:
-        db.execute("UPDATE candidates SET status='failed' WHERE source=? AND accession=?",
-                   (cand["source"], cand["accession"]))
+    db.execute("UPDATE candidates SET status=? WHERE source=? AND accession=?",
+               ("curated" if s.recorded else "failed", cand["source"], cand["accession"]))
     return final, usage
