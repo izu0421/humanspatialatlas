@@ -11,7 +11,7 @@ curates datasets; everything that touches disk is deterministic code.
  sources ──► candidates ──► curator agent ──► deterministic gate ──► catalogue ──► downloader ──► data/
               (queue)        (1 per dataset)   (URL was listed?        (SQLite)    (matrix + coords
  GEO      : E-utilities keyword union                no images/transcripts?                only; remote-zip
- xlsx     : HST-Corpus-112M must-cover list          'ready' needs both?)                  member reads;
+ lists    : reference dataset lists                  'ready' needs both?)                  member reads;
  scouts   : 10x, Zenodo, HuBMAP, HTAN, vendors…                                             tar streaming)
  CELLxGENE: curation API (no LLM) ─────────────────────────────────────────►
 ```
@@ -26,7 +26,7 @@ and per-transcript tables are linked in the catalogue but not downloaded.
 | `exports/hsa_datasets.csv` | one row per dataset: source, accession, technology, tissue, disease, verdict, samples, files, GB, links |
 | `exports/hsa_files.csv` | one row per file: sample, URL, role (matrix / coords / matrix+coords / bundle), download status |
 | `exports/hsa_sources.csv` | database registry: URL, access method, estimated # human datasets |
-| `exports/hst_corpus_coverage.csv` | every human row of `pretraining_data_overview.xlsx` and its HSA status |
+| `exports/hsa_samples.csv` | one row per sample: harmonised species, tissue (UBERON), sex, age / development stage (HsapDv), disease levels 1-3 (MONDO), ethnicity (HANCESTRO), donor, provenance |
 | `index.html` | self-contained dashboard, served by GitHub Pages — https://www.yizhouyu.com/humanspatialatlas/ |
 
 Verdicts: `ready` · `bundle_only` (matrix/coords only inside an archive; extracted by `bundles`) ·
@@ -39,12 +39,13 @@ micromamba env create -f environment.yml
 echo "sk-ant-..." > ../api.txt                     # Anthropic key, read by hsa/config.py (never commit it)
 python run_hsa.py harvest                          # CELLxGENE (deterministic)
 python -c "from hsa import harvest_geo; harvest_geo.run()"    # queue GEO candidates
-python -c "from hsa import harvest_xlsx; harvest_xlsx.run()"  # queue HST-Corpus must-cover list
+python -c "from hsa import harvest_xlsx; harvest_xlsx.run()"  # queue a reference dataset list (xlsx)
 python run_hsa.py curate --workers 12 --budget 50  # Sonnet curator, global $ cap
 python run_hsa.py scout                            # Sonnet scouts for the other databases
 python run_hsa.py download                         # matrix + coords files
 python run_hsa.py bundles                          # extract matrix + coords members from tar/zip archives
 python run_hsa.py status
+python -m hsa.metadata run                         # per-sample metadata harmonisation
 python -m hsa.export                               # CSVs + dashboard
 ```
 

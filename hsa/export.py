@@ -15,6 +15,7 @@ from . import db
 from .config import DATA, ROOT
 
 OUT = ROOT / "exports"
+PRIVATE = ROOT / "exports_private"     # gitignored: reference-list coverage, internal paths
 DASH = ROOT                   # index.html at repo root is what GitHub Pages serves
 TEMPLATE = Path(__file__).with_name("dashboard_template.html")
 
@@ -92,7 +93,38 @@ def run():
     src.assign(updated=pd.to_datetime(src.updated, unit="s").dt.strftime("%Y-%m-%d")).to_csv(OUT / "hsa_sources.csv", index=False)
     xc = xlsx_coverage(ds)
     if len(xc):
-        xc.to_csv(OUT / "hst_corpus_coverage.csv", index=False)
+        PRIVATE.mkdir(exist_ok=True)
+        xc.to_csv(PRIVATE / "hst_corpus_coverage.csv", index=False)
+
+    # per-sample harmonised metadata
+    try:
+        sm = pd.DataFrame(db.query("SELECT * FROM sample_meta"))
+        conf = pd.DataFrame(db.query("SELECT * FROM xlsx_conflicts"))
+    except Exception:
+        sm, conf = pd.DataFrame(), pd.DataFrame()
+    samples_payload = {}
+    if len(sm):
+        sm = sm.drop(columns=["llm_json"])
+        sm["updated"] = pd.to_datetime(sm.updated, unit="s").dt.strftime("%Y-%m-%d %H:%M")
+        sm.to_csv(OUT / "hsa_samples.csv", index=False)
+        hum = sm[sm.species.isin(["homo_sapiens", "human_in_mouse_xenograft"])]
+        known = lambda c: int((~hum[c].isin(["unknown", "", None]) & hum[c].notna()).sum())
+        top = lambda c, n: [[k, int(v)] for k, v in hum.loc[~hum[c].isin(["unknown", ""]), c].value_counts().head(n).items()]
+        samples_payload = {
+            "n": len(hum), "n_nonhuman": int(len(sm) - len(hum)),
+            "completeness": [[lab, known(c)] for lab, c in [("Tissue", "tissue_ontology_term_id"), ("Disease", "disease_state"),
+                             ("Sex", "sex"), ("Age group", "age_group"), ("Development stage", "development_stage_ontology_term_id"),
+                             ("Ethnicity", "self_reported_ethnicity_ontology_term_id"), ("Donor ID", "donor_id")]],
+            "sex": [[k, int(v)] for k, v in hum.sex.value_counts().items()],
+            "age_group": [[k, int(v)] for k, v in hum.age_group.value_counts().items()],
+            "disease_state": [[k, int(v)] for k, v in hum.disease_state.value_counts().items()],
+            "disease_level1": top("disease_level1", 12), "disease_level2": top("disease_level2", 14),
+            "tissue": top("tissue", 16),
+            "source": [[k, int(v)] for k, v in hum.metadata_source.value_counts().items()],
+            "conflicts": len(conf)}
+    if len(conf):
+        PRIVATE.mkdir(exist_ok=True)
+        conf.to_csv(PRIVATE / "xlsx_conflicts.csv", index=False)
 
     usage = db.query("SELECT ROUND(SUM(usd),2) usd FROM usage")[0]["usd"] or 0
     disk_gb = sum(p.stat().st_size for p in DATA.rglob("*") if p.is_file()) / 1e9 if DATA.exists() else 0
@@ -108,9 +140,7 @@ def run():
                         "n_samples_with_files", "n_files", "n_files_downloaded", "n_bundles", "gb", "url"]]
                     .fillna("").to_dict("records"),
         "sources": src.fillna("").to_dict("records"),
-        "xlsx": xc.groupby(["hsa_status"]).size().to_dict() if len(xc) else {},
-        "xlsx_by_source": (xc.groupby(["source", "hsa_status"]).size().unstack(fill_value=0)
-                           .reset_index().to_dict("records") if len(xc) else []),
+        "samples": samples_payload,
     }
     from .logo import svg
     body = (TEMPLATE.read_text().replace("__HSA_LOGO__", svg(inline=True))

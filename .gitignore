@@ -7,3 +7,4 @@ notebooks/.ipynb_checkpoints/
 api.txt
 *.key
 .env
+exports_private/

@@ -178,6 +178,23 @@ def geo_soft(gse):
     return out
 
 
+def page_text(ds, n=7000):
+    """Readable text of the dataset's landing page (10x via Wayback - live site blocks bots)."""
+    url = ds.get("url") or ""
+    try:
+        if ds["accession"].startswith("zenodo:"):
+            return T.zenodo_files(ds["accession"]).get("description", "")[:n]
+        if "10xgenomics.com" in url:
+            av = T.get(f"https://archive.org/wayback/available?url={url}").json()
+            url = av.get("archived_snapshots", {}).get("closest", {}).get("url") or url
+        if url.startswith("http"):
+            t = T.http_request(url, "GET", None, 2 * n).get("text", "")
+            return t.split("\n\nLINKS:")[0][:n]
+    except Exception as e:
+        return f"(page fetch failed: {e})"
+    return ""
+
+
 def samples_for(ds):
     rows = db.query("SELECT DISTINCT sample_id FROM files WHERE source=? AND accession=?", (ds["source"], ds["accession"]))
     return [r["sample_id"] for r in rows] or [ds["accession"]]
@@ -274,7 +291,7 @@ def resolve(ds, rec, source_tag):
             "self_reported_ethnicity": snake(e_lab) if e_id != "unknown" else "unknown",
             "self_reported_ethnicity_ontology_term_id": e_id, "donor_id": rec.get("donor_id", ""),
             "metadata_source": source_tag, "confidence": rec.get("confidence", ""), "evidence": rec.get("evidence", "")[:500],
-            "llm_json": json.dumps(rec), "updated": time.time()}
+            "llm_json": json.dumps(rec) if source_tag == "llm" else "", "updated": time.time()}
 
 
 def write(row):
@@ -297,6 +314,8 @@ def harmonise_dataset(ds):
         return harmonise_cellxgene(ds, sids)
     ctx = {"dataset": {k: ds[k] for k in ("source", "accession", "title", "technology", "tissue", "disease", "notes")},
            "samples": {}}
+    if ds["source"] != "GEO":
+        ctx["dataset"]["page_text"] = page_text(ds)
     if ds["source"] == "GEO" and ds["accession"].startswith("GSE"):
         soft = geo_soft(ds["accession"])
         ctx["samples"] = {s: soft.get(s, {}) for s in sids}
@@ -312,7 +331,7 @@ def harmonise_dataset(ds):
         if r is None:   # model skipped a sample: record as unknown rather than invent
             r = {"sample_id": s, "species": "unknown", "confidence": "low", "evidence": "not returned by model"}
         r["sample_id"] = s
-        write(resolve(ds, r, "llm"))
+        write(resolve(ds, r, "llm"))   # xlsx values are merged afterwards by apply_xlsx()
         n += 1
     return n
 
@@ -334,6 +353,8 @@ def harmonise_cellxgene(ds, sids):
     assay, assay_id = ASSAY.get(tech, (snake(tech), "unknown"))
     t_lab, t_id = one("tissue")
     s_lab, s_id = one("sex")
+    if len(d.get("sex") or []) > 1:     # multi-donor dataset
+        s_lab = "mixed"
     dv_lab, dv_id = one("development_stage")
     e_lab, e_id = one("self_reported_ethnicity")
     dz = d.get("disease") or []
@@ -349,12 +370,16 @@ def harmonise_cellxgene(ds, sids):
         state = "mixed" if dz else "unknown"
     m = re.match(r"(\d+)-year-old", dv_lab)
     age = float(m.group(1)) if m else None
+    dec = re.match(r"(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) decade", dv_lab)
+    if age is None and dec:   # e.g. 'seventh decade stage' = 60-69 -> midpoint 65
+        age = 10 * ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth",
+                     "tenth"].index(dec.group(1)) + 5.0
     grp = age_fields(age, "year", False)[0] if age is not None else ("fetal" if "post-fertilization" in dv_lab or "Carnegie" in dv_lab else "unknown")
     for s in sids:
         write({"source": ds["source"], "accession": ds["accession"], "sample_id": s, "species": "homo_sapiens",
                "organism_ontology_term_id": "NCBITaxon:9606", "assay": assay, "assay_ontology_term_id": assay_id,
                "tissue": snake(t_lab), "tissue_ontology_term_id": t_id, "tissue_match": "cellxgene",
-               "sex": snake(s_lab), "sex_ontology_term_id": s_id, "age_num": age, "age_unit": "year" if age else "unknown",
+               "sex": snake(s_lab), "sex_ontology_term_id": s_id,  # mixed keeps the joined PATO ids "age_num": age, "age_unit": "year" if age else "unknown",
                "age_group": grp, "development_stage": dv_lab, "development_stage_ontology_term_id": dv_id,
                "disease_state": state, "disease_level1": l1[0], "disease_level2": l2[0], "disease_level3": l3[0],
                "disease_ontology_term_id_level1": l1[1], "disease_ontology_term_id_level2": l2[1],
@@ -409,26 +434,95 @@ def _match_xlsx(sids, recs):
     return pairs
 
 
-def apply_xlsx():
-    """Override LLM rows with the user's curated xlsx values where a sample can be paired; returns validation pairs."""
-    xr = xlsx_records()
-    comp = []
-    for (src, acc), recs in xr.items():
+GROUPS = {"species": ["species", "organism_ontology_term_id"],
+          "tissue": ["tissue", "tissue_ontology_term_id", "tissue_match"],
+          "sex": ["sex", "sex_ontology_term_id"],
+          "age": ["age_num", "age_unit", "age_group", "development_stage", "development_stage_ontology_term_id"],
+          "disease": ["disease_state", "disease_level1", "disease_level2", "disease_level3",
+                      "disease_ontology_term_id_level1", "disease_ontology_term_id_level2",
+                      "disease_ontology_term_id_level3", "disease_match"]}
+KEYFIELD = {"species": "species", "tissue": "tissue_ontology_term_id", "sex": "sex", "age": "age_group",
+            "disease": "disease_ontology_term_id_level3"}
+LABEL = {"species": "species", "tissue": "tissue", "sex": "sex", "age": "development_stage", "disease": "disease_level3"}
+db.CON.execute("""CREATE TABLE IF NOT EXISTS xlsx_conflicts (source TEXT, accession TEXT, sample_id TEXT, field TEXT,
+                  hsa_value TEXT, xlsx_value TEXT, llm_evidence TEXT, PRIMARY KEY (source, accession, sample_id, field))""")
+
+
+def _unknown(v):
+    return v in (None, "", "unknown")
+
+
+def xlsx_pairs():
+    """-> list of (ds, sample_id, xlsx-resolved row)"""
+    out = []
+    for (src, acc), recs in xlsx_records().items():
         ds = _ds_rows("AND source=? AND accession=?", (src, acc))
         if not ds:
             continue
-        sids = samples_for(ds[0])
-        for s, r in _match_xlsx(sids, recs).items():
-            old = db.query("SELECT * FROM sample_meta WHERE source=? AND accession=? AND sample_id=?", (src, acc, s))
-            new = resolve(ds[0], {**{k: v for k, v in r.items() if not k.startswith("_")}, "sample_id": s}, "xlsx")
-            if old and old[0]["metadata_source"] == "llm":
-                comp.append((old[0], new))
-            if old:   # keep LLM-only fields the xlsx does not carry
-                for k in ("condition", "donor_id", "self_reported_ethnicity", "self_reported_ethnicity_ontology_term_id"):
-                    new[k] = old[0][k]
-                new["llm_json"] = old[0]["llm_json"]
-            write(new)
+        for sid, r in _match_xlsx(samples_for(ds[0]), recs).items():
+            out.append((ds[0], sid, resolve(ds[0], {**{k: v for k, v in r.items() if not k.startswith("_")},
+                                                     "sample_id": sid}, "xlsx")))
+    return out
+
+
+def apply_xlsx():
+    """Fill fields the LLM left unknown from the user's xlsx; on disagreement keep the LLM value and log a conflict."""
+    db.execute("DELETE FROM xlsx_conflicts")
+    for ds, sid, x in xlsx_pairs():
+        old = db.query("SELECT * FROM sample_meta WHERE source=? AND accession=? AND sample_id=?",
+                       (ds["source"], ds["accession"], sid))
+        if not old or not old[0]["llm_json"] and old[0]["metadata_source"] != "cellxgene":
+            write(x)            # nothing extracted yet: xlsx alone
+            continue
+        row, filled = old[0], []
+        base = resolve(ds, json.loads(row["llm_json"]), "llm") if row["llm_json"] else row
+        for g, cols in GROUPS.items():
+            k = KEYFIELD[g]
+            if _unknown(base[k]) and not _unknown(x[k]):
+                for c in cols:
+                    row[c] = x[c]
+                filled.append(g)
+            else:
+                for c in cols:
+                    row[c] = base[c]
+                if not _unknown(x[k]) and base[k] != x[k]:
+                    db.execute("INSERT OR REPLACE INTO xlsx_conflicts VALUES (?,?,?,?,?,?,?)",
+                               (ds["source"], ds["accession"], sid, g, f"{base[k]} ({base[LABEL[g]]})",
+                                f"{x[k]} ({x[LABEL[g]]})", row["evidence"][:300]))
+        row["metadata_source"] = "llm+xlsx" if filled else row["metadata_source"]
+        write(row)
+
+
+def comparisons():
+    """(LLM-resolved, xlsx-resolved) pairs - computed independently from llm_json and the xlsx itself."""
+    comp = []
+    for ds, sid, x in xlsx_pairs():
+        row = db.query("SELECT llm_json FROM sample_meta WHERE source=? AND accession=? AND sample_id=?",
+                       (ds["source"], ds["accession"], sid))
+        if row and row[0]["llm_json"]:
+            comp.append((resolve(ds, json.loads(row[0]["llm_json"]), "llm"), x))
     return comp
+
+
+def validate_hier(comp):
+    """For ontology fields: exact / consistent (one term is an ancestor of the other) / conflict / LLM unknown."""
+    rep = {}
+    for f in ["tissue_ontology_term_id", "disease_ontology_term_id_level3", "sex", "age_group", "disease_state"]:
+        c = {"exact": 0, "consistent_hierarchy": 0, "conflict": 0, "llm_unknown": 0}
+        for a, b in comp:
+            x, y = a[f], b[f]
+            if _unknown(y):
+                continue
+            if _unknown(x):
+                c["llm_unknown"] += 1
+            elif x == y:
+                c["exact"] += 1
+            elif ":" in str(x) and ":" in str(y) and (y in ancestors(x) or x in ancestors(y)):
+                c["consistent_hierarchy"] += 1
+            else:
+                c["conflict"] += 1
+        rep[f] = c
+    return rep
 
 
 def validate(comp):
@@ -450,7 +544,9 @@ def run(limit=None, workers=8, budget=40.0, only_missing=True, xlsx_only=False):
     if xlsx_only:
         xs = {(r["source"], r["accession"]) for r in db.query("SELECT DISTINCT source, accession FROM xlsx_rows")}
         ds = [d for d in ds if (d["source"], d["accession"]) in xs and d["source"] != "CELLxGENE"]
-    done = {(r["source"], r["accession"]) for r in db.query("SELECT DISTINCT source, accession FROM sample_meta")}
+    # done = has a real extraction (LLM or CELLxGENE); xlsx-only rows still need the LLM pass for validation
+    done = {(r["source"], r["accession"]) for r in db.query(
+        "SELECT DISTINCT source, accession FROM sample_meta WHERE llm_json != '' OR metadata_source IN ('llm','cellxgene')")}
     todo = [d for d in ds if not only_missing or (d["source"], d["accession"]) not in done]
     # HST-Corpus datasets and non-GEO first, then GEO
     todo.sort(key=lambda d: (d["source"] == "GEO", d["accession"]))
@@ -475,9 +571,11 @@ def run(limit=None, workers=8, budget=40.0, only_missing=True, xlsx_only=False):
                 print("metadata budget reached; stopping", flush=True)
                 ex.shutdown(cancel_futures=True)
                 break
-    comp = apply_xlsx()
+    apply_xlsx()
     print("validation vs HST-Corpus xlsx (LLM before override):")
+    comp = comparisons()
     print(json.dumps(validate(comp), indent=1))
+    print("hierarchical:", json.dumps(validate_hier(comp), indent=1))
 
 
 if __name__ == "__main__":
@@ -488,5 +586,10 @@ if __name__ == "__main__":
         run(limit=int(sys.argv[2]) if len(sys.argv) > 2 else 30, xlsx_only=True)
     elif cmd == "run":
         run()
+    elif cmd == "redo_cellxgene":
+        ds = _ds_rows("AND source='CELLxGENE'")
+        n = sum(harmonise_dataset(d) for d in ds)
+        print("cellxgene samples", n)
     elif cmd == "validate":
-        print(json.dumps(validate(apply_xlsx()), indent=1))
+        apply_xlsx()
+        print(json.dumps(validate_hier(comparisons()), indent=1))

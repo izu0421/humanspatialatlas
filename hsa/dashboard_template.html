@@ -61,6 +61,10 @@ h2 { font: 600 0.78rem/1 var(--f-display); text-transform: uppercase; letter-spa
 .bar .val { position: absolute; right: 6px; top: 0; line-height: 18px; font: 0.74rem var(--f-mono); color: var(--fg); font-variant-numeric: tabular-nums; }
 
 .cov { display: grid; gap: 8px; }
+h3 { font: 600 0.8rem/1.2 var(--f-display); color: var(--fg); margin: 4px 0 8px; }
+#metaPanel .grid3 > div { display: grid; gap: 6px; align-content: start; min-width: 0; }
+#metaPanel .grid3 > div h3:not(:first-child) { margin-top: 14px; }
+.bar .fill.ok { background: var(--ok); }
 .covrow { display: grid; grid-template-columns: minmax(100px, 160px) 1fr 48px; gap: 10px; align-items: center; font-size: 0.86rem; }
 .covrow .stk { display: flex; height: 16px; border-radius: 3px; overflow: hidden; background: var(--grey-soft); }
 .covrow .n { font: 0.78rem var(--f-mono); color: var(--muted); text-align: right; }
@@ -119,11 +123,20 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <div class="panel"><h2>Ready datasets by tissue (top 14)</h2><div class="bars" id="byTissue"></div></div>
   </section>
 
-  <section class="panel" id="covPanel">
-    <h2>HST-Corpus-112M coverage (306 human samples in pretraining_data_overview.xlsx)</h2>
-    <div class="cov" id="cov"></div>
-    <div class="legend" id="covLegend"></div>
+  <section class="panel" id="metaPanel">
+    <h2>Sample metadata, harmonised to UBERON / MONDO / HsapDv / HANCESTRO</h2>
+    <p class="sub" id="metaSub"></p>
+    <div class="grid3">
+      <div><h3>Field completeness (% of human samples)</h3><div class="bars" id="mComplete"></div></div>
+      <div><h3>Sex</h3><div class="bars" id="mSex"></div>
+           <h3>Disease state</h3><div class="bars" id="mState"></div></div>
+      <div><h3>Age group</h3><div class="bars" id="mAge"></div></div>
+      <div><h3>Disease category (level 1)</h3><div class="bars" id="mD1"></div></div>
+      <div><h3>Disease (level 2, top 14)</h3><div class="bars" id="mD2"></div></div>
+      <div><h3>Tissue (UBERON, top 16)</h3><div class="bars" id="mTissue"></div></div>
+    </div>
   </section>
+
 
   <section class="panel">
     <h2>Datasets</h2>
@@ -154,7 +167,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <div class="tablebox"><table><thead><tr><th>Source</th><th>Est. human datasets</th><th>Access</th></tr></thead><tbody id="srcRows"></tbody></table></div>
   </section>
 
-  <footer>Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are linked but not downloaded). Regenerate with <code>python -m hsa.export</code>. Code: <a href="https://github.com/izu0421/humanspatialatlas">github.com/izu0421/humanspatialatlas</a>. Tables: <code>exports/hsa_datasets.csv</code>, <code>hsa_files.csv</code>, <code>hsa_sources.csv</code>, <code>hst_corpus_coverage.csv</code>.</footer>
+  <footer>Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are linked but not downloaded). Regenerate with <code>python -m hsa.export</code>. Code: <a href="https://github.com/izu0421/humanspatialatlas">github.com/izu0421/humanspatialatlas</a>. Tables: <code>exports/hsa_datasets.csv</code>, <code>hsa_files.csv</code>, <code>hsa_sources.csv</code>, <code>hsa_samples.csv</code>.</footer>
 </div>
 
 <script type="application/json" id="hsa-data">__HSA_DATA__</script>
@@ -198,16 +211,20 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   bars("bySource", "source", 12);
   bars("byTissue", "tissue_norm", 14, true);
 
-  // HST-Corpus coverage
-  const CS = ["ready", "bundle_only", "pending curation", "restricted", "offline (internal only)", "no_processed_data", "not_spatial", "not_human", "not matched"];
-  const CCOL = { ready: "var(--ok)", bundle_only: "var(--warn)", "pending curation": "var(--accent-soft)", restricted: "var(--bad)", "offline (internal only)": "var(--eosin)", no_processed_data: "var(--grey)", not_spatial: "var(--grey-soft)", not_human: "var(--line)", "not matched": "var(--muted)" };
-  const CLAB = { ...VLABEL, "pending curation": "Pending curation", "offline (internal only)": "Internal only (no public link)", "not matched": "Not matched" };
-  if (!D.xlsx_by_source.length) { $("covPanel").hidden = true; } else {
-    const rows = D.xlsx_by_source.map((r) => ({ src: r.source, n: CS.reduce((s, c) => s + (r[c] || 0), 0), r })).sort((a, b) => b.n - a.n);
-    const max = Math.max(...rows.map((r) => r.n));
-    $("cov").innerHTML = rows.map(({ src, n, r }) => `<div class="covrow"><span>${esc(src)}</span><span class="stk" style="width:${(100 * n) / max}%">${CS.filter((c) => r[c]).map((c) => `<span title="${CLAB[c]}: ${r[c]}" style="width:${(100 * r[c]) / n}%;background:${CCOL[c]}"></span>`).join("")}</span><span class="n">${n}</span></div>`).join("");
-    $("covLegend").innerHTML = CS.filter((c) => D.xlsx[c]).map((c) => `<span><i style="background:${CCOL[c]}"></i>${CLAB[c]} <b>${D.xlsx[c]}</b></span>`).join("");
+  // sample metadata
+  const S = D.samples || {};
+  if (!S.n) { $("metaPanel").hidden = true; } else {
+    $("metaSub").textContent = fmt(S.n) + " human samples harmonised (" + (S.source || []).map(([k, v]) => k + " " + fmt(v)).join(", ") +
+      "). Unknown means the source does not state it; nothing is guessed.";
+    const pairs = (el, arr, cls, pct) => {
+      const max = pct ? S.n : Math.max(1, ...arr.map((a) => a[1]));
+      $(el).innerHTML = arr.map(([lab, n]) => `<div class="bar"><span class="lab" title="${esc(lab)}">${esc(String(lab).replace(/_/g, " "))}</span><span class="trk"><span class="fill ${cls || ""}" style="width:${(100 * n) / max}%"></span><span class="val">${pct ? Math.round((100 * n) / S.n) + "%" : fmt(n)}</span></span></div>`).join("");
+    };
+    pairs("mComplete", S.completeness, "ok", true);
+    pairs("mSex", S.sex); pairs("mState", S.disease_state); pairs("mAge", S.age_group);
+    pairs("mD1", S.disease_level1, "alt"); pairs("mD2", S.disease_level2, "alt"); pairs("mTissue", S.tissue);
   }
+
 
   // table
   const opt = (el, label, vals, lab) => ($(el).innerHTML = `<option value="">${label}</option>` + vals.map((v) => `<option value="${esc(v)}">${esc(lab ? lab[v] || v : v)}</option>`).join(""));
