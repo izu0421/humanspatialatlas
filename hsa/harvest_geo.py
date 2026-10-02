@@ -4,7 +4,7 @@ from . import db, tools_api as T
 TERMS = ["visium", "\"spatial transcriptomics\"", "\"spatial transcriptome\"", "\"spatially resolved\"", "xenium",
          "cosmx", "merscope", "merfish", "\"stereo-seq\"", "stomics", "\"slide-seq\"", "slideseq", "curio",
          "dbit-seq", "geomx", "seqfish", "starmap", "hdst", "\"spatial gene expression\"", "\"visium hd\"",
-         "\"in situ sequencing\"", "\"spatial omics\"", "\"spatial profiling\""]
+         "\"in situ sequencing\"", "\"spatial omics\"", "\"spatial profiling\"", "atera"]
 
 
 def run():

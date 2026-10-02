@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS ancestor_cache (obo_id TEXT PRIMARY KEY, ancestors TE
 # ---------------------------------------------------------------- fixed vocabularies
 ORGANISM = {"homo_sapiens": "NCBITaxon:9606", "mus_musculus": "NCBITaxon:10090"}
 SEX = {"female": "PATO:0000383", "male": "PATO:0000384"}
-ASSAY = {"Visium": ("visium", "EFO:0010961"), "Visium HD": ("visium_hd", "EFO:0920058"),
+ASSAY = {"Atera": ("atera", "unknown"), "Visium": ("visium", "EFO:0010961"), "Visium HD": ("visium_hd", "EFO:0920058"),
          "Xenium": ("xenium", "EFO:0022615"), "CosMx": ("cosmx", "EFO:0022994"), "MERFISH": ("merfish", "EFO:0008992"),
          "Stereo-seq": ("stereo_seq", "EFO:0920125"), "Slide-seq": ("slideseqv2", "EFO:0030062"),
          "GeoMx": ("geomx", "EFO:0920109"), "STARmap": ("starmap", "unknown"), "seqFISH": ("seqfish", "unknown"),
@@ -255,6 +255,10 @@ def llm_extract(ctx, sample_ids, run):
 
 
 # ---------------------------------------------------------------- resolve + write
+FEMALE_TISSUE = re.compile(r"cervix|uter|ovar|endometri|fallopian|oviduct|vagin|vulva|myometri|decidua")
+MALE_TISSUE = re.compile(r"prostat|testi|epididym|seminal|scrot|penis|spermat")
+
+
 def resolve(ds, rec, source_tag):
     """LLM/xlsx label record -> full harmonised row (deterministic ontology mapping)."""
     sp = rec.get("species", "unknown")
@@ -262,6 +266,11 @@ def resolve(ds, rec, source_tag):
     assay, assay_id = ASSAY.get(tech, (snake(tech) or "unknown", "unknown"))
     t_id, t_lab, t_match = ols("uberon", rec.get("tissue"))
     sex = rec.get("sex", "unknown") if rec.get("sex") in SEX else "unknown"
+    implied = ""
+    if sex == "unknown" and rec.get("species") in ("homo_sapiens", "human_in_mouse_xenograft"):
+        tl = f"{rec.get('tissue', '')} {t_lab}".lower()
+        sex = "female" if FEMALE_TISSUE.search(tl) else "male" if MALE_TISSUE.search(tl) else "unknown"
+        implied = f" [sex implied by tissue: {t_lab}]" if sex != "unknown" else ""
     grp, dev, dev_id = age_fields(rec.get("age_num"), rec.get("age_unit"), rec.get("prenatal"))
     state = rec.get("disease_state", "unknown")
     if state == "healthy":
@@ -290,7 +299,7 @@ def resolve(ds, rec, source_tag):
             "disease_ontology_term_id_level3": l3[1], "disease_match": dmatch, "condition": rec.get("condition", ""),
             "self_reported_ethnicity": snake(e_lab) if e_id != "unknown" else "unknown",
             "self_reported_ethnicity_ontology_term_id": e_id, "donor_id": rec.get("donor_id", ""),
-            "metadata_source": source_tag, "confidence": rec.get("confidence", ""), "evidence": rec.get("evidence", "")[:500],
+            "metadata_source": source_tag, "confidence": rec.get("confidence", ""), "evidence": (rec.get("evidence", "")[:480] + implied),
             "llm_json": json.dumps(rec) if source_tag == "llm" else "", "updated": time.time()}
 
 
@@ -586,6 +595,15 @@ if __name__ == "__main__":
         run(limit=int(sys.argv[2]) if len(sys.argv) > 2 else 30, xlsx_only=True)
     elif cmd == "run":
         run()
+    elif cmd == "reresolve":   # re-apply deterministic rules to stored LLM answers (no LLM calls)
+        n = 0
+        for row in db.query("SELECT * FROM sample_meta WHERE llm_json != ''"):
+            ds = _ds_rows("AND source=? AND accession=?", (row["source"], row["accession"]))
+            if ds:
+                write(resolve(ds[0], json.loads(row["llm_json"]), "llm"))
+                n += 1
+        apply_xlsx()
+        print("re-resolved", n)
     elif cmd == "redo_cellxgene":
         ds = _ds_rows("AND source='CELLxGENE'")
         n = sum(harmonise_dataset(d) for d in ds)

@@ -19,7 +19,7 @@ PRIVATE = ROOT / "exports_private"     # gitignored: reference-list coverage, in
 DASH = ROOT                   # index.html at repo root is what GitHub Pages serves
 TEMPLATE = Path(__file__).with_name("dashboard_template.html")
 
-TECH = [("visium hd", "Visium HD"), ("visium", "Visium"), ("xenium", "Xenium"), ("cosmx", "CosMx"),
+TECH = [("atera", "Atera"), ("visium hd", "Visium HD"), ("visium", "Visium"), ("xenium", "Xenium"), ("cosmx", "CosMx"),
         ("merscope", "MERFISH"), ("merfish", "MERFISH"), ("stereo", "Stereo-seq"), ("slide", "Slide-seq"),
         ("curio", "Slide-seq"), ("geomx", "GeoMx"), ("dbit", "DBiT-seq"), ("starmap", "STARmap"),
         ("seqfish", "seqFISH"), ("cartana", "ISS/Cartana"), ("in situ seq", "ISS/Cartana"), ("hdst", "HDST"),
