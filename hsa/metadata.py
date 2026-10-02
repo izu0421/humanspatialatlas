@@ -445,8 +445,11 @@ def validate(comp):
 
 
 # ---------------------------------------------------------------- driver
-def run(limit=None, workers=8, budget=40.0, only_missing=True):
+def run(limit=None, workers=8, budget=40.0, only_missing=True, xlsx_only=False):
     ds = _ds_rows()
+    if xlsx_only:
+        xs = {(r["source"], r["accession"]) for r in db.query("SELECT DISTINCT source, accession FROM xlsx_rows")}
+        ds = [d for d in ds if (d["source"], d["accession"]) in xs and d["source"] != "CELLxGENE"]
     done = {(r["source"], r["accession"]) for r in db.query("SELECT DISTINCT source, accession FROM sample_meta")}
     todo = [d for d in ds if not only_missing or (d["source"], d["accession"]) not in done]
     # HST-Corpus datasets and non-GEO first, then GEO
@@ -481,6 +484,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "run"
     if cmd == "pilot":
         run(limit=int(sys.argv[2]) if len(sys.argv) > 2 else 20)
+    elif cmd == "pilot_xlsx":
+        run(limit=int(sys.argv[2]) if len(sys.argv) > 2 else 30, xlsx_only=True)
     elif cmd == "run":
         run()
     elif cmd == "validate":
