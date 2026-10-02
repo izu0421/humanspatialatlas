@@ -1,0 +1,18 @@
+name: hsa
+channels: [conda-forge]
+dependencies:
+  - python=3.12
+  - pandas
+  - numpy
+  - scipy
+  - h5py
+  - anndata
+  - scanpy
+  - pyarrow
+  - requests
+  - openpyxl
+  - matplotlib
+  - jupyterlab
+  - pip
+  - pip:
+      - anthropic>=1.8

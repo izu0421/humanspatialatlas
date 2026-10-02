@@ -1,0 +1,249 @@
+<title>Human Spatial Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one column of stacked panels; summary tiles -> funnel -> breakdown grid -> coverage -> searchable table -> source registry.
+   Palette borrows from H&E: hematoxylin indigo as accent, eosin pink as secondary, violet-biased neutrals. */
+:root {
+  --bg: #f6f6fa; --panel: #ffffff; --fg: #1d1d2e; --muted: #5d5f78; --line: #e1e1ec;
+  --accent: #3a3f9a; --accent-soft: #e4e5f6; --eosin: #c24d7a; --eosin-soft: #f7e3ec;
+  --ok: #2f7d4f; --ok-soft: #e1f1e7; --warn: #a86a0c; --warn-soft: #f8ecd6; --bad: #b2412f; --bad-soft: #f6e1dc;
+  --grey: #7a7c90; --grey-soft: #ececf2;
+  --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12121c; --panel: #1b1b28; --fg: #e8e8f2; --muted: #a0a2bb; --line: #2d2d40;
+  --accent: #9da3f2; --accent-soft: #2a2c52; --eosin: #ec8fb2; --eosin-soft: #46263a;
+  --ok: #6fcf95; --ok-soft: #1f3a2a; --warn: #e5b45a; --warn-soft: #3d3020; --bad: #ef8a77; --bad-soft: #43251f;
+  --grey: #9a9cb2; --grey-soft: #282838; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12121c; --panel: #1b1b28; --fg: #e8e8f2; --muted: #a0a2bb; --line: #2d2d40;
+  --accent: #9da3f2; --accent-soft: #2a2c52; --eosin: #ec8fb2; --eosin-soft: #46263a;
+  --ok: #6fcf95; --ok-soft: #1f3a2a; --warn: #e5b45a; --warn-soft: #3d3020; --bad: #ef8a77; --bad-soft: #43251f;
+  --grey: #9a9cb2; --grey-soft: #282838; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--f-body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: grid; gap: 22px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+h1 { font: 700 clamp(1.6rem, 3.5vw, 2.2rem)/1.1 var(--f-display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h1 span { color: var(--accent); }
+h2 { font: 600 0.78rem/1 var(--f-display); text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin: 0 0 12px; }
+.sub { color: var(--muted); font-size: 0.92rem; max-width: 70ch; }
+.stamp { font: 0.8rem var(--f-mono); color: var(--muted); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; }
+.kpi b { font: 700 1.7rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--muted); font-size: 0.85rem; }
+.kpi small { font: 0.75rem var(--f-mono); color: var(--muted); }
+.kpi.hero b { color: var(--accent); }
+
+.funnel { display: flex; height: 30px; border-radius: 6px; overflow: hidden; background: var(--grey-soft); }
+.funnel div { min-width: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 0.85rem; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.bars { display: grid; gap: 7px; }
+.bar { display: grid; grid-template-columns: minmax(90px, 38%) 1fr; gap: 10px; align-items: center; font-size: 0.86rem; }
+.bar .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
+.bar .trk { position: relative; height: 18px; background: var(--grey-soft); border-radius: 3px; }
+.bar .fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 3px; }
+.bar .fill.alt { background: var(--eosin); }
+.bar .val { position: absolute; right: 6px; top: 0; line-height: 18px; font: 0.74rem var(--f-mono); color: var(--fg); font-variant-numeric: tabular-nums; }
+
+.cov { display: grid; gap: 8px; }
+.covrow { display: grid; grid-template-columns: minmax(100px, 160px) 1fr 48px; gap: 10px; align-items: center; font-size: 0.86rem; }
+.covrow .stk { display: flex; height: 16px; border-radius: 3px; overflow: hidden; background: var(--grey-soft); }
+.covrow .n { font: 0.78rem var(--f-mono); color: var(--muted); text-align: right; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+input[type=search], select { font: inherit; font-size: 0.9rem; padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--fg); }
+input[type=search] { flex: 1 1 240px; min-width: 0; }
+input:focus-visible, select:focus-visible, button:focus-visible, th:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.count { font: 0.8rem var(--f-mono); color: var(--muted); }
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 0.72rem var(--f-display); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: var(--bg); position: sticky; top: 0; cursor: pointer; white-space: nowrap; user-select: none; }
+th[aria-sort=ascending]::after { content: " \2191"; } th[aria-sort=descending]::after { content: " \2193"; }
+td.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+td.acc { font-family: var(--f-mono); font-size: 0.8rem; max-width: 220px; overflow-wrap: anywhere; }
+td.title { min-width: 240px; max-width: 420px; }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font: 600 0.72rem var(--f-body); white-space: nowrap; }
+.v-ready { background: var(--ok-soft); color: var(--ok); }
+.v-bundle_only { background: var(--warn-soft); color: var(--warn); }
+.v-restricted { background: var(--bad-soft); color: var(--bad); }
+.v-not_human, .v-not_spatial, .v-no_processed_data { background: var(--grey-soft); color: var(--grey); }
+.prog { font-family: var(--f-mono); font-size: 0.78rem; }
+.prog.full { color: var(--ok); }
+button.more { font: inherit; font-size: 0.88rem; margin-top: 10px; padding: 7px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--accent); cursor: pointer; }
+.src td:nth-child(3) { max-width: 520px; color: var(--muted); }
+footer { color: var(--muted); font-size: 0.82rem; }
+code { font-family: var(--f-mono); font-size: 0.85em; }
+@media (prefers-reduced-motion: no-preference) { .bar .fill, .funnel div { transition: width .4s ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Human Spatial Atlas <span>HSA</span></h1>
+      <div class="sub">Public human spatial transcriptomics datasets, curated by a Claude Sonnet 5.5 agent, with cell/spot-by-gene matrices and spatial coordinates downloaded per sample.</div>
+    </div>
+    <div class="stamp" id="stamp"></div>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <section class="panel">
+    <h2>Curation outcome, all recorded datasets</h2>
+    <div class="funnel" id="funnel" role="img" aria-label="Datasets by verdict"></div>
+    <div class="legend" id="funnelLegend"></div>
+  </section>
+
+  <section class="grid3">
+    <div class="panel"><h2>Ready datasets by technology</h2><div class="bars" id="byTech"></div></div>
+    <div class="panel"><h2>Ready datasets by source</h2><div class="bars" id="bySource"></div></div>
+    <div class="panel"><h2>Ready datasets by tissue (top 14)</h2><div class="bars" id="byTissue"></div></div>
+  </section>
+
+  <section class="panel" id="covPanel">
+    <h2>HST-Corpus-112M coverage (306 human samples in pretraining_data_overview.xlsx)</h2>
+    <div class="cov" id="cov"></div>
+    <div class="legend" id="covLegend"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Datasets</h2>
+    <div class="controls">
+      <input type="search" id="q" placeholder="Search accession, title, tissue, disease" aria-label="Search datasets">
+      <select id="fVerdict" aria-label="Filter by verdict"></select>
+      <select id="fTech" aria-label="Filter by technology"></select>
+      <select id="fSource" aria-label="Filter by source"></select>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="tablebox">
+      <table id="tbl">
+        <thead><tr>
+          <th data-k="source" tabindex="0">Source</th><th data-k="accession" tabindex="0">Accession</th>
+          <th data-k="title" tabindex="0">Title</th><th data-k="technology_norm" tabindex="0">Tech</th>
+          <th data-k="tissue_norm" tabindex="0">Tissue</th><th data-k="verdict" tabindex="0">Verdict</th>
+          <th data-k="n_samples_with_files" tabindex="0">Samples</th><th data-k="n_files_downloaded" tabindex="0">Files on disk</th>
+          <th data-k="gb" tabindex="0">GB</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <button class="more" id="more" type="button">Show 100 more</button>
+  </section>
+
+  <section class="panel src">
+    <h2>Source registry</h2>
+    <div class="tablebox"><table><thead><tr><th>Source</th><th>Est. human datasets</th><th>Access</th></tr></thead><tbody id="srcRows"></tbody></table></div>
+  </section>
+
+  <footer>Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are linked but not downloaded). Regenerate with <code>python -m hsa.export</code>. Tables: <code>exports/hsa_datasets.csv</code>, <code>hsa_files.csv</code>, <code>hsa_sources.csv</code>, <code>hst_corpus_coverage.csv</code>.</footer>
+</div>
+
+<script type="application/json" id="hsa-data">__HSA_DATA__</script>
+<script>
+(function () {
+  const D = JSON.parse(document.getElementById("hsa-data").textContent);
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => Number(n).toLocaleString("en-GB");
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const VERDICTS = ["ready", "bundle_only", "restricted", "no_processed_data", "not_spatial", "not_human"];
+  const VLABEL = { ready: "Ready", bundle_only: "Archive only", restricted: "Restricted", no_processed_data: "No processed data", not_spatial: "Not spatial", not_human: "Not human" };
+  const VCOL = { ready: "var(--ok)", bundle_only: "var(--warn)", restricted: "var(--bad)", no_processed_data: "var(--grey)", not_spatial: "var(--grey-soft)", not_human: "var(--line)" };
+
+  $("stamp").textContent = "Snapshot " + D.generated;
+  const k = D.kpi;
+  const tiles = [
+    ["hero", fmt(k.ready), "datasets ready", "matrix + coordinates"],
+    ["", fmt(k.samples), "samples with files", "ready datasets"],
+    ["", fmt(k.files_done) + " / " + fmt(k.files_total), "files downloaded", Math.round(100 * k.files_done / Math.max(1, k.files_total)) + "%"],
+    ["", fmt(k.disk_gb) + " GB", "on disk", "data/"],
+    ["", fmt(k.cand_done) + " / " + fmt(k.cand_total), "candidates curated", Math.round(100 * k.cand_done / Math.max(1, k.cand_total)) + "% of queue"],
+    ["", "$" + Number(k.usd).toFixed(2), "agent spend", "Sonnet 5.5 API"],
+  ];
+  $("kpis").innerHTML = tiles.map(([c, b, s, sm]) => `<div class="kpi ${c}"><b>${b}</b><span>${s}</span><small>${sm}</small></div>`).join("");
+
+  // funnel
+  const vc = {}; D.datasets.forEach((d) => (vc[d.verdict] = (vc[d.verdict] || 0) + 1));
+  const tot = D.datasets.length || 1;
+  $("funnel").innerHTML = VERDICTS.filter((v) => vc[v]).map((v) => `<div title="${VLABEL[v]}: ${vc[v]}" style="width:${(100 * vc[v]) / tot}%;background:${VCOL[v]}"></div>`).join("");
+  $("funnelLegend").innerHTML = VERDICTS.filter((v) => vc[v]).map((v) => `<span><i style="background:${VCOL[v]}"></i>${VLABEL[v]} <b>${fmt(vc[v])}</b></span>`).join("");
+
+  // breakdown bars (ready only)
+  const ready = D.datasets.filter((d) => d.verdict === "ready");
+  function bars(el, key, top, alt) {
+    const c = {}; ready.forEach((d) => (c[d[key]] = (c[d[key]] || 0) + 1));
+    const arr = Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, top);
+    const max = arr.length ? arr[0][1] : 1;
+    $(el).innerHTML = arr.map(([lab, n]) => `<div class="bar"><span class="lab" title="${esc(lab)}">${esc(lab)}</span><span class="trk"><span class="fill${alt ? " alt" : ""}" style="width:${(100 * n) / max}%"></span><span class="val">${fmt(n)}</span></span></div>`).join("") || "<span class='count'>No ready datasets yet</span>";
+  }
+  bars("byTech", "technology_norm", 12);
+  bars("bySource", "source", 12);
+  bars("byTissue", "tissue_norm", 14, true);
+
+  // HST-Corpus coverage
+  const CS = ["ready", "bundle_only", "pending curation", "restricted", "offline (internal only)", "no_processed_data", "not_spatial", "not_human", "not matched"];
+  const CCOL = { ready: "var(--ok)", bundle_only: "var(--warn)", "pending curation": "var(--accent-soft)", restricted: "var(--bad)", "offline (internal only)": "var(--eosin)", no_processed_data: "var(--grey)", not_spatial: "var(--grey-soft)", not_human: "var(--line)", "not matched": "var(--muted)" };
+  const CLAB = { ...VLABEL, "pending curation": "Pending curation", "offline (internal only)": "Internal only (no public link)", "not matched": "Not matched" };
+  if (!D.xlsx_by_source.length) { $("covPanel").hidden = true; } else {
+    const rows = D.xlsx_by_source.map((r) => ({ src: r.source, n: CS.reduce((s, c) => s + (r[c] || 0), 0), r })).sort((a, b) => b.n - a.n);
+    const max = Math.max(...rows.map((r) => r.n));
+    $("cov").innerHTML = rows.map(({ src, n, r }) => `<div class="covrow"><span>${esc(src)}</span><span class="stk" style="width:${(100 * n) / max}%">${CS.filter((c) => r[c]).map((c) => `<span title="${CLAB[c]}: ${r[c]}" style="width:${(100 * r[c]) / n}%;background:${CCOL[c]}"></span>`).join("")}</span><span class="n">${n}</span></div>`).join("");
+    $("covLegend").innerHTML = CS.filter((c) => D.xlsx[c]).map((c) => `<span><i style="background:${CCOL[c]}"></i>${CLAB[c]} <b>${D.xlsx[c]}</b></span>`).join("");
+  }
+
+  // table
+  const opt = (el, label, vals, lab) => ($(el).innerHTML = `<option value="">${label}</option>` + vals.map((v) => `<option value="${esc(v)}">${esc(lab ? lab[v] || v : v)}</option>`).join(""));
+  const uniq = (key) => [...new Set(D.datasets.map((d) => d[key]))].sort();
+  opt("fVerdict", "All verdicts", VERDICTS.filter((v) => vc[v]), VLABEL);
+  opt("fTech", "All technologies", uniq("technology_norm"));
+  opt("fSource", "All sources", uniq("source"));
+  let sortK = "verdict", sortDir = 1, shown = 100;
+  function filtered() {
+    const q = $("q").value.trim().toLowerCase(), v = $("fVerdict").value, t = $("fTech").value, s = $("fSource").value;
+    return D.datasets.filter((d) => (!v || d.verdict === v) && (!t || d.technology_norm === t) && (!s || d.source === s) &&
+      (!q || [d.accession, d.title, d.tissue_norm, d.disease, d.source].join(" ").toLowerCase().includes(q)))
+      .sort((a, b) => {
+        let x = a[sortK], y = b[sortK];
+        if (sortK === "verdict") { x = VERDICTS.indexOf(x); y = VERDICTS.indexOf(y); }
+        return (typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y))) * sortDir;
+      });
+  }
+  function render() {
+    const f = filtered();
+    $("count").textContent = fmt(f.length) + " of " + fmt(D.datasets.length);
+    $("rows").innerHTML = f.slice(0, shown).map((d) => {
+      const full = d.n_files && d.n_files_downloaded === d.n_files;
+      return `<tr><td>${esc(d.source)}</td><td class="acc">${d.url ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.accession)}</a>` : esc(d.accession)}</td>
+      <td class="title">${esc(d.title)}</td><td>${esc(d.technology_norm)}</td><td>${esc(d.tissue_norm)}</td>
+      <td><span class="pill v-${esc(d.verdict)}">${VLABEL[d.verdict] || esc(d.verdict)}</span></td>
+      <td class="num">${d.n_samples_with_files || ""}</td>
+      <td class="num"><span class="prog${full ? " full" : ""}">${d.n_files ? d.n_files_downloaded + "/" + d.n_files : d.n_bundles ? d.n_bundles + " archive" + (d.n_bundles > 1 ? "s" : "") : ""}</span></td>
+      <td class="num">${d.gb ? Number(d.gb).toFixed(2) : ""}</td></tr>`;
+    }).join("");
+    $("more").hidden = f.length <= shown;
+    document.querySelectorAll("th[data-k]").forEach((th) => th.setAttribute("aria-sort", th.dataset.k === sortK ? (sortDir > 0 ? "ascending" : "descending") : "none"));
+  }
+  ["q", "fVerdict", "fTech", "fSource"].forEach((id) => $(id).addEventListener("input", () => { shown = 100; render(); }));
+  $("more").addEventListener("click", () => { shown += 100; render(); });
+  document.querySelectorAll("th[data-k]").forEach((th) => {
+    const go = () => { if (sortK === th.dataset.k) sortDir = -sortDir; else { sortK = th.dataset.k; sortDir = ["gb", "n_samples_with_files", "n_files_downloaded"].includes(sortK) ? -1 : 1; } render(); };
+    th.addEventListener("click", go);
+    th.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+  render();
+
+  $("srcRows").innerHTML = D.sources.sort((a, b) => (b.est_human_datasets || 0) - (a.est_human_datasets || 0)).map((s) =>
+    `<tr><td><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></td><td class="num">${s.est_human_datasets ? fmt(s.est_human_datasets) : ""}</td><td>${esc(s.access_method)}${s.notes ? "<br><small>" + esc(s.notes) + "</small>" : ""}</td></tr>`).join("");
+})();
+</script>
