@@ -1,6 +1,6 @@
 """Export the catalogue to CSV + a self-contained HTML dashboard.
 
-  python -m hsa.export          -> exports/*.csv, docs/index.html (GitHub Pages)
+  python -m hsa.export          -> exports/*.csv, index.html (GitHub Pages)
 """
 import json
 import re
@@ -14,7 +14,7 @@ from . import db
 from .config import DATA, ROOT
 
 OUT = ROOT / "exports"
-DASH = ROOT / "docs"          # served by GitHub Pages (main branch, /docs)
+DASH = ROOT                   # index.html at repo root is what GitHub Pages serves
 TEMPLATE = Path(__file__).with_name("dashboard_template.html")
 
 TECH = [("visium hd", "Visium HD"), ("visium", "Visium"), ("xenium", "Xenium"), ("cosmx", "CosMx"),
@@ -112,10 +112,14 @@ def run():
                            .reset_index().to_dict("records") if len(xc) else []),
     }
     body = TEMPLATE.read_text().replace("__HSA_DATA__", json.dumps(payload, default=str).replace("</", "<\\/"))
-    (DASH / "index.html").write_text(        # standalone page (GitHub / local)
+    (DASH / "index.html").write_text(        # standalone page (GitHub Pages / local)
         "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
-        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\"></head>\n<body>\n"
-        + body + "\n</body></html>\n")
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n"
+        "<style>*,*::before,*::after{box-sizing:border-box}:root{color-scheme:light;"
+        "padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}"
+        "body{margin:0;-webkit-font-smoothing:antialiased}img{max-width:100%}[hidden]{display:none!important}</style>\n"
+        "</head>\n<body>\n" + body + "\n</body></html>\n")
+    (DASH / ".nojekyll").touch()
     print(f"exported {len(ds)} datasets, {len(fs)} files -> {OUT}, {DASH/'index.html'}")
 
 

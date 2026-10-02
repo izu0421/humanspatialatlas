@@ -7156,22 +7156,22 @@ GEO,GSE281317,GSM8618656,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8618nnn/GSM
 GEO,GSE281317,GSM8618656,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8618nnn/GSM8618656/suppl/GSM8618656_67-08_29597_barcodes.tsv.gz,matrix,tsv.gz,2700,done,0.0 MB
 GEO,GSE281317,GSM8618656,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8618nnn/GSM8618656/suppl/GSM8618656_67-08_29597_features.tsv.gz,matrix,tsv.gz,326000,done,0.3 MB
 GEO,GSE281317,GSM8618656,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8618nnn/GSM8618656/suppl/GSM8618656_67-08_29597_tissue_positions.csv.gz,coords,csv.gz,94000,done,0.1 MB
-GEO,GSE281317,GSM8618656,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8618nnn/GSM8618656/suppl/GSM8618656_67-08_29597_scalefactors_json.json.gz,coords,json.gz,167,pending,
-GEO,GSE297064,GSM8983043,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983043/suppl/GSM8983043_Visium-Skin_barcodes.tsv.gz,matrix,tsv.gz,15000,pending,
-GEO,GSE297064,GSM8983043,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983043/suppl/GSM8983043_Visium-Skin_features.tsv.gz,matrix,tsv.gz,326000,pending,
-GEO,GSE297064,GSM8983043,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983043/suppl/GSM8983043_Visium-Skin_matrix.mtx.gz,matrix,mtx.gz,5200000,pending,
-GEO,GSE297064,GSM8983043,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983043/suppl/GSM8983043_Visium-Skin_scalefactors_json.json.gz,coords,json.gz,179,pending,
-GEO,GSE297064,GSM8983043,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983043/suppl/GSM8983043_Visium-Skin_tissue_positions_list.csv.gz,coords,csv.gz,64000,pending,
-GEO,GSE297064,GSM8983044,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983044/suppl/GSM8983044_Visium-Scar_barcodes.tsv.gz,matrix,tsv.gz,5500,pending,
-GEO,GSE297064,GSM8983044,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983044/suppl/GSM8983044_Visium-Scar_features.tsv.gz,matrix,tsv.gz,326000,pending,
-GEO,GSE297064,GSM8983044,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983044/suppl/GSM8983044_Visium-Scar_matrix.mtx.gz,matrix,mtx.gz,2600000,pending,
-GEO,GSE297064,GSM8983044,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983044/suppl/GSM8983044_Visium-Scar_scalefactors_json.json.gz,coords,json.gz,179,pending,
-GEO,GSE297064,GSM8983044,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983044/suppl/GSM8983044_Visium-Scar_tissue_positions_list.csv.gz,coords,csv.gz,60000,pending,
-GEO,GSE269379,GSM8968967,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8968nnn/GSM8968967/suppl/GSM8968967_barcodes.tsv.gz,matrix,tsv.gz,1500000,pending,
-GEO,GSE269379,GSM8968967,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8968nnn/GSM8968967/suppl/GSM8968967_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE269379,GSM8968967,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8968nnn/GSM8968967/suppl/GSM8968967_matrix.mtx.gz,matrix,mtx.gz,62000000,pending,
-GEO,GSE269379,GSM8968967,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8968nnn/GSM8968967/suppl/GSM8968967_scalefactors_json.json.gz,coords,json.gz,224,pending,
-GEO,GSE269379,GSM8968967,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8968nnn/GSM8968967/suppl/GSM8968967_tissue_positions.parquet.gz,coords,parquet.gz,10000000,pending,
+GEO,GSE281317,GSM8618656,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8618nnn/GSM8618656/suppl/GSM8618656_67-08_29597_scalefactors_json.json.gz,coords,json.gz,167,done,0.0 MB
+GEO,GSE297064,GSM8983043,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983043/suppl/GSM8983043_Visium-Skin_barcodes.tsv.gz,matrix,tsv.gz,15000,done,0.0 MB
+GEO,GSE297064,GSM8983043,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983043/suppl/GSM8983043_Visium-Skin_features.tsv.gz,matrix,tsv.gz,326000,done,0.3 MB
+GEO,GSE297064,GSM8983043,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983043/suppl/GSM8983043_Visium-Skin_matrix.mtx.gz,matrix,mtx.gz,5200000,done,5.4 MB
+GEO,GSE297064,GSM8983043,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983043/suppl/GSM8983043_Visium-Skin_scalefactors_json.json.gz,coords,json.gz,179,done,0.0 MB
+GEO,GSE297064,GSM8983043,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983043/suppl/GSM8983043_Visium-Skin_tissue_positions_list.csv.gz,coords,csv.gz,64000,done,0.1 MB
+GEO,GSE297064,GSM8983044,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983044/suppl/GSM8983044_Visium-Scar_barcodes.tsv.gz,matrix,tsv.gz,5500,done,0.0 MB
+GEO,GSE297064,GSM8983044,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983044/suppl/GSM8983044_Visium-Scar_features.tsv.gz,matrix,tsv.gz,326000,done,0.3 MB
+GEO,GSE297064,GSM8983044,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983044/suppl/GSM8983044_Visium-Scar_matrix.mtx.gz,matrix,mtx.gz,2600000,done,2.8 MB
+GEO,GSE297064,GSM8983044,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983044/suppl/GSM8983044_Visium-Scar_scalefactors_json.json.gz,coords,json.gz,179,done,0.0 MB
+GEO,GSE297064,GSM8983044,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983044/suppl/GSM8983044_Visium-Scar_tissue_positions_list.csv.gz,coords,csv.gz,60000,done,0.1 MB
+GEO,GSE269379,GSM8968967,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8968nnn/GSM8968967/suppl/GSM8968967_barcodes.tsv.gz,matrix,tsv.gz,1500000,done,1.5 MB
+GEO,GSE269379,GSM8968967,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8968nnn/GSM8968967/suppl/GSM8968967_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE269379,GSM8968967,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8968nnn/GSM8968967/suppl/GSM8968967_matrix.mtx.gz,matrix,mtx.gz,62000000,done,65.3 MB
+GEO,GSE269379,GSM8968967,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8968nnn/GSM8968967/suppl/GSM8968967_scalefactors_json.json.gz,coords,json.gz,224,done,0.0 MB
+GEO,GSE269379,GSM8968967,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8968nnn/GSM8968967/suppl/GSM8968967_tissue_positions.parquet.gz,coords,parquet.gz,10000000,done,11.0 MB
 GEO,GSE331133,GSM9739520,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9739nnn/GSM9739520/suppl/GSM9739520_POP7-2_EmptyDrops_CR_matrix.tar.gz#tarmember=./features.tsv.gz,matrix,gz,156435,done,from bundle GSM9739520_POP7-2_EmptyDrops_CR_matrix.tar.gz
 GEO,GSE331133,GSM9739520,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9739nnn/GSM9739520/suppl/GSM9739520_POP7-2_EmptyDrops_CR_matrix.tar.gz#tarmember=./matrix.mtx.gz,matrix,gz,54342817,done,from bundle GSM9739520_POP7-2_EmptyDrops_CR_matrix.tar.gz
 GEO,GSE331133,GSM9739520,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9739nnn/GSM9739520/suppl/GSM9739520_POP7-2_EmptyDrops_CR_matrix.tar.gz#tarmember=./barcodes.tsv.gz,matrix,gz,531759,done,from bundle GSM9739520_POP7-2_EmptyDrops_CR_matrix.tar.gz
@@ -7210,180 +7210,180 @@ GEO,GSE293199,GSM8878529,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8878nnn/GSM
 GEO,GSE331133,GSM9739528,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9739nnn/GSM9739528/suppl/GSM9739528_E2_6_EmptyDrops_CR_matrix.tar.gz#tarmember=./matrix.mtx.gz,matrix,gz,44124534,done,from bundle GSM9739528_E2_6_EmptyDrops_CR_matrix.tar.gz
 GEO,GSE331133,GSM9739528,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9739nnn/GSM9739528/suppl/GSM9739528_E2_6_EmptyDrops_CR_matrix.tar.gz#tarmember=./barcodes.tsv.gz,matrix,gz,547356,done,from bundle GSM9739528_E2_6_EmptyDrops_CR_matrix.tar.gz
 NanoString,nanostring.com/products/cosmx-spatial-molecular-imager/ffpe-dataset/nsclc-ffpe-dataset,Lung5_Rep1,https://nanostring-public-share.s3.us-west-2.amazonaws.com/SMI-Compressed/Lung5_Rep1/Lung5_Rep1+SMI+Flat+data.tar.gz#tarmember=Lung5_Rep1/Lung5_Rep1-Flat_files_and_images/Lung5_Rep1_exprMat_file.csv,matrix,csv,197855902,done,from bundle Lung5_Rep1+SMI+Flat+data.tar.gz
-GEO,GSE252228,GSM7997851,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997851/suppl/GSM7997851_MCHTB362_C200_2Ba.h5,matrix,h5,158000000,pending,
+GEO,GSE252228,GSM7997851,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997851/suppl/GSM7997851_MCHTB362_C200_2Ba.h5,matrix,h5,158000000,done,165.6 MB
 GEO,GSE252228,GSM7997851,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997851/suppl/GSM7997851_MCHTB362_C200_2Ba_VROmics.tar.gz,bundle,tar.gz,128000000,deferred,
-GEO,GSE252228,GSM7997848,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997848/suppl/GSM7997848_MCHTB361_C200_1C.h5,matrix,h5,170000000,pending,
+GEO,GSE252228,GSM7997848,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997848/suppl/GSM7997848_MCHTB361_C200_1C.h5,matrix,h5,170000000,done,178.5 MB
 GEO,GSE252228,GSM7997848,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997848/suppl/GSM7997848_MCHTB361_C200_1B_VROmics.tar.gz,bundle,tar.gz,101000000,deferred,
-GEO,GSE252228,GSM7997847,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997847/suppl/GSM7997847_MCHTB361_C200_1B.h5,matrix,h5,138000000,pending,
+GEO,GSE252228,GSM7997847,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997847/suppl/GSM7997847_MCHTB361_C200_1B.h5,matrix,h5,138000000,done,145.0 MB
 GEO,GSE252228,GSM7997847,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997847/suppl/GSM7997847_MCHTB361_C200_1A_VROmics.tar.gz,bundle,tar.gz,75000000,deferred,
-GEO,GSE252228,GSM7997850,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997850/suppl/GSM7997850_MCHTB362_C200_2Ab.h5,matrix,h5,114000000,pending,
+GEO,GSE252228,GSM7997850,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997850/suppl/GSM7997850_MCHTB362_C200_2Ab.h5,matrix,h5,114000000,done,119.8 MB
 GEO,GSE252228,GSM7997850,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997850/suppl/GSM7997850_MCHTB362_C200_2Ab_VROmics.tar.gz,bundle,tar.gz,82000000,deferred,
-GEO,GSE252228,GSM7997853,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997853/suppl/GSM7997853_MCHTB362_C200_2C.h5,matrix,h5,58000000,pending,
+GEO,GSE252228,GSM7997853,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997853/suppl/GSM7997853_MCHTB362_C200_2C.h5,matrix,h5,58000000,done,61.3 MB
 GEO,GSE252228,GSM7997853,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997853/suppl/GSM7997853_MCHTB362_C200_2C_VROmics.tar.gz,bundle,tar.gz,22000000,deferred,
-GEO,GSE252228,GSM7997852,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997852/suppl/GSM7997852_MCHTB362_C200_2Bb.h5,matrix,h5,128000000,pending,
+GEO,GSE252228,GSM7997852,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997852/suppl/GSM7997852_MCHTB362_C200_2Bb.h5,matrix,h5,128000000,done,134.5 MB
 GEO,GSE252228,GSM7997852,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997852/suppl/GSM7997852_MCHTB362_C200_2Bb_VROmics.tar.gz,bundle,tar.gz,96000000,deferred,
-GEO,GSE252228,GSM7997849,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997849/suppl/GSM7997849_MCHTB362_C200_2Aa.h5,matrix,h5,127000000,pending,
+GEO,GSE252228,GSM7997849,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997849/suppl/GSM7997849_MCHTB362_C200_2Aa.h5,matrix,h5,127000000,done,132.7 MB
 GEO,GSE252228,GSM7997849,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997849/suppl/GSM7997849_MCHTB362_C200_2Aa_VROmics.tar.gz,bundle,tar.gz,92000000,deferred,
-GEO,GSE252228,GSM7997846,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997846/suppl/GSM7997846_MCHTB302_C200_1A.h5,matrix,h5,114000000,pending,
+GEO,GSE252228,GSM7997846,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997846/suppl/GSM7997846_MCHTB302_C200_1A.h5,matrix,h5,114000000,done,119.4 MB
 GEO,GSE252228,GSM7997846,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997846/suppl/GSM7997846_MCHTB302_C200_1_VROmics.tar.gz,bundle,tar.gz,43000000,deferred,
-GEO,GSE252228,GSM7997843,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997843/suppl/GSM7997843_MCHTB361_C200_1.h5,matrix,h5,82000000,pending,
+GEO,GSE252228,GSM7997843,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997843/suppl/GSM7997843_MCHTB361_C200_1.h5,matrix,h5,82000000,done,86.3 MB
 GEO,GSE252228,GSM7997843,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7997nnn/GSM7997843/suppl/GSM7997843_MCHTB361_C200_1C_VROmics.tar.gz,bundle,tar.gz,137000000,deferred,
 GEO,GSE252228,GSE252228,https://ftp.ncbi.nlm.nih.gov/geo/series/GSE252nnn/GSE252228/suppl/GSE252228_MCHTB302_Joint_Clustering_VROmics.tar.gz,bundle,tar.gz,292000000,deferred,
-GEO,GSE296626,GSM8973775,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973775/suppl/GSM8973775_HPAP149_pLN_barcodes.tsv.gz,matrix,tsv.gz,12000,pending,
-GEO,GSE296626,GSM8973775,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973775/suppl/GSM8973775_HPAP149_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973775,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973775/suppl/GSM8973775_HPAP149_pLN_matrix.mtx.gz,matrix,mtx.gz,17000000,pending,
-GEO,GSE296626,GSM8973775,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973775/suppl/GSM8973775_HPAP149_pLN_scalefactors_json.json.gz,coords,json.gz,198,pending,
-GEO,GSE296626,GSM8973775,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973775/suppl/GSM8973775_HPAP149_pLN_tissue_positions.csv.gz,coords,csv.gz,61000,pending,
-GEO,GSE296626,GSM8973755,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973755/suppl/GSM8973755_HPAP016_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,34000,pending,
-GEO,GSE296626,GSM8973755,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973755/suppl/GSM8973755_HPAP016_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973755,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973755/suppl/GSM8973755_HPAP016_Pancreas_matrix.mtx.gz,matrix,mtx.gz,80000000,pending,
-GEO,GSE296626,GSM8973755,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973755/suppl/GSM8973755_HPAP016_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,pending,
-GEO,GSE296626,GSM8973755,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973755/suppl/GSM8973755_HPAP016_Pancreas_tissue_positions.csv.gz,coords,csv.gz,146000,pending,
-GEO,GSE296626,GSM8973772,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973772/suppl/GSM8973772_HPAP043_pLN_barcodes.tsv.gz,matrix,tsv.gz,11000,pending,
-GEO,GSE296626,GSM8973772,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973772/suppl/GSM8973772_HPAP043_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973772,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973772/suppl/GSM8973772_HPAP043_pLN_matrix.mtx.gz,matrix,mtx.gz,11000000,pending,
-GEO,GSE296626,GSM8973772,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973772/suppl/GSM8973772_HPAP043_pLN_scalefactors_json.json.gz,coords,json.gz,194,pending,
-GEO,GSE296626,GSM8973772,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973772/suppl/GSM8973772_HPAP043_pLN_tissue_positions.csv.gz,coords,csv.gz,63000,pending,
-GEO,GSE296626,GSM8973752,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973752/suppl/GSM8973752_HPAP043_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,35000,pending,
-GEO,GSE296626,GSM8973752,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973752/suppl/GSM8973752_HPAP043_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973752,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973752/suppl/GSM8973752_HPAP043_Pancreas_matrix.mtx.gz,matrix,mtx.gz,70000000,pending,
-GEO,GSE296626,GSM8973752,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973752/suppl/GSM8973752_HPAP043_Pancreas_scalefactors_json.json.gz,coords,json.gz,202,pending,
-GEO,GSE296626,GSM8973752,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973752/suppl/GSM8973752_HPAP043_Pancreas_tissue_positions.csv.gz,coords,csv.gz,187000,pending,
-GEO,GSE296626,GSM8973758,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973758/suppl/GSM8973758_HPAP032_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,7300,pending,
-GEO,GSE296626,GSM8973758,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973758/suppl/GSM8973758_HPAP032_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973758,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973758/suppl/GSM8973758_HPAP032_Pancreas_matrix.mtx.gz,matrix,mtx.gz,19000000,pending,
-GEO,GSE296626,GSM8973758,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973758/suppl/GSM8973758_HPAP032_Pancreas_scalefactors_json.json.gz,coords,json.gz,201,pending,
-GEO,GSE296626,GSM8973758,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973758/suppl/GSM8973758_HPAP032_Pancreas_tissue_positions.csv.gz,coords,csv.gz,154000,pending,
-GEO,GSE296626,GSM8973764,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973764/suppl/GSM8973764_HPAP012_pLN_barcodes.tsv.gz,matrix,tsv.gz,7900,pending,
-GEO,GSE296626,GSM8973764,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973764/suppl/GSM8973764_HPAP012_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973764,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973764/suppl/GSM8973764_HPAP012_pLN_matrix.mtx.gz,matrix,mtx.gz,21000000,pending,
-GEO,GSE296626,GSM8973764,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973764/suppl/GSM8973764_HPAP012_pLN_scalefactors_json.json.gz,coords,json.gz,194,pending,
-GEO,GSE296626,GSM8973764,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973764/suppl/GSM8973764_HPAP012_pLN_tissue_positions.csv.gz,coords,csv.gz,65000,pending,
-GEO,GSE296626,GSM8973778,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973778/suppl/GSM8973778_HPAP102_pLN_barcodes.tsv.gz,matrix,tsv.gz,8600,pending,
-GEO,GSE296626,GSM8973778,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973778/suppl/GSM8973778_HPAP102_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973778,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973778/suppl/GSM8973778_HPAP102_pLN_matrix.mtx.gz,matrix,mtx.gz,19000000,pending,
-GEO,GSE296626,GSM8973778,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973778/suppl/GSM8973778_HPAP102_pLN_scalefactors_json.json.gz,coords,json.gz,197,pending,
-GEO,GSE296626,GSM8973778,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973778/suppl/GSM8973778_HPAP102_pLN_tissue_positions_list.csv.gz,coords,csv.gz,61000,pending,
-GEO,GSE296626,GSM8973750,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973750/suppl/GSM8973750_HPAP072_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,50000,pending,
-GEO,GSE296626,GSM8973750,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973750/suppl/GSM8973750_HPAP072_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973750,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973750/suppl/GSM8973750_HPAP072_Pancreas_matrix.mtx.gz,matrix,mtx.gz,175000000,pending,
-GEO,GSE296626,GSM8973750,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973750/suppl/GSM8973750_HPAP072_Pancreas_scalefactors_json.json.gz,coords,json.gz,201,pending,
-GEO,GSE296626,GSM8973750,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973750/suppl/GSM8973750_HPAP072_Pancreas_tissue_positions.csv.gz,coords,csv.gz,172000,pending,
-GEO,GSE296626,GSM8973761,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973761/suppl/GSM8973761_HPAP102_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,28000,pending,
-GEO,GSE296626,GSM8973761,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973761/suppl/GSM8973761_HPAP102_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973761,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973761/suppl/GSM8973761_HPAP102_Pancreas_matrix.mtx.gz,matrix,mtx.gz,65000000,pending,
-GEO,GSE296626,GSM8973761,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973761/suppl/GSM8973761_HPAP102_Pancreas_scalefactors_json.json.gz,coords,json.gz,197,pending,
-GEO,GSE296626,GSM8973761,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973761/suppl/GSM8973761_HPAP102_Pancreas_tissue_positions.csv.gz,coords,csv.gz,172000,pending,
-GEO,GSE296626,GSM8973747,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973747/suppl/GSM8973747_HPAP095_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,29000,pending,
-GEO,GSE296626,GSM8973747,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973747/suppl/GSM8973747_HPAP095_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973747,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973747/suppl/GSM8973747_HPAP095_Pancreas_matrix.mtx.gz,matrix,mtx.gz,52000000,pending,
-GEO,GSE296626,GSM8973747,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973747/suppl/GSM8973747_HPAP095_Pancreas_scalefactors_json.json.gz,coords,json.gz,201,pending,
-GEO,GSE296626,GSM8973747,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973747/suppl/GSM8973747_HPAP095_Pancreas_tissue_positions.csv.gz,coords,csv.gz,154000,pending,
-GEO,GSE296626,GSM8973767,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973767/suppl/GSM8973767_HPAP095_pLN_barcodes.tsv.gz,matrix,tsv.gz,8600,pending,
-GEO,GSE296626,GSM8973767,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973767/suppl/GSM8973767_HPAP095_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973767,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973767/suppl/GSM8973767_HPAP095_pLN_matrix.mtx.gz,matrix,mtx.gz,28000000,pending,
-GEO,GSE296626,GSM8973767,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973767/suppl/GSM8973767_HPAP095_pLN_scalefactors_json.json.gz,coords,json.gz,196,pending,
-GEO,GSE296626,GSM8973767,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973767/suppl/GSM8973767_HPAP095_pLN_tissue_positions.csv.gz,coords,csv.gz,57000,pending,
-GEO,GSE296626,GSM8973744,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973744/suppl/GSM8973744_HPAP012_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,50000,pending,
-GEO,GSE296626,GSM8973744,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973744/suppl/GSM8973744_HPAP012_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973744,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973744/suppl/GSM8973744_HPAP012_Pancreas_matrix.mtx.gz,matrix,mtx.gz,164000000,pending,
-GEO,GSE296626,GSM8973744,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973744/suppl/GSM8973744_HPAP012_Pancreas_scalefactors_json.json.gz,coords,json.gz,203,pending,
-GEO,GSE296626,GSM8973744,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973744/suppl/GSM8973744_HPAP012_Pancreas_tissue_positions.csv.gz,coords,csv.gz,154000,pending,
-GEO,GSE296626,GSM8973759,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973759/suppl/GSM8973759_HPAP071_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,26000,pending,
-GEO,GSE296626,GSM8973759,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973759/suppl/GSM8973759_HPAP071_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973759,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973759/suppl/GSM8973759_HPAP071_Pancreas_matrix.mtx.gz,matrix,mtx.gz,50000000,pending,
-GEO,GSE296626,GSM8973759,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973759/suppl/GSM8973759_HPAP071_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,pending,
-GEO,GSE296626,GSM8973759,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973759/suppl/GSM8973759_HPAP071_Pancreas_tissue_positions.csv.gz,coords,csv.gz,156000,pending,
-GEO,GSE296626,GSM8973776,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973776/suppl/GSM8973776_HPAP032_pLN_barcodes.tsv.gz,matrix,tsv.gz,3500,pending,
-GEO,GSE296626,GSM8973776,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973776/suppl/GSM8973776_HPAP032_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973776,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973776/suppl/GSM8973776_HPAP032_pLN_matrix.mtx.gz,matrix,mtx.gz,11000000,pending,
-GEO,GSE296626,GSM8973776,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973776/suppl/GSM8973776_HPAP032_pLN_scalefactors_json.json.gz,coords,json.gz,194,pending,
-GEO,GSE296626,GSM8973776,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973776/suppl/GSM8973776_HPAP032_pLN_tissue_positions.csv.gz,coords,csv.gz,62000,pending,
-GEO,GSE296626,GSM8973756,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973756/suppl/GSM8973756_HPAP020_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,8900,pending,
-GEO,GSE296626,GSM8973756,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973756/suppl/GSM8973756_HPAP020_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973756,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973756/suppl/GSM8973756_HPAP020_Pancreas_matrix.mtx.gz,matrix,mtx.gz,29000000,pending,
-GEO,GSE296626,GSM8973756,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973756/suppl/GSM8973756_HPAP020_Pancreas_scalefactors_json.json.gz,coords,json.gz,199,pending,
-GEO,GSE296626,GSM8973756,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973756/suppl/GSM8973756_HPAP020_Pancreas_tissue_positions.csv.gz,coords,csv.gz,159000,pending,
-GEO,GSE296626,GSM8973770,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973770/suppl/GSM8973770_HPAP072_pLN_barcodes.tsv.gz,matrix,tsv.gz,6100,pending,
-GEO,GSE296626,GSM8973770,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973770/suppl/GSM8973770_HPAP072_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973770,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973770/suppl/GSM8973770_HPAP072_pLN_matrix.mtx.gz,matrix,mtx.gz,33000000,pending,
-GEO,GSE296626,GSM8973770,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973770/suppl/GSM8973770_HPAP072_pLN_scalefactors_json.json.gz,coords,json.gz,191,pending,
-GEO,GSE296626,GSM8973770,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973770/suppl/GSM8973770_HPAP072_pLN_tissue_positions.csv.gz,coords,csv.gz,63000,pending,
-GEO,GSE296626,GSM8973773,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973773/suppl/GSM8973773_HPAP148_pLN_barcodes.tsv.gz,matrix,tsv.gz,20000,pending,
-GEO,GSE296626,GSM8973773,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973773/suppl/GSM8973773_HPAP148_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973773,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973773/suppl/GSM8973773_HPAP148_pLN_matrix.mtx.gz,matrix,mtx.gz,20000000,pending,
-GEO,GSE296626,GSM8973773,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973773/suppl/GSM8973773_HPAP148_pLN_scalefactors_json.json.gz,coords,json.gz,196,pending,
-GEO,GSE296626,GSM8973773,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973773/suppl/GSM8973773_HPAP148_pLN_tissue_positions.csv.gz,coords,csv.gz,53000,pending,
-GEO,GSE296626,GSM8973753,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973753/suppl/GSM8973753_HPAP148_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,58000,pending,
-GEO,GSE296626,GSM8973753,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973753/suppl/GSM8973753_HPAP148_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973753,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973753/suppl/GSM8973753_HPAP148_Pancreas_matrix.mtx.gz,matrix,mtx.gz,123000000,pending,
-GEO,GSE296626,GSM8973753,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973753/suppl/GSM8973753_HPAP148_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,pending,
-GEO,GSE296626,GSM8973753,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973753/suppl/GSM8973753_HPAP148_Pancreas_tissue_positions.csv.gz,coords,csv.gz,185000,pending,
-GEO,GSE296626,GSM8973779,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973779/suppl/GSM8973779_HPAP048_pLN_barcodes.tsv.gz,matrix,tsv.gz,13000,pending,
-GEO,GSE296626,GSM8973779,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973779/suppl/GSM8973779_HPAP048_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973779,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973779/suppl/GSM8973779_HPAP048_pLN_matrix.mtx.gz,matrix,mtx.gz,50000000,pending,
-GEO,GSE296626,GSM8973779,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973779/suppl/GSM8973779_HPAP048_pLN_scalefactors_json.json.gz,coords,json.gz,195,pending,
-GEO,GSE296626,GSM8973779,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973779/suppl/GSM8973779_HPAP048_pLN_tissue_positions.csv.gz,coords,csv.gz,60000,pending,
-GEO,GSE296626,GSM8973762,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973762/suppl/GSM8973762_HPAP087_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,19000,pending,
-GEO,GSE296626,GSM8973762,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973762/suppl/GSM8973762_HPAP087_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973762,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973762/suppl/GSM8973762_HPAP087_Pancreas_matrix.mtx.gz,matrix,mtx.gz,44000000,pending,
-GEO,GSE296626,GSM8973762,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973762/suppl/GSM8973762_HPAP087_Pancreas_scalefactors_json.json.gz,coords,json.gz,200,pending,
-GEO,GSE296626,GSM8973762,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973762/suppl/GSM8973762_HPAP087_Pancreas_tissue_positions.csv.gz,coords,csv.gz,158000,pending,
-GEO,GSE296626,GSM8973765,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973765/suppl/GSM8973765_HPAP034_pLN_barcodes.tsv.gz,matrix,tsv.gz,4000,pending,
-GEO,GSE296626,GSM8973765,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973765/suppl/GSM8973765_HPAP034_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973765,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973765/suppl/GSM8973765_HPAP034_pLN_matrix.mtx.gz,matrix,mtx.gz,5100000,pending,
-GEO,GSE296626,GSM8973765,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973765/suppl/GSM8973765_HPAP034_pLN_scalefactors_json.json.gz,coords,json.gz,193,pending,
-GEO,GSE296626,GSM8973765,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973765/suppl/GSM8973765_HPAP034_pLN_tissue_positions.csv.gz,coords,csv.gz,69000,pending,
-GEO,GSE296626,GSM8973745,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973745/suppl/GSM8973745_HPAP034_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,38000,pending,
-GEO,GSE296626,GSM8973745,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973745/suppl/GSM8973745_HPAP034_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973745,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973745/suppl/GSM8973745_HPAP034_Pancreas_matrix.mtx.gz,matrix,mtx.gz,40000000,pending,
-GEO,GSE296626,GSM8973745,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973745/suppl/GSM8973745_HPAP034_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,pending,
-GEO,GSE296626,GSM8973745,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973745/suppl/GSM8973745_HPAP034_Pancreas_tissue_positions.csv.gz,coords,csv.gz,168000,pending,
-GEO,GSE296626,GSM8973768,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973768/suppl/GSM8973768_HPAP110_pLN_barcodes.tsv.gz,matrix,tsv.gz,10000,pending,
-GEO,GSE296626,GSM8973768,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973768/suppl/GSM8973768_HPAP110_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973768,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973768/suppl/GSM8973768_HPAP110_pLN_matrix.mtx.gz,matrix,mtx.gz,21000000,pending,
-GEO,GSE296626,GSM8973768,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973768/suppl/GSM8973768_HPAP110_pLN_scalefactors_json.json.gz,coords,json.gz,191,pending,
-GEO,GSE296626,GSM8973768,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973768/suppl/GSM8973768_HPAP110_pLN_tissue_positions.csv.gz,coords,csv.gz,61000,pending,
-GEO,GSE296626,GSM8973748,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973748/suppl/GSM8973748_HPAP110_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,46000,pending,
-GEO,GSE296626,GSM8973748,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973748/suppl/GSM8973748_HPAP110_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973748,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973748/suppl/GSM8973748_HPAP110_Pancreas_matrix.mtx.gz,matrix,mtx.gz,59000000,pending,
-GEO,GSE296626,GSM8973748,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973748/suppl/GSM8973748_HPAP110_Pancreas_scalefactors_json.json.gz,coords,json.gz,200,pending,
-GEO,GSE296626,GSM8973748,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973748/suppl/GSM8973748_HPAP110_Pancreas_tissue_positions.csv.gz,coords,csv.gz,174000,pending,
-GEO,GSE296626,GSM8973774,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973774/suppl/GSM8973774_HPAP020_pLN_barcodes.tsv.gz,matrix,tsv.gz,13000,pending,
-GEO,GSE296626,GSM8973774,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973774/suppl/GSM8973774_HPAP020_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973774,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973774/suppl/GSM8973774_HPAP020_pLN_matrix.mtx.gz,matrix,mtx.gz,14000000,pending,
-GEO,GSE296626,GSM8973774,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973774/suppl/GSM8973774_HPAP020_pLN_scalefactors_json.json.gz,coords,json.gz,192,pending,
-GEO,GSE296626,GSM8973774,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973774/suppl/GSM8973774_HPAP020_pLN_tissue_positions.csv.gz,coords,csv.gz,69000,pending,
-GEO,GSE296626,GSM8973754,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973754/suppl/GSM8973754_HPAP107_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,20000,pending,
-GEO,GSE296626,GSM8973754,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973754/suppl/GSM8973754_HPAP107_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973754,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973754/suppl/GSM8973754_HPAP107_Pancreas_matrix.mtx.gz,matrix,mtx.gz,48000000,pending,
-GEO,GSE296626,GSM8973754,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973754/suppl/GSM8973754_HPAP107_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,pending,
-GEO,GSE296626,GSM8973754,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973754/suppl/GSM8973754_HPAP107_Pancreas_tissue_positions.csv.gz,coords,csv.gz,155000,pending,
-GEO,GSE296626,GSM8973771,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973771/suppl/GSM8973771_HPAP114_pLN_barcodes.tsv.gz,matrix,tsv.gz,5100,pending,
-GEO,GSE296626,GSM8973771,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973771/suppl/GSM8973771_HPAP114_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973771,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973771/suppl/GSM8973771_HPAP114_pLN_matrix.mtx.gz,matrix,mtx.gz,13000000,pending,
-GEO,GSE296626,GSM8973771,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973771/suppl/GSM8973771_HPAP114_pLN_scalefactors_json.json.gz,coords,json.gz,196,pending,
-GEO,GSE296626,GSM8973771,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973771/suppl/GSM8973771_HPAP114_pLN_tissue_positions.csv.gz,coords,csv.gz,65000,pending,
-GEO,GSE296626,GSM8973751,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973751/suppl/GSM8973751_HPAP114_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,28000,pending,
-GEO,GSE296626,GSM8973751,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973751/suppl/GSM8973751_HPAP114_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
+GEO,GSE296626,GSM8973775,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973775/suppl/GSM8973775_HPAP149_pLN_barcodes.tsv.gz,matrix,tsv.gz,12000,done,0.0 MB
+GEO,GSE296626,GSM8973775,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973775/suppl/GSM8973775_HPAP149_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973775,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973775/suppl/GSM8973775_HPAP149_pLN_matrix.mtx.gz,matrix,mtx.gz,17000000,done,18.1 MB
+GEO,GSE296626,GSM8973775,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973775/suppl/GSM8973775_HPAP149_pLN_scalefactors_json.json.gz,coords,json.gz,198,done,0.0 MB
+GEO,GSE296626,GSM8973775,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973775/suppl/GSM8973775_HPAP149_pLN_tissue_positions.csv.gz,coords,csv.gz,61000,done,0.1 MB
+GEO,GSE296626,GSM8973755,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973755/suppl/GSM8973755_HPAP016_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,34000,done,0.0 MB
+GEO,GSE296626,GSM8973755,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973755/suppl/GSM8973755_HPAP016_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973755,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973755/suppl/GSM8973755_HPAP016_Pancreas_matrix.mtx.gz,matrix,mtx.gz,80000000,done,84.4 MB
+GEO,GSE296626,GSM8973755,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973755/suppl/GSM8973755_HPAP016_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,done,0.0 MB
+GEO,GSE296626,GSM8973755,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973755/suppl/GSM8973755_HPAP016_Pancreas_tissue_positions.csv.gz,coords,csv.gz,146000,done,0.1 MB
+GEO,GSE296626,GSM8973772,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973772/suppl/GSM8973772_HPAP043_pLN_barcodes.tsv.gz,matrix,tsv.gz,11000,done,0.0 MB
+GEO,GSE296626,GSM8973772,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973772/suppl/GSM8973772_HPAP043_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973772,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973772/suppl/GSM8973772_HPAP043_pLN_matrix.mtx.gz,matrix,mtx.gz,11000000,done,11.8 MB
+GEO,GSE296626,GSM8973772,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973772/suppl/GSM8973772_HPAP043_pLN_scalefactors_json.json.gz,coords,json.gz,194,done,0.0 MB
+GEO,GSE296626,GSM8973772,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973772/suppl/GSM8973772_HPAP043_pLN_tissue_positions.csv.gz,coords,csv.gz,63000,done,0.1 MB
+GEO,GSE296626,GSM8973752,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973752/suppl/GSM8973752_HPAP043_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,35000,done,0.0 MB
+GEO,GSE296626,GSM8973752,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973752/suppl/GSM8973752_HPAP043_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973752,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973752/suppl/GSM8973752_HPAP043_Pancreas_matrix.mtx.gz,matrix,mtx.gz,70000000,done,73.5 MB
+GEO,GSE296626,GSM8973752,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973752/suppl/GSM8973752_HPAP043_Pancreas_scalefactors_json.json.gz,coords,json.gz,202,done,0.0 MB
+GEO,GSE296626,GSM8973752,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973752/suppl/GSM8973752_HPAP043_Pancreas_tissue_positions.csv.gz,coords,csv.gz,187000,done,0.2 MB
+GEO,GSE296626,GSM8973758,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973758/suppl/GSM8973758_HPAP032_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,7300,done,0.0 MB
+GEO,GSE296626,GSM8973758,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973758/suppl/GSM8973758_HPAP032_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973758,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973758/suppl/GSM8973758_HPAP032_Pancreas_matrix.mtx.gz,matrix,mtx.gz,19000000,done,19.6 MB
+GEO,GSE296626,GSM8973758,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973758/suppl/GSM8973758_HPAP032_Pancreas_scalefactors_json.json.gz,coords,json.gz,201,done,0.0 MB
+GEO,GSE296626,GSM8973758,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973758/suppl/GSM8973758_HPAP032_Pancreas_tissue_positions.csv.gz,coords,csv.gz,154000,done,0.2 MB
+GEO,GSE296626,GSM8973764,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973764/suppl/GSM8973764_HPAP012_pLN_barcodes.tsv.gz,matrix,tsv.gz,7900,done,0.0 MB
+GEO,GSE296626,GSM8973764,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973764/suppl/GSM8973764_HPAP012_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973764,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973764/suppl/GSM8973764_HPAP012_pLN_matrix.mtx.gz,matrix,mtx.gz,21000000,done,22.4 MB
+GEO,GSE296626,GSM8973764,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973764/suppl/GSM8973764_HPAP012_pLN_scalefactors_json.json.gz,coords,json.gz,194,done,0.0 MB
+GEO,GSE296626,GSM8973764,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973764/suppl/GSM8973764_HPAP012_pLN_tissue_positions.csv.gz,coords,csv.gz,65000,done,0.1 MB
+GEO,GSE296626,GSM8973778,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973778/suppl/GSM8973778_HPAP102_pLN_barcodes.tsv.gz,matrix,tsv.gz,8600,done,0.0 MB
+GEO,GSE296626,GSM8973778,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973778/suppl/GSM8973778_HPAP102_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973778,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973778/suppl/GSM8973778_HPAP102_pLN_matrix.mtx.gz,matrix,mtx.gz,19000000,done,20.1 MB
+GEO,GSE296626,GSM8973778,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973778/suppl/GSM8973778_HPAP102_pLN_scalefactors_json.json.gz,coords,json.gz,197,done,0.0 MB
+GEO,GSE296626,GSM8973778,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973778/suppl/GSM8973778_HPAP102_pLN_tissue_positions_list.csv.gz,coords,csv.gz,61000,done,0.1 MB
+GEO,GSE296626,GSM8973750,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973750/suppl/GSM8973750_HPAP072_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,50000,done,0.1 MB
+GEO,GSE296626,GSM8973750,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973750/suppl/GSM8973750_HPAP072_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973750,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973750/suppl/GSM8973750_HPAP072_Pancreas_matrix.mtx.gz,matrix,mtx.gz,175000000,done,183.3 MB
+GEO,GSE296626,GSM8973750,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973750/suppl/GSM8973750_HPAP072_Pancreas_scalefactors_json.json.gz,coords,json.gz,201,done,0.0 MB
+GEO,GSE296626,GSM8973750,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973750/suppl/GSM8973750_HPAP072_Pancreas_tissue_positions.csv.gz,coords,csv.gz,172000,done,0.2 MB
+GEO,GSE296626,GSM8973761,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973761/suppl/GSM8973761_HPAP102_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,28000,done,0.0 MB
+GEO,GSE296626,GSM8973761,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973761/suppl/GSM8973761_HPAP102_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973761,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973761/suppl/GSM8973761_HPAP102_Pancreas_matrix.mtx.gz,matrix,mtx.gz,65000000,done,67.9 MB
+GEO,GSE296626,GSM8973761,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973761/suppl/GSM8973761_HPAP102_Pancreas_scalefactors_json.json.gz,coords,json.gz,197,done,0.0 MB
+GEO,GSE296626,GSM8973761,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973761/suppl/GSM8973761_HPAP102_Pancreas_tissue_positions.csv.gz,coords,csv.gz,172000,done,0.2 MB
+GEO,GSE296626,GSM8973747,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973747/suppl/GSM8973747_HPAP095_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,29000,done,0.0 MB
+GEO,GSE296626,GSM8973747,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973747/suppl/GSM8973747_HPAP095_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973747,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973747/suppl/GSM8973747_HPAP095_Pancreas_matrix.mtx.gz,matrix,mtx.gz,52000000,done,54.5 MB
+GEO,GSE296626,GSM8973747,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973747/suppl/GSM8973747_HPAP095_Pancreas_scalefactors_json.json.gz,coords,json.gz,201,done,0.0 MB
+GEO,GSE296626,GSM8973747,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973747/suppl/GSM8973747_HPAP095_Pancreas_tissue_positions.csv.gz,coords,csv.gz,154000,done,0.2 MB
+GEO,GSE296626,GSM8973767,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973767/suppl/GSM8973767_HPAP095_pLN_barcodes.tsv.gz,matrix,tsv.gz,8600,done,0.0 MB
+GEO,GSE296626,GSM8973767,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973767/suppl/GSM8973767_HPAP095_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973767,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973767/suppl/GSM8973767_HPAP095_pLN_matrix.mtx.gz,matrix,mtx.gz,28000000,done,28.9 MB
+GEO,GSE296626,GSM8973767,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973767/suppl/GSM8973767_HPAP095_pLN_scalefactors_json.json.gz,coords,json.gz,196,done,0.0 MB
+GEO,GSE296626,GSM8973767,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973767/suppl/GSM8973767_HPAP095_pLN_tissue_positions.csv.gz,coords,csv.gz,57000,done,0.1 MB
+GEO,GSE296626,GSM8973744,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973744/suppl/GSM8973744_HPAP012_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,50000,done,0.1 MB
+GEO,GSE296626,GSM8973744,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973744/suppl/GSM8973744_HPAP012_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973744,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973744/suppl/GSM8973744_HPAP012_Pancreas_matrix.mtx.gz,matrix,mtx.gz,164000000,done,171.5 MB
+GEO,GSE296626,GSM8973744,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973744/suppl/GSM8973744_HPAP012_Pancreas_scalefactors_json.json.gz,coords,json.gz,203,done,0.0 MB
+GEO,GSE296626,GSM8973744,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973744/suppl/GSM8973744_HPAP012_Pancreas_tissue_positions.csv.gz,coords,csv.gz,154000,done,0.2 MB
+GEO,GSE296626,GSM8973759,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973759/suppl/GSM8973759_HPAP071_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,26000,done,0.0 MB
+GEO,GSE296626,GSM8973759,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973759/suppl/GSM8973759_HPAP071_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973759,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973759/suppl/GSM8973759_HPAP071_Pancreas_matrix.mtx.gz,matrix,mtx.gz,50000000,done,52.2 MB
+GEO,GSE296626,GSM8973759,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973759/suppl/GSM8973759_HPAP071_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,done,0.0 MB
+GEO,GSE296626,GSM8973759,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973759/suppl/GSM8973759_HPAP071_Pancreas_tissue_positions.csv.gz,coords,csv.gz,156000,done,0.2 MB
+GEO,GSE296626,GSM8973776,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973776/suppl/GSM8973776_HPAP032_pLN_barcodes.tsv.gz,matrix,tsv.gz,3500,done,0.0 MB
+GEO,GSE296626,GSM8973776,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973776/suppl/GSM8973776_HPAP032_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973776,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973776/suppl/GSM8973776_HPAP032_pLN_matrix.mtx.gz,matrix,mtx.gz,11000000,done,11.2 MB
+GEO,GSE296626,GSM8973776,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973776/suppl/GSM8973776_HPAP032_pLN_scalefactors_json.json.gz,coords,json.gz,194,done,0.0 MB
+GEO,GSE296626,GSM8973776,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973776/suppl/GSM8973776_HPAP032_pLN_tissue_positions.csv.gz,coords,csv.gz,62000,done,0.1 MB
+GEO,GSE296626,GSM8973756,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973756/suppl/GSM8973756_HPAP020_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,8900,done,0.0 MB
+GEO,GSE296626,GSM8973756,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973756/suppl/GSM8973756_HPAP020_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973756,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973756/suppl/GSM8973756_HPAP020_Pancreas_matrix.mtx.gz,matrix,mtx.gz,29000000,done,30.4 MB
+GEO,GSE296626,GSM8973756,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973756/suppl/GSM8973756_HPAP020_Pancreas_scalefactors_json.json.gz,coords,json.gz,199,done,0.0 MB
+GEO,GSE296626,GSM8973756,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973756/suppl/GSM8973756_HPAP020_Pancreas_tissue_positions.csv.gz,coords,csv.gz,159000,done,0.2 MB
+GEO,GSE296626,GSM8973770,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973770/suppl/GSM8973770_HPAP072_pLN_barcodes.tsv.gz,matrix,tsv.gz,6100,done,0.0 MB
+GEO,GSE296626,GSM8973770,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973770/suppl/GSM8973770_HPAP072_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973770,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973770/suppl/GSM8973770_HPAP072_pLN_matrix.mtx.gz,matrix,mtx.gz,33000000,done,34.8 MB
+GEO,GSE296626,GSM8973770,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973770/suppl/GSM8973770_HPAP072_pLN_scalefactors_json.json.gz,coords,json.gz,191,done,0.0 MB
+GEO,GSE296626,GSM8973770,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973770/suppl/GSM8973770_HPAP072_pLN_tissue_positions.csv.gz,coords,csv.gz,63000,done,0.1 MB
+GEO,GSE296626,GSM8973773,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973773/suppl/GSM8973773_HPAP148_pLN_barcodes.tsv.gz,matrix,tsv.gz,20000,done,0.0 MB
+GEO,GSE296626,GSM8973773,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973773/suppl/GSM8973773_HPAP148_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973773,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973773/suppl/GSM8973773_HPAP148_pLN_matrix.mtx.gz,matrix,mtx.gz,20000000,done,20.8 MB
+GEO,GSE296626,GSM8973773,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973773/suppl/GSM8973773_HPAP148_pLN_scalefactors_json.json.gz,coords,json.gz,196,done,0.0 MB
+GEO,GSE296626,GSM8973773,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973773/suppl/GSM8973773_HPAP148_pLN_tissue_positions.csv.gz,coords,csv.gz,53000,done,0.1 MB
+GEO,GSE296626,GSM8973753,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973753/suppl/GSM8973753_HPAP148_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,58000,done,0.1 MB
+GEO,GSE296626,GSM8973753,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973753/suppl/GSM8973753_HPAP148_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973753,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973753/suppl/GSM8973753_HPAP148_Pancreas_matrix.mtx.gz,matrix,mtx.gz,123000000,done,128.5 MB
+GEO,GSE296626,GSM8973753,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973753/suppl/GSM8973753_HPAP148_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,done,0.0 MB
+GEO,GSE296626,GSM8973753,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973753/suppl/GSM8973753_HPAP148_Pancreas_tissue_positions.csv.gz,coords,csv.gz,185000,done,0.2 MB
+GEO,GSE296626,GSM8973779,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973779/suppl/GSM8973779_HPAP048_pLN_barcodes.tsv.gz,matrix,tsv.gz,13000,done,0.0 MB
+GEO,GSE296626,GSM8973779,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973779/suppl/GSM8973779_HPAP048_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973779,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973779/suppl/GSM8973779_HPAP048_pLN_matrix.mtx.gz,matrix,mtx.gz,50000000,done,52.8 MB
+GEO,GSE296626,GSM8973779,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973779/suppl/GSM8973779_HPAP048_pLN_scalefactors_json.json.gz,coords,json.gz,195,done,0.0 MB
+GEO,GSE296626,GSM8973779,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973779/suppl/GSM8973779_HPAP048_pLN_tissue_positions.csv.gz,coords,csv.gz,60000,done,0.1 MB
+GEO,GSE296626,GSM8973762,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973762/suppl/GSM8973762_HPAP087_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,19000,done,0.0 MB
+GEO,GSE296626,GSM8973762,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973762/suppl/GSM8973762_HPAP087_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973762,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973762/suppl/GSM8973762_HPAP087_Pancreas_matrix.mtx.gz,matrix,mtx.gz,44000000,done,46.7 MB
+GEO,GSE296626,GSM8973762,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973762/suppl/GSM8973762_HPAP087_Pancreas_scalefactors_json.json.gz,coords,json.gz,200,done,0.0 MB
+GEO,GSE296626,GSM8973762,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973762/suppl/GSM8973762_HPAP087_Pancreas_tissue_positions.csv.gz,coords,csv.gz,158000,done,0.2 MB
+GEO,GSE296626,GSM8973765,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973765/suppl/GSM8973765_HPAP034_pLN_barcodes.tsv.gz,matrix,tsv.gz,4000,done,0.0 MB
+GEO,GSE296626,GSM8973765,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973765/suppl/GSM8973765_HPAP034_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973765,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973765/suppl/GSM8973765_HPAP034_pLN_matrix.mtx.gz,matrix,mtx.gz,5100000,done,5.3 MB
+GEO,GSE296626,GSM8973765,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973765/suppl/GSM8973765_HPAP034_pLN_scalefactors_json.json.gz,coords,json.gz,193,done,0.0 MB
+GEO,GSE296626,GSM8973765,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973765/suppl/GSM8973765_HPAP034_pLN_tissue_positions.csv.gz,coords,csv.gz,69000,done,0.1 MB
+GEO,GSE296626,GSM8973745,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973745/suppl/GSM8973745_HPAP034_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,38000,done,0.0 MB
+GEO,GSE296626,GSM8973745,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973745/suppl/GSM8973745_HPAP034_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973745,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973745/suppl/GSM8973745_HPAP034_Pancreas_matrix.mtx.gz,matrix,mtx.gz,40000000,done,41.8 MB
+GEO,GSE296626,GSM8973745,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973745/suppl/GSM8973745_HPAP034_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,done,0.0 MB
+GEO,GSE296626,GSM8973745,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973745/suppl/GSM8973745_HPAP034_Pancreas_tissue_positions.csv.gz,coords,csv.gz,168000,done,0.2 MB
+GEO,GSE296626,GSM8973768,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973768/suppl/GSM8973768_HPAP110_pLN_barcodes.tsv.gz,matrix,tsv.gz,10000,done,0.0 MB
+GEO,GSE296626,GSM8973768,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973768/suppl/GSM8973768_HPAP110_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973768,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973768/suppl/GSM8973768_HPAP110_pLN_matrix.mtx.gz,matrix,mtx.gz,21000000,done,22.1 MB
+GEO,GSE296626,GSM8973768,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973768/suppl/GSM8973768_HPAP110_pLN_scalefactors_json.json.gz,coords,json.gz,191,done,0.0 MB
+GEO,GSE296626,GSM8973768,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973768/suppl/GSM8973768_HPAP110_pLN_tissue_positions.csv.gz,coords,csv.gz,61000,done,0.1 MB
+GEO,GSE296626,GSM8973748,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973748/suppl/GSM8973748_HPAP110_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,46000,done,0.0 MB
+GEO,GSE296626,GSM8973748,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973748/suppl/GSM8973748_HPAP110_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973748,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973748/suppl/GSM8973748_HPAP110_Pancreas_matrix.mtx.gz,matrix,mtx.gz,59000000,done,61.5 MB
+GEO,GSE296626,GSM8973748,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973748/suppl/GSM8973748_HPAP110_Pancreas_scalefactors_json.json.gz,coords,json.gz,200,done,0.0 MB
+GEO,GSE296626,GSM8973748,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973748/suppl/GSM8973748_HPAP110_Pancreas_tissue_positions.csv.gz,coords,csv.gz,174000,done,0.2 MB
+GEO,GSE296626,GSM8973774,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973774/suppl/GSM8973774_HPAP020_pLN_barcodes.tsv.gz,matrix,tsv.gz,13000,done,0.0 MB
+GEO,GSE296626,GSM8973774,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973774/suppl/GSM8973774_HPAP020_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973774,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973774/suppl/GSM8973774_HPAP020_pLN_matrix.mtx.gz,matrix,mtx.gz,14000000,done,14.6 MB
+GEO,GSE296626,GSM8973774,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973774/suppl/GSM8973774_HPAP020_pLN_scalefactors_json.json.gz,coords,json.gz,192,done,0.0 MB
+GEO,GSE296626,GSM8973774,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973774/suppl/GSM8973774_HPAP020_pLN_tissue_positions.csv.gz,coords,csv.gz,69000,done,0.1 MB
+GEO,GSE296626,GSM8973754,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973754/suppl/GSM8973754_HPAP107_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,20000,done,0.0 MB
+GEO,GSE296626,GSM8973754,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973754/suppl/GSM8973754_HPAP107_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973754,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973754/suppl/GSM8973754_HPAP107_Pancreas_matrix.mtx.gz,matrix,mtx.gz,48000000,done,50.4 MB
+GEO,GSE296626,GSM8973754,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973754/suppl/GSM8973754_HPAP107_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,done,0.0 MB
+GEO,GSE296626,GSM8973754,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973754/suppl/GSM8973754_HPAP107_Pancreas_tissue_positions.csv.gz,coords,csv.gz,155000,done,0.2 MB
+GEO,GSE296626,GSM8973771,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973771/suppl/GSM8973771_HPAP114_pLN_barcodes.tsv.gz,matrix,tsv.gz,5100,done,0.0 MB
+GEO,GSE296626,GSM8973771,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973771/suppl/GSM8973771_HPAP114_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973771,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973771/suppl/GSM8973771_HPAP114_pLN_matrix.mtx.gz,matrix,mtx.gz,13000000,done,13.4 MB
+GEO,GSE296626,GSM8973771,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973771/suppl/GSM8973771_HPAP114_pLN_scalefactors_json.json.gz,coords,json.gz,196,done,0.0 MB
+GEO,GSE296626,GSM8973771,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973771/suppl/GSM8973771_HPAP114_pLN_tissue_positions.csv.gz,coords,csv.gz,65000,done,0.1 MB
+GEO,GSE296626,GSM8973751,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973751/suppl/GSM8973751_HPAP114_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,28000,done,0.0 MB
+GEO,GSE296626,GSM8973751,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973751/suppl/GSM8973751_HPAP114_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
 GEO,GSE296626,GSM8973751,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973751/suppl/GSM8973751_HPAP114_Pancreas_matrix.mtx.gz,matrix,mtx.gz,70000000,pending,
-GEO,GSE296626,GSM8973751,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973751/suppl/GSM8973751_HPAP114_Pancreas_scalefactors_json.json.gz,coords,json.gz,200,pending,
-GEO,GSE296626,GSM8973751,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973751/suppl/GSM8973751_HPAP114_Pancreas_tissue_positions.csv.gz,coords,csv.gz,175000,pending,
-GEO,GSE296626,GSM8973760,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973760/suppl/GSM8973760_HPAP123_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,26000,pending,
-GEO,GSE296626,GSM8973760,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973760/suppl/GSM8973760_HPAP123_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973760,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973760/suppl/GSM8973760_HPAP123_Pancreas_matrix.mtx.gz,matrix,mtx.gz,50000000,pending,
-GEO,GSE296626,GSM8973760,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973760/suppl/GSM8973760_HPAP123_Pancreas_scalefactors_json.json.gz,coords,json.gz,202,pending,
-GEO,GSE296626,GSM8973760,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973760/suppl/GSM8973760_HPAP123_Pancreas_tissue_positions.csv.gz,coords,csv.gz,170000,pending,
-GEO,GSE296626,GSM8973749,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973749/suppl/GSM8973749_HPAP019_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,30000,pending,
-GEO,GSE296626,GSM8973749,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973749/suppl/GSM8973749_HPAP019_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
-GEO,GSE296626,GSM8973749,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973749/suppl/GSM8973749_HPAP019_Pancreas_matrix.mtx.gz,matrix,mtx.gz,71000000,pending,
-GEO,GSE296626,GSM8973749,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973749/suppl/GSM8973749_HPAP019_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,pending,
-GEO,GSE296626,GSM8973749,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973749/suppl/GSM8973749_HPAP019_Pancreas_tissue_positions_list.csv.gz,coords,csv.gz,157000,pending,
-GEO,GSE296626,GSM8973777,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973777/suppl/GSM8973777_HPAP123_pLN_barcodes.tsv.gz,matrix,tsv.gz,14000,pending,
-GEO,GSE296626,GSM8973777,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973777/suppl/GSM8973777_HPAP123_pLN_features.tsv.gz,matrix,tsv.gz,153000,pending,
+GEO,GSE296626,GSM8973751,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973751/suppl/GSM8973751_HPAP114_Pancreas_scalefactors_json.json.gz,coords,json.gz,200,done,0.0 MB
+GEO,GSE296626,GSM8973751,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973751/suppl/GSM8973751_HPAP114_Pancreas_tissue_positions.csv.gz,coords,csv.gz,175000,done,0.2 MB
+GEO,GSE296626,GSM8973760,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973760/suppl/GSM8973760_HPAP123_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,26000,done,0.0 MB
+GEO,GSE296626,GSM8973760,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973760/suppl/GSM8973760_HPAP123_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973760,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973760/suppl/GSM8973760_HPAP123_Pancreas_matrix.mtx.gz,matrix,mtx.gz,50000000,done,52.0 MB
+GEO,GSE296626,GSM8973760,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973760/suppl/GSM8973760_HPAP123_Pancreas_scalefactors_json.json.gz,coords,json.gz,202,done,0.0 MB
+GEO,GSE296626,GSM8973760,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973760/suppl/GSM8973760_HPAP123_Pancreas_tissue_positions.csv.gz,coords,csv.gz,170000,done,0.2 MB
+GEO,GSE296626,GSM8973749,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973749/suppl/GSM8973749_HPAP019_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,30000,done,0.0 MB
+GEO,GSE296626,GSM8973749,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973749/suppl/GSM8973749_HPAP019_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
+GEO,GSE296626,GSM8973749,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973749/suppl/GSM8973749_HPAP019_Pancreas_matrix.mtx.gz,matrix,mtx.gz,71000000,done,74.1 MB
+GEO,GSE296626,GSM8973749,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973749/suppl/GSM8973749_HPAP019_Pancreas_scalefactors_json.json.gz,coords,json.gz,198,done,0.0 MB
+GEO,GSE296626,GSM8973749,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973749/suppl/GSM8973749_HPAP019_Pancreas_tissue_positions_list.csv.gz,coords,csv.gz,157000,done,0.2 MB
+GEO,GSE296626,GSM8973777,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973777/suppl/GSM8973777_HPAP123_pLN_barcodes.tsv.gz,matrix,tsv.gz,14000,done,0.0 MB
+GEO,GSE296626,GSM8973777,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973777/suppl/GSM8973777_HPAP123_pLN_features.tsv.gz,matrix,tsv.gz,153000,done,0.2 MB
 GEO,GSE296626,GSM8973777,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973777/suppl/GSM8973777_HPAP123_pLN_matrix.mtx.gz,matrix,mtx.gz,55000000,pending,
-GEO,GSE296626,GSM8973777,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973777/suppl/GSM8973777_HPAP123_pLN_scalefactors_json.json.gz,coords,json.gz,196,pending,
-GEO,GSE296626,GSM8973777,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973777/suppl/GSM8973777_HPAP123_pLN_tissue_positions.csv.gz,coords,csv.gz,62000,pending,
+GEO,GSE296626,GSM8973777,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973777/suppl/GSM8973777_HPAP123_pLN_scalefactors_json.json.gz,coords,json.gz,196,done,0.0 MB
+GEO,GSE296626,GSM8973777,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973777/suppl/GSM8973777_HPAP123_pLN_tissue_positions.csv.gz,coords,csv.gz,62000,done,0.1 MB
 GEO,GSE296626,GSM8973757,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973757/suppl/GSM8973757_HPAP149_Pancreas_barcodes.tsv.gz,matrix,tsv.gz,25000,pending,
 GEO,GSE296626,GSM8973757,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973757/suppl/GSM8973757_HPAP149_Pancreas_features.tsv.gz,matrix,tsv.gz,153000,pending,
 GEO,GSE296626,GSM8973757,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8973nnn/GSM8973757/suppl/GSM8973757_HPAP149_Pancreas_matrix.mtx.gz,matrix,mtx.gz,58000000,pending,
@@ -15543,3 +15543,48 @@ GEO,GSE301280,GSM9079623,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9079nnn/GSM
 GEO,GSE301280,GSM9079623,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9079nnn/GSM9079623/suppl/GSM9079623_11629-JD-1_C2_Pustule_cells.parquet.gz,coords,parquet.gz,394000,pending,
 GEO,GSE301280,GSM9079620,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9079nnn/GSM9079620/suppl/GSM9079620_11629-JD-1_B3_Pustule_cell_feature_matrix.h5,matrix,h5,832000,pending,
 GEO,GSE301280,GSM9079620,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9079nnn/GSM9079620/suppl/GSM9079620_11629-JD-1_B3_Pustule_cells.parquet.gz,coords,parquet.gz,771000,pending,
+GEO,GSE297091,GSM8983566,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983566/suppl/GSM8983566_Skin_exprMat_file.csv.gz,matrix,csv.gz,4700000,pending,
+GEO,GSE297091,GSM8983566,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983566/suppl/GSM8983566_Skin_metadata_file.csv.gz,coords,csv.gz,3000000,pending,
+GEO,GSE297091,GSM8983566,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8983nnn/GSM8983566/suppl/GSM8983566_Skin_fov_positions_file.csv.gz,coords,csv.gz,361,pending,
+GEO,GSE308699,GSM9251665,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9251nnn/GSM9251665/suppl/GSM9251665_pt3_pre_processed_data.zip,bundle,zip,1500000,pending,
+GEO,GSE308699,GSM9251662,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9251nnn/GSM9251662/suppl/GSM9251662_pt1_post_processed_data.zip,bundle,zip,4700000,pending,
+GEO,GSE308699,GSM9251663,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9251nnn/GSM9251663/suppl/GSM9251663_pt2_pre_processed_data.zip,bundle,zip,1100000,pending,
+GEO,GSE308699,GSM9251666,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9251nnn/GSM9251666/suppl/GSM9251666_pt3_post_processed_data.zip,bundle,zip,1700000,pending,
+GEO,GSE308699,GSM9251664,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9251nnn/GSM9251664/suppl/GSM9251664_pt2_post_processed_data.zip,bundle,zip,9900000,pending,
+GEO,GSE308699,GSM9251661,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM9251nnn/GSM9251661/suppl/GSM9251661_pt1_pre_processed_data.zip,bundle,zip,4200000,pending,
+GEO,GSE294466,GSM8907631,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907631/suppl/GSM8907631_output-XETG00050__0014474__Region_3__20231212__144750.zip,bundle,zip,3900000000,pending,
+GEO,GSE294466,GSM8907611,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907611/suppl/GSM8907611_output-XETG00050__0003341__P3_D__20230817__135943.zip,bundle,zip,4300000000,pending,
+GEO,GSE294466,GSM8907614,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907614/suppl/GSM8907614_output-XETG00050__0003370__P4_D__20230808__140759.zip,bundle,zip,6000000000,pending,
+GEO,GSE294466,GSM8907608,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907608/suppl/GSM8907608_output-XETG00050__0003496__P2_H__20230808__140759.zip,bundle,zip,3600000000,pending,
+GEO,GSE294466,GSM8907623,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907623/suppl/GSM8907623_output-XETG00050__0014483__Region_3__20231212__144750.zip,bundle,zip,4200000000,pending,
+GEO,GSE294466,GSM8907617,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907617/suppl/GSM8907617_output-XETG00050__0003341__P4_H__20230817__135943.zip,bundle,zip,2800000000,pending,
+GEO,GSE294466,GSM8907620,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907620/suppl/GSM8907620_output-XETG00050__0010655__Region_2__20231207__114925.zip,bundle,zip,6400000000,pending,
+GEO,GSE294466,GSM8907603,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907603/suppl/GSM8907603_output-XETG00050__0003602__P1_D__20230817__135943.zip,bundle,zip,3200000000,pending,
+GEO,GSE294466,GSM8907606,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907606/suppl/GSM8907606_output-XETG00050__0003496__P2_D__20230808__140759.zip,bundle,zip,5800000000,pending,
+GEO,GSE294466,GSM8907609,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907609/suppl/GSM8907609_output-XETG00050__0003602__P2_H__20230817__135943.zip,bundle,zip,3500000000,pending,
+GEO,GSE294466,GSM8907612,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907612/suppl/GSM8907612_output-XETG00050__0003370__P3_H__20230808__140759.zip,bundle,zip,3000000000,pending,
+GEO,GSE294466,GSM8907626,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907626/suppl/GSM8907626_output-XETG00050__0010643__Region_1__20231207__114925.zip,bundle,zip,8300000000,pending,
+GEO,GSE294466,GSM8907615,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907615/suppl/GSM8907615_output-XETG00050__0003341__P4_D__20230817__135943.zip,bundle,zip,5900000000,pending,
+GEO,GSE294466,GSM8907629,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907629/suppl/GSM8907629_output-XETG00050__0014474__Region_2__20231212__144750.zip,bundle,zip,5700000000,pending,
+GEO,GSE294466,GSM8907632,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907632/suppl/GSM8907632_output-XETG00050__0010643__Region_4__20231207__114925.zip,bundle,zip,9400000000,pending,
+GEO,GSE294466,GSM8907618,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907618/suppl/GSM8907618_output-XETG00050__0010655__Region_1__20231207__114925.zip,bundle,zip,5600000000,pending,
+GEO,GSE294466,GSM8907621,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907621/suppl/GSM8907621_output-XETG00050__0014483__Region_2__20231212__144750.zip,bundle,zip,6100000000,pending,
+GEO,GSE294466,GSM8907624,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907624/suppl/GSM8907624_output-XETG00050__0010655__Region_4__20231207__114925.zip,bundle,zip,7000000000,pending,
+GEO,GSE294466,GSM8907604,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907604/suppl/GSM8907604_output-XETG00050__0003496__P1_H__20230808__140759.zip,bundle,zip,1900000000,pending,
+GEO,GSE294466,GSM8907630,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907630/suppl/GSM8907630_output-XETG00050__0010643__Region_3__20231207__114925.zip,bundle,zip,3800000000,pending,
+GEO,GSE294466,GSM8907633,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907633/suppl/GSM8907633_output-XETG00050__0014474__Region_4__20231212__144750.zip,bundle,zip,9200000000,pending,
+GEO,GSE294466,GSM8907607,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907607/suppl/GSM8907607_output-XETG00050__0003602__P2_D__20230817__135943.zip,bundle,zip,5800000000,pending,
+GEO,GSE294466,GSM8907616,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907616/suppl/GSM8907616_output-XETG00050__0003370__P4_H__20230808__140759.zip,bundle,zip,2800000000,pending,
+GEO,GSE294466,GSM8907610,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907610/suppl/GSM8907610_output-XETG00050__0003370__P3_D__20230808__140759.zip,bundle,zip,4600000000,pending,
+GEO,GSE294466,GSM8907627,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907627/suppl/GSM8907627_output-XETG00050__0014474__Region_1__20231212__144750.zip,bundle,zip,7900000000,pending,
+GEO,GSE294466,GSM8907619,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907619/suppl/GSM8907619_output-XETG00050__0014483__Region_1__20231212__144750.zip,bundle,zip,5800000000,pending,
+GEO,GSE294466,GSM8907613,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907613/suppl/GSM8907613_output-XETG00050__0003341__P3_H__20230817__135943.zip,bundle,zip,2900000000,pending,
+GEO,GSE294466,GSM8907602,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907602/suppl/GSM8907602_output-XETG00050__0003496__P1_D__20230808__140759.zip,bundle,zip,3500000000,pending,
+GEO,GSE294466,GSM8907622,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907622/suppl/GSM8907622_output-XETG00050__0010655__Region_3__20231207__114925.zip,bundle,zip,4300000000,pending,
+GEO,GSE294466,GSM8907605,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907605/suppl/GSM8907605_output-XETG00050__0003602__P1_H__20230817__135943.zip,bundle,zip,1900000000,pending,
+GEO,GSE294466,GSM8907628,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907628/suppl/GSM8907628_output-XETG00050__0010643__Region_2__20231207__114925.zip,bundle,zip,5800000000,pending,
+GEO,GSE294466,GSM8907625,https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8907nnn/GSM8907625/suppl/GSM8907625_output-XETG00050__0014483__Region_4__20231212__144750.zip,bundle,zip,6700000000,pending,
+GEO,GSE276083,GSE276083,https://ftp.ncbi.nlm.nih.gov/geo/series/GSE276nnn/GSE276083/suppl/GSE276083_CosMx_raw_counts.csv.gz,matrix,csv.gz,27000000,pending,
+GEO,GSE276083,GSE276083,https://ftp.ncbi.nlm.nih.gov/geo/series/GSE276nnn/GSE276083/suppl/GSE276083_CosMx_spatial_coordinates.csv.gz,coords,csv.gz,1400000,pending,
+GEO,GSE311892,GSE311892_all,https://ftp.ncbi.nlm.nih.gov/geo/series/GSE311nnn/GSE311892/suppl/GSE311892_Raw_counts.txt.gz,matrix,txt.gz,58000000,pending,
+GEO,GSE311892,GSE311892_all,https://ftp.ncbi.nlm.nih.gov/geo/series/GSE311nnn/GSE311892/suppl/GSE311892_CosMx_vHSIL_data.RData.gz,matrix+coords,RData.gz,1300000000,pending,
