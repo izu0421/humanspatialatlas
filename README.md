@@ -1,3 +1,5 @@
+<img src="logo.svg" width="96" align="right" alt="HSA logo">
+
 # HSA — Human Spatial Atlas
 
 A uniformly collected catalogue of public **human** spatially-resolved transcriptomics data

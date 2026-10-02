@@ -2,6 +2,7 @@
 
   python -m hsa.export          -> exports/*.csv, index.html (GitHub Pages)
 """
+import base64
 import json
 import re
 import shutil
@@ -111,10 +112,14 @@ def run():
         "xlsx_by_source": (xc.groupby(["source", "hsa_status"]).size().unstack(fill_value=0)
                            .reset_index().to_dict("records") if len(xc) else []),
     }
-    body = TEMPLATE.read_text().replace("__HSA_DATA__", json.dumps(payload, default=str).replace("</", "<\\/"))
+    from .logo import svg
+    body = (TEMPLATE.read_text().replace("__HSA_LOGO__", svg(inline=True))
+            .replace("__HSA_DATA__", json.dumps(payload, default=str).replace("</", "<\\/")))
+    favicon = "data:image/svg+xml;base64," + base64.b64encode(svg().encode()).decode()
     (DASH / "index.html").write_text(        # standalone page (GitHub Pages / local)
         "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n"
+        f"<link rel=\"icon\" href=\"{favicon}\">\n"
         "<style>*,*::before,*::after{box-sizing:border-box}:root{color-scheme:light;"
         "padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}"
         "body{margin:0;-webkit-font-smoothing:antialiased}img{max-width:100%}[hidden]{display:none!important}</style>\n"

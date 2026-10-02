@@ -27,6 +27,10 @@
 
 body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--f-body); }
 .wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: grid; gap: 22px; }
+.brand { display: flex; gap: 16px; align-items: center; min-width: 0; }
+.brand > div { min-width: 0; }
+.logo { width: 64px; height: 64px; flex: none; }
+@media (max-width: 520px) { .logo { width: 48px; height: 48px; } }
 header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
 h1 { font: 700 clamp(1.6rem, 3.5vw, 2.2rem)/1.1 var(--f-display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
 h1 span { color: var(--accent); }
@@ -91,9 +95,12 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
 
 <div class="wrap">
   <header>
-    <div>
+    <div class="brand">
+      __HSA_LOGO__
+      <div>
       <h1>Human Spatial Atlas <span>HSA</span></h1>
       <div class="sub">Public human spatial transcriptomics datasets, curated by a Claude Sonnet 5.5 agent, with cell/spot-by-gene matrices and spatial coordinates downloaded per sample.</div>
+      </div>
     </div>
     <div class="stamp" id="stamp"></div>
   </header>
