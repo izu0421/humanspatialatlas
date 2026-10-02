@@ -96,4 +96,5 @@ def log_usage(run, u, usd):
 
 
 def total_usd():
-    return query("SELECT COALESCE(SUM(usd),0) AS s FROM usage")[0]["s"]
+    """Agent (curation/scout) spend only; metadata harmonisation ('meta_*' runs) has its own cap."""
+    return query("SELECT COALESCE(SUM(usd),0) AS s FROM usage WHERE run NOT LIKE 'meta_%'")[0]["s"]
