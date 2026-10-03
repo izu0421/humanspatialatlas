@@ -67,6 +67,8 @@ _RULES = [
 
 def classify(name: str) -> str:
     n = name.lower().rsplit("/", 1)[-1]
+    if n.startswith("._"):          # macOS resource-fork junk inside archives
+        return "other"
     if "raw_feature_bc_matrix" in n:
         return "matrix_raw"      # unfiltered 10x - recorded but not preferred
     for role, pat in _RULES:
