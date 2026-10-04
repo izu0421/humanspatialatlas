@@ -13,7 +13,7 @@ MODEL = "claude-sonnet-5-5"
 PRICE = {"in": 2.00, "out": 10.00, "cache_read": 0.20, "cache_write": 2.50}
 
 # download guards
-MAX_FILE_GB = 5.0          # skip single files larger than this
+MAX_FILE_GB = float(os.environ.get("HSA_MAX_FILE_GB", 5.0))   # skip single files larger than this
 MIN_FREE_TB = 1.0          # stop downloading if /data free space drops below this
 HTTP_UA = "HSA-human-spatial-atlas/0.1 (academic; yzy21@cam.ac.uk)"
 

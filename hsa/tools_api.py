@@ -273,9 +273,18 @@ class HttpRangeFile(io.RawIOBase):
         # 10x CDN stalls on range reads near the end of large files; its S3 origin does not
         url = url.replace("https://cf.10xgenomics.com/", "https://s3-us-west-2.amazonaws.com/10x.files/")
         self.url, self.pos = url, 0
+        _throttle(url)
         h = S.head(url, timeout=60, allow_redirects=True)
         self.url = h.url
-        self.size = int(h.headers["Content-Length"])
+        if "Content-Length" not in h.headers:        # some servers omit it on HEAD; ask for one byte
+            g = S.get(self.url, headers={"Range": "bytes=0-0"}, timeout=60, stream=True)
+            cr = g.headers.get("Content-Range", "")
+            g.close()
+            if "/" not in cr:
+                raise IOError("server does not report a size; cannot range-read")
+            self.size = int(cr.rsplit("/", 1)[1])
+        else:
+            self.size = int(h.headers["Content-Length"])
         if h.headers.get("Accept-Ranges", "bytes") == "none":
             raise IOError("server does not support range requests")
 
@@ -298,14 +307,15 @@ class HttpRangeFile(io.RawIOBase):
         if n == 0 or self.pos >= self.size:
             return b""
         end = min(self.pos + n, self.size) - 1
-        for attempt in range(5):
+        for attempt in range(6):
             try:
+                _throttle(self.url)
                 r = S.get(self.url, headers={"Range": f"bytes={self.pos}-{end}"}, timeout=(15, 60))
                 if r.status_code == 206:
                     break
             except requests.RequestException:
                 pass
-            time.sleep(2 ** attempt)
+            time.sleep(min(60, 3 * 2 ** attempt))
         else:
             raise IOError(f"range read failed {r.status_code}")
         self.pos += len(r.content)

@@ -263,6 +263,9 @@ LANES = {
            "'10x Visium', 'Xenium', 'CosMx', 'MERFISH', 'Stereo-seq', 'Slide-seq', 'GeoMx', 'spatially resolved' ...; always "
            "AND \"Homo sapiens\"[Organism]), page through ALL results with retstart, and queue_candidates every human-plausible series.",
     "CELLxGENE": "CZ CELLxGENE Discover - already harvested deterministically; just note_source with its API.",
+    "Mendeley Data / Dryad / OSF / Synapse": "General repositories not covered elsewhere: Mendeley Data (search API https://data.mendeley.com/api/research-data/search?query=...), "
+                                             "Dryad (datadryad.org/api/v2/search?q=...), OSF, Synapse public projects, Harvard Dataverse, Open Science Framework. "
+                                             "Search for Visium / Xenium / CosMx / MERFISH / Stereo-seq / spatial transcriptomics + human.",
     "10x Genomics Datasets": "https://www.10xgenomics.com/datasets - public human Visium/Visium HD/Xenium demo datasets with direct "
                              "download links on cf.10xgenomics.com. Find each human spatial dataset, its output files, and record_dataset.",
     "Zenodo": "Zenodo - zenodo_search for human spatial transcriptomics deposits (Visium, Xenium, CosMx, MERFISH, Stereo-seq, ...). "
@@ -289,9 +292,19 @@ def scout(lane, budget_usd):
     s = Session()
     names = list(TOOL_SPECS)
     tools, funcs = _bind(s, names)
-    user = (f"Scout lane: **{lane}**.\n{LANES[lane]}\n\nFirst note_source for every database you touch (URL, access method, "
-            f"estimated number of human spatial datasets). Be exhaustive within this lane; finish with a short summary of what you "
-            f"found, what you could not access, and why.")
+    user = (f"Scout lane: **{lane}**.\n{LANES[lane]}\n\n"
+            "Goal: find EVERY public human spatial transcriptomics dataset in this lane. HSA already has ~1,700 "
+            "datasets (GEO, CELLxGENE, 10x catalogue) - queueing a duplicate is harmless (ignored).\n"
+            "Rules:\n"
+            "1. note_source first for each database you touch (URL, access method incl. API endpoint, est. # human datasets).\n"
+            "2. Use queue_candidates for every human (or possibly human) spatial dataset you find - do NOT call "
+            "record_dataset; the curator agent inspects each one. Accession conventions: GEO 'GSE…', Zenodo 'zenodo:<id>', "
+            "figshare 'figshare:<id>', Mendeley 'mendeley:<id>', ArrayExpress/BioStudies 'E-MTAB-…'/'S-BSST…', 10x "
+            "'10xgenomics.com/datasets/<slug>', otherwise the landing URL without https://. Put the landing URL in `url`.\n"
+            "3. If a dataset you find points to a GEO/ArrayExpress accession, queue that accession (source GEO / ArrayExpress).\n"
+            "4. Page through search results exhaustively (APIs first; web_search to discover endpoints). Sites that block "
+            "bots: wayback_fetch. Skip mouse-only and non-spatial data.\n"
+            "Finish with a short summary: what you searched, how many you queued, what you could not access and why.")
     final, usage = run_agent(f"scout_{re.sub(r'[^A-Za-z0-9]+', '_', lane)}", MISSION, user, tools, funcs,
                              effort="high", max_turns=150, budget_usd=budget_usd, server_tools=[WEB_SEARCH])
     return final, usage, s.recorded

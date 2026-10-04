@@ -68,10 +68,18 @@ def _one(f):
         return "done", str(dest), f"{dest.stat().st_size/1e6:.1f} MB (zip member)"
     have = part.stat().st_size if part.exists() else 0
     hdr = {"Range": f"bytes={have}-"} if have else {}
-    _throttle(f["url"])
-    with S.get(f["url"], stream=True, timeout=120, headers=hdr) as r:
-        if r.status_code not in (200, 206):
+    for attempt in range(5):
+        _throttle(f["url"])
+        r = S.get(f["url"], stream=True, timeout=120, headers=hdr)
+        if r.status_code in (200, 206):
+            break
+        r.close()
+        if r.status_code not in (429, 500, 502, 503, 504):
             return "failed", None, f"HTTP {r.status_code}"
+        time.sleep(min(60, 5 * 2 ** attempt))
+    else:
+        return "failed", None, f"HTTP {r.status_code} after 5 attempts"
+    with r:
         mode = "ab" if r.status_code == 206 else "wb"
         with open(part, mode) as fh:
             for chunk in r.iter_content(1 << 20):
@@ -133,9 +141,18 @@ def _member_sample(name, default):
     return f"{default}/{parts[0]}" if parts else default
 
 
-def _member_dest(base, name, default):
-    """Keep the member's folder structure so identically named files (one per sample / bin size) never collide."""
-    return base / _safe(_member_sample(name, default)) / "/".join(_safe(p) for p in name.split("/") if p)
+def _archive_stem(url):
+    """Distinguishing part of the archive's own filename (e.g. square_002um_spatial)."""
+    base = url.split(ZIP_SEP)[0].split(TAR_SEP)[0].split("?")[0].rstrip("/").rsplit("/", 1)[-1]
+    stem = re.sub(r"\.(tar\.gz|tar|tgz|zip|gz)$", "", base, flags=re.I)
+    return re.sub(r"^GS[EM]\d+_?", "", stem)
+
+
+def _member_dest(base, name, default, archive_url=""):
+    """Member folder structure AND the archive's own stem, so two archives never write to the same path."""
+    stem = _safe(_archive_stem(archive_url)) if archive_url else ""
+    parts = [_safe(p) for p in name.split("/") if p]
+    return base.joinpath(_safe(_member_sample(name, default)), *([stem] if stem else []), *parts)
 
 
 def _add_member(b, member_url, name, role, path, size):
@@ -170,7 +187,7 @@ def _bundle(b):
     if kind == "zip":
         files = [f for f in zip_list(url)["files"] if f["role"] in GET_ROLES]
         for f in files:
-            dest = _member_dest(base, f["name"], b["sample_id"])
+            dest = _member_dest(base, f["name"], b["sample_id"], url)
             dest.parent.mkdir(parents=True, exist_ok=True)
             if not dest.exists():
                 zip_extract(f["url"], dest)
@@ -196,7 +213,7 @@ def _bundle(b):
                 role = classify(m.name)
                 if role not in GET_ROLES:
                     continue
-                dest = _member_dest(base, m.name, b["sample_id"])
+                dest = _member_dest(base, m.name, b["sample_id"], url)
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 with tf.extractfile(m) as src, open(dest, "wb") as out:
                     shutil.copyfileobj(src, out, 1 << 22)
