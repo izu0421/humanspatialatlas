@@ -164,10 +164,28 @@ def _add_member(b, member_url, name, role, path, size):
 
 
 def _sniff(url):
-    """Archive type from the first bytes (URLs like Zenodo's .../content carry no extension)."""
-    try:
-        head = S.get(url, headers={"Range": "bytes=0-511"}, timeout=60).content
-    except Exception:
+    """Archive type from the first bytes (URLs like Zenodo's .../content carry no extension).
+
+    Only a real 200/206 body is sniffed: a rate-limit or error page is NOT evidence that the target
+    is not an archive, and treating it as such silently discards recoverable data.
+    """
+    head = b""
+    for attempt in range(5):
+        try:
+            _throttle(url)
+            r = S.get(url, headers={"Range": "bytes=0-511"}, timeout=60)
+        except Exception:
+            time.sleep(min(60, 5 * 2 ** attempt))
+            continue
+        if r.status_code in (200, 206):
+            head = r.content
+            break
+        if r.status_code not in (429, 500, 502, 503, 504):
+            return "unknown"                      # genuine client error: leave it alone, don't judge
+        time.sleep(min(60, 5 * 2 ** attempt))
+    else:
+        return "unknown"
+    if not head:
         return "unknown"
     if head[:2] == b"PK":
         return "zip"

@@ -10,3 +10,6 @@ api.txt
 exports_private/
 .dashboard_password
 exports/
+tmp_images/
+visium_hd_cells/
+standard/
