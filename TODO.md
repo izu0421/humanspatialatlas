@@ -56,8 +56,13 @@
       205 genuine HD samples are covered with none excluded.
 - [ ] Wire the resolved technology into `export.py` so the dashboard stops counting 64 Visium and
       33 Xenium samples as Visium HD (~21M units mis-attributed; the cell/bin split also shifts).
-- [ ] Normalise coordinates to microns. The grid gives the scale factor exactly: um per unit =
-      (grid_rows x bin_um) / coordinate extent. 225 samples store pixels, 92 microns.
+- [x] Coordinate scale resolved per sample (`panels.coordinate_scale()`, runs/coordinate_scale.csv).
+      um_per_unit = (grid_rows x bin_um) / coordinate extent. Among the 205 genuine HD samples,
+      187 are in full-resolution pixels (median 0.287 um/unit) and 18 already in microns (median
+      0.95, which is the check that the derivation is sound rather than rescaling noise). The
+      earlier "225 pixels / 92 microns" figure was computed over all 320 labelled samples with an
+      extent heuristic and is superseded.
+- [ ] Apply the scale when materialising, rather than mutating stored files.
 - [ ] Materialise the cohorts as standardised .h5ad. Blocked on disk: /data at 98%, 1.4 TB free,
       full corpus estimated 1-1.5 TB -- plan is the three HD and two large Xenium cohorts only,
       int32 CSR, no dense layers.

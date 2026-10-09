@@ -339,25 +339,32 @@ def _fetch_image(url: str, dest: Path, min_bps: float = 1.5e6, grace_s: float = 
 
 
 def _stardist_params(image_path: Path) -> dict:
-    """Tiling parameters that satisfy StarDist's own constraint for this image.
+    """Tiling parameters that survive StarDist's own grid adjustment.
 
-    stardist.big.cover() asserts `min_overlap + 2*context < block_size <= size`, and bin2cell's
-    defaults (4096/128/128) break it on any image smaller than 4096 px. The gene-expression grid
-    images are exactly that: a 39k-bin sample rasterised at 2 um per pixel is a few hundred pixels
-    across. Scale the block and its margins to the image instead of assuming a whole-slide H&E.
+    stardist.big.cover() asserts `min_overlap + 2*context < block_size <= size`, and
+    predict_instances_big first rounds each of those UP to a multiple of the model's grid (16).
+    So passing block_size = size is not enough: 3350 was promoted to 3360 and then failed the
+    assertion against a 3350 px image. Everything is therefore rounded DOWN to a multiple of 32,
+    which is already grid-divisible and so passes through the adjustment unchanged.
+
+    The gene-expression grid images make this necessary -- a 2 um sample rasterised at 2 um per
+    pixel is 3350 px, below bin2cell's default 4096 block.
     """
     from PIL import Image
     Image.MAX_IMAGE_PIXELS = None
     with Image.open(image_path) as im:
         size = min(im.size)
+    G = 32
     if size >= 4096 + 384:
         return {"block_size": 4096, "min_overlap": 128, "context": 128}
-    block = max(64, size)                       # one block covering the whole image
-    context = max(8, block // 16)
-    overlap = max(0, block // 32)
-    while overlap + 2 * context >= block:        # keep the assertion satisfied
-        context //= 2
-        overlap //= 2
+    block = max(G, (size // G) * G)
+    context = max(G, ((block // 8) // G) * G)
+    overlap = max(G, ((block // 16) // G) * G)
+    while overlap + 2 * context >= block and context > G:
+        context -= G
+        overlap = max(G, overlap - G)
+    if overlap + 2 * context >= block:              # image too small to tile at all
+        raise ValueError(f"image {size}px too small for StarDist tiling")
     return {"block_size": block, "min_overlap": overlap, "context": context}
 
 

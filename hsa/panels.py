@@ -17,6 +17,7 @@ import logging
 import re
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from .config import RUNS
@@ -277,6 +278,37 @@ def grid_geometry(technology: str = "Visium HD") -> pd.DataFrame:
     df = pd.DataFrame(rows)
     df.to_csv(RUNS / "grid_geometry.csv", index=False)
     return df
+
+
+def coordinate_scale(technology: str = "Visium HD") -> pd.DataFrame:
+    """Microns per coordinate unit for every sample, derived from the bin grid.
+
+    225 of 320 Visium HD samples store coordinates in full-resolution image pixels and 92 in
+    microns, at image scales whose pixels-per-micron ranges 0.25-6.17 -- so no single conversion
+    factor works and the depositor's convention cannot be assumed. The grid settles it per sample:
+    a known bin count at a known bin size spans a known physical distance, so
+
+        um_per_unit = (grid_rows * bin_um) / coordinate_extent
+
+    Samples already in microns come out at ~1.0, which is the check that this is right rather than
+    a rescaling of nonsense.
+    """
+    geo = pd.read_csv(RUNS / "grid_geometry.csv")
+    qc = pd.read_csv(RUNS / "sample_qc.csv")
+    key = ["source", "accession", "sample_id"]
+    for d in (geo, qc):
+        d[key] = d[key].astype(str)
+    m = geo.merge(qc[key + ["x_range", "y_range"]], on=key, how="left")
+    x = pd.to_numeric(m.x_range, errors="coerce")
+    y = pd.to_numeric(m.y_range, errors="coerce")
+    extent = pd.concat([x, y], axis=1).max(axis=1)
+    span_um = m.grid_rows * m.bin_um                  # physical width the grid covers
+    m["um_per_unit"] = span_um / extent
+    m["coord_units"] = np.where(m.um_per_unit.between(0.8, 1.25), "microns",
+                        np.where(m.um_per_unit.notna(), "pixels", "unknown"))
+    out = m[key + ["technology", "bin_um", "grid_rows", "um_per_unit", "coord_units"]]
+    out.to_csv(RUNS / "coordinate_scale.csv", index=False)
+    return out
 
 
 def reclassify(technology: str = "Visium HD") -> pd.DataFrame:
