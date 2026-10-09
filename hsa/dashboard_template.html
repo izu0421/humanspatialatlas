@@ -39,6 +39,11 @@ h2 { font: 600 0.78rem/1 var(--f-display); text-transform: uppercase; letter-spa
 .stamp { font: 0.8rem var(--f-mono); color: var(--muted); }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
 
+.headline { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+  border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+.headline b { font: 700 1.55rem/1.2 var(--f-display); font-variant-numeric: tabular-nums; }
+.headline .n { color: var(--accent); }
+.headline .fine { margin-top: 6px; color: var(--muted); font-size: 0.84rem; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; }
 .kpi b { font: 700 1.7rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
@@ -109,7 +114,14 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <div class="stamp" id="stamp"></div>
   </header>
 
+  <section class="headline" id="headline" hidden></section>
+
   <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <section class="panel" id="unitsPanel" hidden>
+    <h2>Measured units per technology <span class="count" id="unitsNote"></span></h2>
+    <div class="bars" id="byUnits" role="img" aria-label="Cells or spots per technology"></div>
+  </section>
 
   <section class="panel">
     <h2>Curation outcome, all recorded datasets</h2>
@@ -207,6 +219,29 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     const max = arr.length ? arr[0][1] : 1;
     $(el).innerHTML = arr.map(([lab, n]) => `<div class="bar"><span class="lab" title="${esc(lab)}">${esc(lab)}</span><span class="trk"><span class="fill${alt ? " alt" : ""}" style="width:${(100 * n) / max}%"></span><span class="val">${fmt(n)}</span></span></div>`).join("") || "<span class='count'>No ready datasets yet</span>";
   }
+  // Headline: cells and spots are deliberately NOT summed. ~260M of the units are Visium HD 2um
+  // bins; calling them cells would inflate the atlas threefold. Donors are a floor, not a count.
+  const H = D.headline || {};
+  if (H.cells !== undefined) {
+    $("headline").hidden = false;
+    $("headline").innerHTML =
+      `<b><span class="n">${fmt(H.cells)}</span> single cells and <span class="n">${fmt(H.spots)}</span> spots/bins ` +
+      `across <span class="n">&ge;${fmt(H.donors)}</span> donors in <span class="n">${fmt(H.tissues)}</span> tissues</b>` +
+      `<div class="fine">Counted over the ${fmt(H.samples_loaded)} human samples from ${fmt(H.datasets)} datasets whose ` +
+      `matrix loads. Spots and bins are kept separate from cells because Visium HD contributes 2&nbsp;&micro;m bins, not ` +
+      `segmented cells. The donor count is a lower bound &mdash; only ${H.donor_frac}% of samples state a donor, and ` +
+      `donor identifiers are local to each study.</div>`;
+    const u = (H.per_tech || []).slice(0, 12), mx = u.length ? u[0][3] : 1;
+    if (u.length) {
+      $("unitsPanel").hidden = false;
+      $("unitsNote").textContent = "cells in blue, spots or bins in pink";
+      $("byUnits").innerHTML = u.map(([tech, unit, n, tot]) =>
+        `<div class="bar"><span class="lab" title="${esc(tech)} &mdash; ${fmt(n)} samples">${esc(tech)}</span>` +
+        `<span class="trk"><span class="fill${unit === "cell" ? "" : " alt"}" style="width:${(100 * tot) / mx}%"></span>` +
+        `<span class="val">${fmt(tot)} ${unit === "cell" ? "cells" : "spots/bins"}</span></span></div>`).join("");
+    }
+  }
+
   bars("byTech", "technology_norm", 12);
   bars("bySource", "source", 12);
   bars("byTissue", "tissue_norm", 14, true);

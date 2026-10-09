@@ -9,10 +9,11 @@ import shutil
 import time
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from . import db
-from .config import DATA, ROOT
+from .config import DATA, ROOT, RUNS
 
 OUT = ROOT / "exports"
 PRIVATE = ROOT / "exports_private"     # gitignored: reference-list coverage, internal paths
@@ -81,6 +82,50 @@ def xlsx_coverage(ds):
     return x
 
 
+# technologies that measure a spot or a bin, not a cell. Visium HD alone contributes ~260M 2um
+# bins, so folding them into a "cells" total would overstate the atlas by a factor of three.
+SPOT_TECH = ("Visium", "Visium HD", "Slide-seq", "Stereo-seq", "DBiT-seq", "GeoMx", "ST")
+
+
+def headline():
+    """One sentence: how many cells, across how many donors, in how many tissues.
+
+    Counted only over human samples whose matrix actually loads, since a sample we cannot open
+    contributes no cells. Donors are (accession, donor_id) pairs because donor ids are local to a
+    study, and the count is a lower bound: not every sample states one.
+    """
+    qc = RUNS / "sample_qc.csv"
+    if not qc.exists():
+        return {}
+    q = pd.read_csv(qc)
+    try:
+        sm = pd.DataFrame(db.query("SELECT source, accession, sample_id, species, donor_id,"
+                                   " tissue_ontology_term_id FROM sample_meta"))
+    except Exception:
+        return {}
+    if not len(sm):
+        return {}
+    m = q.merge(sm, on=["source", "accession", "sample_id"], how="left")
+    hum = m[m.species.isin(["homo_sapiens", "human_in_mouse_xenograft"])]
+    ok = hum[hum.status.eq("ok") & hum.n_cells.notna()].copy()
+    is_spot = ok.technology.astype(str).apply(lambda t: any(x in t for x in SPOT_TECH))
+    d = hum[hum.donor_id.notna() & ~hum.donor_id.isin(["unknown", ""])]
+    t = hum[hum.tissue_ontology_term_id.str.startswith("UBERON", na=False)]
+    per_tech = (ok.assign(unit=np.where(is_spot, "spot/bin", "cell"))
+                  .groupby(["technology", "unit"]).n_cells.agg(["size", "sum"])
+                  .reset_index().sort_values("sum", ascending=False))
+    return {
+        "cells": int(ok.loc[~is_spot, "n_cells"].sum()),
+        "spots": int(ok.loc[is_spot, "n_cells"].sum()),
+        "donors": int(d.set_index(["accession", "donor_id"]).index.nunique()),
+        "donor_frac": round(100 * len(d) / max(1, len(hum)), 1),
+        "tissues": int(t.tissue_ontology_term_id.nunique()),
+        "samples_loaded": int(len(ok)), "datasets": int(ok.accession.nunique()),
+        "per_tech": [[r.technology, r.unit, int(r["size"]), int(r["sum"])]
+                     for _, r in per_tech.iterrows()],
+    }
+
+
 def run():
     OUT.mkdir(exist_ok=True)
     DASH.mkdir(exist_ok=True)
@@ -141,6 +186,7 @@ def run():
                     .fillna("").to_dict("records"),
         "sources": src.fillna("").to_dict("records"),
         "samples": samples_payload,
+        "headline": headline(),
     }
     from .logo import svg
     body = (TEMPLATE.read_text().replace("__HSA_LOGO__", svg(inline=True))

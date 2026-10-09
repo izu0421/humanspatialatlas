@@ -1,15 +1,15 @@
 # HSA — to do
 
 ## Dashboard
-- [ ] **Headline line: "X cells across Y donors in Z tissues".** Put it at the top of the page,
-      above the KPI tiles, as the one sentence that says what HSA is. Current values:
-      **654,095,070 cells · 2,637 donors · 289 UBERON tissues** (also available: 6,643 samples with
-      cell counts, 379 MONDO diseases, 2,102 datasets).
-      Needs `runs/sample_qc.csv` joined into `hsa/export.py`; donor count comes from
-      `sample_meta.donor_id` (only ~24% of samples state one, so the honest phrasing is
-      "≥2,637 donors" or report samples alongside).
-- [ ] Add a cells-per-technology panel (Visium HD bins vs true single cells — label the difference,
-      since 418M of the 654M are 2/8/16 µm bins, not cells).
+- [x] **Headline line: "X cells across Y donors in Z tissues".** Rendered above the KPI tiles.
+      Measured, human-only, loaded-samples-only: **126,833,893 single cells and 299,060,172
+      spots/bins across ≥3,076 donors in 277 UBERON tissues** (5,633 samples, 1,111 datasets).
+      Cells and spots are deliberately not summed: 259.8M of the units are Visium HD 2µm bins.
+      The earlier 654M/2,637/289 figure in this file was wrong — it mixed species and counted
+      samples whose matrix does not load. Donor count is a floor (61.7% of samples state one, and
+      donor ids are study-local, so counted as (accession, donor_id) pairs).
+- [x] Cells-per-technology panel ("Measured units per technology"), cells in blue and spots/bins
+      in pink so the Visium HD bin contribution is visible rather than hidden in a total.
 - [ ] Show load/QC status per technology so a user can see what actually opens.
 
 ## Corpus
@@ -20,17 +20,31 @@
 - [ ] Push refreshed dashboard + exports (one commit outstanding).
 
 ## Visium HD cell-level
-- [ ] bin2cell on the 19 samples that have image + 2 µm bins (image reading just fixed:
-      gzipped TIFF and BigTIFF both return empty from `cv2.imread` rather than raising).
+- [ ] bin2cell: 13 of 19 eligible samples segmented (18/19 in progress, the 11 mm colon section).
+      Fixed a silent skip: the output filename truncated at 120 characters, so three distinct
+      lung-cancer post-Xenium samples collapsed onto one path and two were recorded as
+      `already_done` against the first one's file. `_tag()` now appends an md5 of the full
+      identity and migrates the existing files on next touch, so those two will be re-queued.
 - [ ] 131 samples have an image but no 2 µm bins — would need `binned_outputs` re-download
       (8–12 GB each) to become eligible.
 - [ ] 309 of 459 HD samples have no public full-res image at all; depositors ship the CytAssist
       image (~14–26 MB) and fiducial JPEGs, which cannot resolve nuclei.
 
 ## PPI benchmark
-- [ ] Finish the Atera benchmark (co-location baseline AUPRC 0.091 vs 0.048 random; cross-covariance
-      methods still scoring).
-- [ ] Add LIANA+ bivariate and SpatialDM as published comparators.
+- [x] Atera benchmark running on two samples (breast, cervical) at a standardised 30,000-cell
+      budget so every method is scored on the identical pair list.
+- [x] LIANA+ bivariate added. It wins and it replicates: AUPRC 0.154 breast / 0.137 cervical
+      against a 0.091 random floor. Specificity is its weakness (7.4% / 12.2% of impossible
+      housekeeping x ligand pairs clear the decoy-95th threshold).
+- [x] COMMOT added. It does not replicate: 0.113 breast but 0.083 cervical against a 0.091 floor,
+      AUROC 0.453, i.e. slightly anti-correlated with CellPhoneDB in the second tissue.
+- [ ] SpatialDM running. The earlier `IndexError` was ours: `globle_st_compute()` sizes its
+      variance vector by counting pairs annotated `ECM-Receptor`/`Cell-Cell Contact`/
+      `Secreted Signaling`, and we had labelled every pair `custom`, so `st` came back length-0.
+- [ ] Celcomen still not evaluable at this scale: lr 1e-1 saturates every g2g entry to 1.0 and
+      lr 1e-6 leaves it at initialisation. Report as "not evaluated", never as "Celcomen fails".
+- [ ] Notebook with PR curves and the specificity plane (per-pair scores now persisted to
+      `results/scores_{sample}.parquet`).
 - [ ] Extend to a second platform once a multi-donor single-cell + wide-panel substrate exists.
 
 ## Known caveats to keep visible

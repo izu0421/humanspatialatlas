@@ -11,6 +11,7 @@ Peak extra disk is one image.
 from __future__ import annotations
 
 import logging
+import hashlib
 import re
 import shutil
 from pathlib import Path
@@ -243,8 +244,38 @@ def _attach_positions(adata, stage: Path, img_path: Path) -> None:
     lib = next(iter(adata.uns.get("spatial", {})), "library")
     adata.uns.setdefault("spatial", {}).setdefault(lib, {})
     adata.uns["spatial"][lib]["scalefactors"] = sf
-    adata.uns["spatial"][lib].setdefault("images", {})
     adata.uns["spatial"][lib]["metadata"] = {"source_image_path": str(img_path)}
+    # Space Ranger ships downsampled hires/lowres overviews; HSA never downloaded them, so build
+    # them from the source image using the scalefactors the depositor did provide.
+    imgs = adata.uns["spatial"][lib].setdefault("images", {})
+    if "hires" not in imgs:
+        import cv2
+        src = cv2.imread(str(img_path), cv2.IMREAD_UNCHANGED)
+        if src is None:
+            import tifffile
+            src = tifffile.imread(img_path)
+        if src.ndim == 2:
+            src = cv2.cvtColor(src, cv2.COLOR_GRAY2RGB)
+        elif src.shape[-1] == 4:
+            src = src[..., :3]
+        for key, sk in (("hires", "tissue_hires_scalef"), ("lowres", "tissue_lowres_scalef")):
+            f = float(sf.get(sk, 0.1))
+            imgs[key] = cv2.resize(src, (max(1, int(src.shape[1] * f)), max(1, int(src.shape[0] * f))),
+                                   interpolation=cv2.INTER_AREA)
+        del src
+
+
+def _tag(accession: str, sample_id: str) -> str:
+    """Filesystem tag for one sample.
+
+    The slug alone is not safe: 10x accessions plus sample ids run well past any truncation limit,
+    and three distinct lung-cancer post-Xenium samples truncated to the SAME 120 characters, so two
+    of them were skipped as "already_done" against the first one's output. The hash of the full,
+    untruncated identity makes the name injective again.
+    """
+    slug = re.sub(r"[^A-Za-z0-9]+", "_", f"{accession}__{sample_id}")[:110].strip("_")
+    h = hashlib.md5(f"{accession}__{sample_id}".encode()).hexdigest()[:8]
+    return f"{slug}_{h}"
 
 
 def segment_one(source: str, accession: str, sample_id: str, image_url: str,
@@ -255,8 +286,11 @@ def segment_one(source: str, accession: str, sample_id: str, image_url: str,
     rec = {"source": source, "accession": accession, "sample_id": sample_id, "status": "start"}
     HDOUT.mkdir(parents=True, exist_ok=True)
     IMG_TMP.mkdir(parents=True, exist_ok=True)
-    tag = re.sub(r"[^A-Za-z0-9]+", "_", f"{accession}__{sample_id}")[:120]
+    tag = _tag(accession, sample_id)
     out = HDOUT / f"{tag}.h5ad"
+    legacy = HDOUT / f"{re.sub(r"[^A-Za-z0-9]+", "_", f"{accession}__{sample_id}")[:120]}.h5ad"
+    if not out.exists() and legacy.exists():
+        legacy.rename(out)                       # migrate off the collision-prone name
     if out.exists():
         return {**rec, "status": "already_done", "path": str(out)}
 
@@ -284,8 +318,15 @@ def segment_one(source: str, accession: str, sample_id: str, image_url: str,
         adata.var_names_make_unique()
         _attach_positions(adata, stage, img_path)
         adata = adata[:, adata.X.sum(0).A1 > 0].copy() if hasattr(adata.X, "A1") else adata
-        adata.obs["n_counts"] = np.asarray(adata.X.sum(1)).ravel()   # destripe expects this
-        b2c.destripe(adata)                                   # remove the HD row/column striping
+        # Drop empty bins BEFORE destriping: at 2 um most bins are empty, and destripe divides by a
+        # per-row/column quantile that is then 0, producing inf that only surfaces much later.
+        adata.obs["n_counts"] = np.asarray(adata.X.sum(1)).ravel()
+        adata = adata[adata.obs["n_counts"] > 0].copy()
+        b2c.destripe(adata)
+        for key in ("destripe_factor", "n_counts_adjusted"):
+            if key in adata.obs:
+                v = adata.obs[key].to_numpy(dtype=float)
+                adata.obs[key] = np.nan_to_num(v, nan=0.0, posinf=0.0, neginf=0.0)                                   # remove the HD row/column striping
         b2c.scaled_he_image(adata, mpp=mpp, save_path=str(scaled))
         b2c.stardist(image_path=str(scaled), labels_npz_path=str(labels),
                      stardist_model="2D_versatile_he", prob_thresh=prob_thresh)
@@ -302,7 +343,10 @@ def segment_one(source: str, accession: str, sample_id: str, image_url: str,
         rec.update(status="ok", n_cells=int(cells.n_obs), n_genes=int(cells.n_vars),
                    n_bins=int(adata.n_obs), path=str(out))
     except Exception as e:
+        import traceback
         rec["status"] = f"error: {type(e).__name__}: {e}"[:220]
+        rec["traceback"] = traceback.format_exc()[-1200:]
+        logger.error("%s / %s failed:\n%s", accession, sample_id, rec["traceback"])
     finally:
         if not keep_image:
             for f in list(IMG_TMP.glob(f"{tag}*")) + [scaled, labels]:
