@@ -10,7 +10,9 @@
       donor ids are study-local, so counted as (accession, donor_id) pairs).
 - [x] Cells-per-technology panel ("Measured units per technology"), cells in blue and spots/bins
       in pink so the Visium HD bin contribution is visible rather than hidden in a total.
-- [ ] Show load/QC status per technology so a user can see what actually opens.
+- [x] Load/QC status per technology ("What actually opens"), stacked as loads / no coordinates /
+      no matrix found / read error. Reveals that Xenium's 37.9% load rate is a *coordinate*
+      problem (716 of 978 failures), not a matrix one — a different fix from Visium's.
 
 ## Corpus
 - [ ] Raise loader coverage: 57% of samples load cleanly. Remaining failures are

@@ -44,6 +44,9 @@ h2 { font: 600 0.78rem/1 var(--f-display); text-transform: uppercase; letter-spa
 .headline b { font: 700 1.55rem/1.2 var(--f-display); font-variant-numeric: tabular-nums; }
 .headline .n { color: var(--accent); }
 .headline .fine { margin-top: 6px; color: var(--muted); font-size: 0.84rem; }
+.stack { display: flex; height: 18px; border-radius: 3px; overflow: hidden; background: var(--grey-soft); }
+.stack i { display: block; height: 100%; }
+.swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 3px 0 10px; vertical-align: baseline; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; }
 .kpi b { font: 700 1.7rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
@@ -117,6 +120,11 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   <section class="headline" id="headline" hidden></section>
 
   <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <section class="panel" id="loadPanel" hidden>
+    <h2>What actually opens, per technology <span class="count" id="loadNote"></span></h2>
+    <div class="bars" id="byLoad" role="img" aria-label="Load outcome per technology"></div>
+  </section>
 
   <section class="panel" id="unitsPanel" hidden>
     <h2>Measured units per technology <span class="count" id="unitsNote"></span></h2>
@@ -240,6 +248,25 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
         `<span class="trk"><span class="fill${unit === "cell" ? "" : " alt"}" style="width:${(100 * tot) / mx}%"></span>` +
         `<span class="val">${fmt(tot)} ${unit === "cell" ? "cells" : "spots/bins"}</span></span></div>`).join("");
     }
+  }
+
+  // Load outcome per technology. The failure modes are distinct and worth distinguishing: GeoMx
+  // is region-level by design, legacy ST has no standard matrix, and Xenium usually fails at the
+  // coordinate step rather than the matrix step.
+  const LS = D.load_status || [];
+  if (LS.length) {
+    $("loadPanel").hidden = false;
+    const cols = ["var(--ok)", "var(--eosin)", "var(--accent)", "var(--grey-soft)"];
+    const labs = ["loads", "no coordinates", "no matrix found", "read error"];
+    $("loadNote").innerHTML = labs.map((l, i) =>
+      `<span class="swatch" style="background:${cols[i]}"></span>${l}`).join("");
+    $("byLoad").innerHTML = LS.map(([tech, a, b, c, e, n]) => {
+      const parts = [a, b, c, e].map((v, i) =>
+        `<i style="width:${(100 * v) / Math.max(1, n)}%;background:${cols[i]}" title="${labs[i]}: ${fmt(v)}"></i>`).join("");
+      return `<div class="bar"><span class="lab" title="${esc(tech)}">${esc(tech)}</span>` +
+             `<span class="trk"><span class="stack">${parts}</span>` +
+             `<span class="val">${Math.round((100 * a) / Math.max(1, n))}% of ${fmt(n)}</span></span></div>`;
+    }).join("");
   }
 
   bars("byTech", "technology_norm", 12);

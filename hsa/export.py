@@ -126,6 +126,38 @@ def headline():
     }
 
 
+def load_status():
+    """Per technology: how many samples actually open, and why the rest do not.
+
+    Worth showing on the page rather than hiding in a log, because the failure modes are not
+    uniform: GeoMx is region-level by design and legacy ST ships no standard matrix, whereas
+    Xenium mostly fails at the coordinate step (716 of its 978 failures), i.e. the matrix is
+    found but no cell-centroid table is located beside it.
+    """
+    qc = RUNS / "sample_qc.csv"
+    if not qc.exists():
+        return []
+    q = pd.read_csv(qc)
+
+    def bucket(x):
+        x = str(x)
+        if x.startswith("ok"):
+            return "loads"
+        if x.startswith("no_coords"):
+            return "no coordinates"
+        if x.startswith("no_recognised_matrix"):
+            return "no matrix found"
+        return "read error"
+
+    q["bucket"] = q.status.map(bucket)
+    tab = q.pivot_table(index="technology", columns="bucket", aggfunc="size", fill_value=0)
+    tab["n"] = tab.sum(1)
+    tab = tab.sort_values("n", ascending=False).head(12)
+    keys = ["loads", "no coordinates", "no matrix found", "read error"]
+    return [[t] + [int(tab.loc[t, k]) if k in tab.columns else 0 for k in keys] + [int(tab.loc[t, "n"])]
+            for t in tab.index]
+
+
 def run():
     OUT.mkdir(exist_ok=True)
     DASH.mkdir(exist_ok=True)
@@ -187,6 +219,7 @@ def run():
         "sources": src.fillna("").to_dict("records"),
         "samples": samples_payload,
         "headline": headline(),
+        "load_status": load_status(),
     }
     from .logo import svg
     body = (TEMPLATE.read_text().replace("__HSA_LOGO__", svg(inline=True))
