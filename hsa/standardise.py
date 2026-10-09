@@ -333,6 +333,14 @@ def qc_all(workers: int = 12, limit: int | None = None, resume: bool = True,
     if limit:
         todo = todo[:limit]
 
+    # Canonical column order. qc_one() builds its record incrementally and the keys it sets depend
+    # on which code path a sample takes, so pd.DataFrame(batch) can order columns differently from
+    # one batch to the next. Appending such a batch with header=False silently rotates fields into
+    # the wrong columns -- it put gene_id_style where x_range belongs in 1,495 rows before this was
+    # caught. Reindexing every batch to one order makes the append positional-safe.
+    COLS = ["source", "accession", "sample_id", "technology", "n_files", "loader", "status",
+            "coord_source", "n_cells", "n_genes", "median_counts", "median_genes", "is_integer",
+            "frac_zero_cells", "x_range", "y_range", "n_unique_coords", "gene_id_style"]
     out, header = [], not QC_CSV.exists()
     QC_CSV.parent.mkdir(exist_ok=True, parents=True)
     with ProcessPoolExecutor(workers) as ex:
@@ -340,7 +348,8 @@ def qc_all(workers: int = 12, limit: int | None = None, resume: bool = True,
         for i, fu in enumerate(as_completed(futs)):
             out.append(fu.result())
             if len(out) >= 200 or i == len(futs) - 1:
-                pd.DataFrame(out).to_csv(QC_CSV, mode="a", header=header, index=False)
+                (pd.DataFrame(out).reindex(columns=COLS)
+                   .to_csv(QC_CSV, mode="a", header=header, index=False))
                 header, out = False, []
                 logger.info("[%d/%d] written", i + 1, len(futs))
     df = pd.read_csv(QC_CSV)
