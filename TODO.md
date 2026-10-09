@@ -69,6 +69,14 @@
 - [ ] 2 samples on an unrecognised 280-row grid (GSE325706) left flagged, not guessed.
 
 ## Visium HD cell-level
+- [x] GEX rasterisation resolution: `gex_mpp` default changed from bin2cell's 2.0 to **0.5**.
+      At 2 um/px a 10 um nucleus spans 5 px and StarDist merges them. Measured on GSM9937429
+      (9.83M bins): mpp 2.0/1.0/0.5 -> 9,829 / 17,959 / 40,267 nuclei, against 74,928 cells for
+      the SAME sample segmented from H&E once its image finally downloaded. So 2.0 recovers 13%
+      of the H&E yield and 0.5 about 54%. Costs 16x the pixels (~1 min -> ~10 min per sample).
+      Note cells-per-bin is NOT a platform constant and cannot be used to detect over-segmentation
+      across tissues: H&E rates range 0.70% (GSE342738 brain) to 4.93% (10x breast cancer).
+
 - [ ] bin2cell: 13 of 19 eligible samples segmented (18/19 in progress, the 11 mm colon section).
       Fixed a silent skip: the output filename truncated at 120 characters, so three distinct
       lung-cancer post-Xenium samples collapsed onto one path and two were recorded as

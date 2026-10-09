@@ -388,11 +388,18 @@ def _read_staged(stage: Path, img_path: Path | None):
 
 def segment_one(source: str, accession: str, sample_id: str, image_url: str | None = None,
                 mpp: float = 0.3, prob_thresh: float = 0.01, keep_image: bool = False,
-                gex_mpp: float = 2.0, gex_prob_thresh: float = 0.05) -> dict:
+                gex_mpp: float = 0.5, gex_prob_thresh: float = 0.05) -> dict:
     """Download image -> bin2cell -> cell-level .h5ad -> DELETE image. Peak extra disk: one image.
 
     With no image_url, segments on gene-expression density instead: b2c.grid_image() rasterises
-    per-bin total counts and StarDist's fluorescence model finds nuclei in that. This is the only
+    per-bin total counts and StarDist's fluorescence model finds nuclei in that.
+
+    gex_mpp defaults to 0.5, not bin2cell's 2.0. At 2 um per pixel a 10 um nucleus spans 5 pixels,
+    which StarDist largely merges away: measured on GSM9937429 (9.8M bins), mpp 2.0 / 1.0 / 0.5
+    gave 9,829 / 17,959 / 40,267 nuclei, against 62,006-80,867 cells for four H&E siblings from the
+    same study at comparable bin counts. So 2.0 recovers ~14% of the H&E rate and 0.5 about 55%.
+    Still below H&E, so the extra nuclei are merged ones being recovered rather than false splits.
+    The cost is 16x the pixels. This is the only
     route for the 47 of 69 two-micron samples that have no public full-resolution H&E, so it is
     worth having even though H&E segmentation is the better of the two. Where an image does exist
     both are run and salvage_secondary_labels() fills H&E gaps with GEX calls, which is what the
