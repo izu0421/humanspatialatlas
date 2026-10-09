@@ -191,7 +191,16 @@ def _read_coord_table(p: Path) -> pd.DataFrame:
     That file has no header, so a default read silently eats the first spot and turns barcodes into
     column names. Detect it by testing whether the first field of row 0 looks like a barcode.
     """
-    if p.suffix == ".parquet":
+    # GEO re-gzips 10x parquet deposits, so the Xenium centroid table usually arrives as
+    # cells.parquet.gz. p.suffix is then ".gz" and a plain suffix test sends a binary parquet
+    # into read_csv, whose exception was being swallowed as "no coordinates" -- 716 Xenium
+    # samples had their centroids on disk the whole time.
+    if ".parquet" in p.name:
+        if p.name.endswith(".gz"):
+            import gzip as _gz
+            import io as _io
+            with _gz.open(p, "rb") as fh:
+                return pd.read_parquet(_io.BytesIO(fh.read()))
         return pd.read_parquet(p)
     comp = "gzip" if p.name.endswith(".gz") else None
     head = pd.read_csv(p, compression=comp, nrows=1, header=None)
@@ -290,8 +299,15 @@ def qc_one(args) -> dict:
     return rec
 
 
-def qc_all(workers: int = 12, limit: int | None = None, resume: bool = True) -> pd.DataFrame:
-    """Run the loader over every ready sample; write a per-sample QC table (resumable)."""
+def qc_all(workers: int = 12, limit: int | None = None, resume: bool = True,
+           retry: str | None = None) -> pd.DataFrame:
+    """Run the loader over every ready sample; write a per-sample QC table (resumable).
+
+    `retry` re-runs only samples whose recorded status starts with that prefix, which is how a
+    loader fix is rolled out: after teaching the reader a new format, `retry="no_coords"` revisits
+    exactly the samples that format broke instead of re-reading the whole corpus. The table is
+    de-duplicated on (source, accession, sample_id) afterwards, last write winning.
+    """
     from concurrent.futures import ProcessPoolExecutor, as_completed
     from .export import norm_tech
 
@@ -303,8 +319,13 @@ def qc_all(workers: int = 12, limit: int | None = None, resume: bool = True) -> 
     todo = [(r["source"], r["accession"], r["sample_id"], ds.get((r["source"], r["accession"]), "Unknown"))
             for r in rows if (r["source"], r["accession"]) in ds]
 
-    done_keys = set()
-    if resume and QC_CSV.exists():
+    if retry and QC_CSV.exists():
+        prev = pd.read_csv(QC_CSV)
+        bad = prev[prev.status.astype(str).str.startswith(retry)]
+        keys = set(map(tuple, bad[["source", "accession", "sample_id"]].astype(str).values))
+        todo = [t for t in todo if (str(t[0]), str(t[1]), str(t[2])) in keys]
+        logger.info("retrying %d samples previously recorded as %s*", len(todo), retry)
+    elif resume and QC_CSV.exists():
         prev = pd.read_csv(QC_CSV)
         done_keys = set(map(tuple, prev[["source", "accession", "sample_id"]].astype(str).values))
         todo = [t for t in todo if (str(t[0]), str(t[1]), str(t[2])) not in done_keys]
@@ -322,4 +343,10 @@ def qc_all(workers: int = 12, limit: int | None = None, resume: bool = True) -> 
                 pd.DataFrame(out).to_csv(QC_CSV, mode="a", header=header, index=False)
                 header, out = False, []
                 logger.info("[%d/%d] written", i + 1, len(futs))
-    return pd.read_csv(QC_CSV)
+    df = pd.read_csv(QC_CSV)
+    if retry:                                     # last write wins for a re-run sample
+        n0 = len(df)
+        df = df.drop_duplicates(subset=["source", "accession", "sample_id"], keep="last")
+        df.to_csv(QC_CSV, index=False)
+        logger.info("de-duplicated QC table: %d -> %d rows", n0, len(df))
+    return df
