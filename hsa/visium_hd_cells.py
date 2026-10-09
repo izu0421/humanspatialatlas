@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 from . import db, tools_api as T
-from .config import DATA
+from .config import DATA, RUNS
 
 logger = logging.getLogger(__name__)
 HDOUT = DATA.parent / "visium_hd_cells"
@@ -158,13 +158,25 @@ def _stage_spaceranger(source: str, accession: str, sample_id: str, stage: Path)
         "SELECT local_path FROM files WHERE source=? AND accession=? AND sample_id=? "
         "AND dl_status='done' AND local_path IS NOT NULL", (source, accession, sample_id))
         if Path(r["local_path"]).exists()]
-    two = [p for p in paths if "square_002um" in str(p)]
+    # 10x names the 2 um output directory square_002um, but GEO depositors use their own
+    # conventions (slide2_2um_filtered_feature_bc_matrix.h5), so try progressively looser patterns
+    # and fall back to every file for the sample -- build_queue() has already established that this
+    # sample IS 2 um from its bin grid, so there is nothing to disambiguate when nothing matches.
+    two = []
+    for pat in (r"square_0*2um", r"0{2,}2um", r"[^0-9]2um", r"2um"):
+        two = [p for p in paths if re.search(pat, str(p), re.I)]
+        if two:
+            break
+    if not two:
+        other = [p for p in paths if re.search(r"0*(8|16|32)um", str(p), re.I)]
+        two = [p for p in paths if p not in other]
     if not two:
         return None
     mat = (next((p for p in two if p.name == "filtered_feature_bc_matrix.h5"), None)
            or next((p for p in two if "filtered_feature_bc_matrix" in p.name and p.suffix == ".h5"), None)
            or next((p for p in two if p.name.endswith(".h5") and "raw" not in p.name and "probe" not in p.name), None))
-    pos = next((p for p in two if p.name.startswith("tissue_positions")), None)
+    # substring, not startswith: depositors prefix these (slide2_2um_tissue_positions.parquet.gz)
+    pos = next((p for p in two if "tissue_positions" in p.name), None)
     sf = next((p for p in two if "scalefactors" in p.name), None)
     if not (pos and sf):
         return None
@@ -187,8 +199,22 @@ def _stage_spaceranger(source: str, accession: str, sample_id: str, stage: Path)
             if src is None:
                 return None
             link(src, d / name)
-    link(pos, stage / "spatial" / pos.name)
-    link(sf, stage / "spatial" / "scalefactors_json.json")
+    # read_visium reads these by name and cannot handle gzip, so normalise the names and
+    # decompress where needed rather than symlinking a .gz under an uncompressed name.
+    def place(src: Path, dst: Path):
+        if src.name.endswith(".gz"):
+            import gzip as _gz
+            with _gz.open(src, "rb") as fi, open(dst, "wb") as fo:
+                shutil.copyfileobj(fi, fo, 1 << 24)
+        else:
+            link(src, dst)
+
+    stem = pos.name[:-3] if pos.name.endswith(".gz") else pos.name
+    pos_name = ("tissue_positions.parquet" if stem.endswith(".parquet")
+                else "tissue_positions_list.csv" if "list" in stem
+                else "tissue_positions.csv")
+    place(pos, stage / "spatial" / pos_name)
+    place(sf, stage / "spatial" / "scalefactors_json.json")
     for extra in two:                            # hires/lowres images if the depositor included them
         if "hires_image" in extra.name or "lowres_image" in extra.name:
             link(extra, stage / "spatial" / extra.name)
@@ -220,7 +246,7 @@ def _prepare_image(img: Path) -> Path:
     return img
 
 
-def _attach_positions(adata, stage: Path, img_path: Path) -> None:
+def _attach_positions(adata, stage: Path, img_path: Path | None) -> None:
     """Join tissue positions and scalefactors onto an AnnData read with load_images=False."""
     import json as _json
     pos = next(iter((stage / "spatial").glob("tissue_positions*")), None)
@@ -245,11 +271,14 @@ def _attach_positions(adata, stage: Path, img_path: Path) -> None:
     lib = next(iter(adata.uns.get("spatial", {})), "library")
     adata.uns.setdefault("spatial", {}).setdefault(lib, {})
     adata.uns["spatial"][lib]["scalefactors"] = sf
-    adata.uns["spatial"][lib]["metadata"] = {"source_image_path": str(img_path)}
+    adata.uns["spatial"][lib]["metadata"] = {"source_image_path":
+                                             None if img_path is None else str(img_path)}
     # Space Ranger ships downsampled hires/lowres overviews; HSA never downloaded them, so build
-    # them from the source image using the scalefactors the depositor did provide.
+    # them from the source image using the scalefactors the depositor did provide. Skipped entirely
+    # when there is no image: the gene-expression segmentation path works from array coordinates
+    # and per-bin counts, so it never reads an overview.
     imgs = adata.uns["spatial"][lib].setdefault("images", {})
-    if "hires" not in imgs:
+    if img_path is not None and "hires" not in imgs:
         import cv2
         src = cv2.imread(str(img_path), cv2.IMREAD_UNCHANGED)
         if src is None:
@@ -309,9 +338,59 @@ def _fetch_image(url: str, dest: Path, min_bps: float = 1.5e6, grace_s: float = 
     return n, t0
 
 
-def segment_one(source: str, accession: str, sample_id: str, image_url: str,
-                mpp: float = 0.3, prob_thresh: float = 0.01, keep_image: bool = False) -> dict:
-    """Download image -> bin2cell -> cell-level .h5ad -> DELETE image. Peak extra disk: one image."""
+def _stardist_params(image_path: Path) -> dict:
+    """Tiling parameters that satisfy StarDist's own constraint for this image.
+
+    stardist.big.cover() asserts `min_overlap + 2*context < block_size <= size`, and bin2cell's
+    defaults (4096/128/128) break it on any image smaller than 4096 px. The gene-expression grid
+    images are exactly that: a 39k-bin sample rasterised at 2 um per pixel is a few hundred pixels
+    across. Scale the block and its margins to the image instead of assuming a whole-slide H&E.
+    """
+    from PIL import Image
+    Image.MAX_IMAGE_PIXELS = None
+    with Image.open(image_path) as im:
+        size = min(im.size)
+    if size >= 4096 + 384:
+        return {"block_size": 4096, "min_overlap": 128, "context": 128}
+    block = max(64, size)                       # one block covering the whole image
+    context = max(8, block // 16)
+    overlap = max(0, block // 32)
+    while overlap + 2 * context >= block:        # keep the assertion satisfied
+        context //= 2
+        overlap //= 2
+    return {"block_size": block, "min_overlap": overlap, "context": context}
+
+
+def _read_staged(stage: Path, img_path: Path | None):
+    """AnnData from a staged Space Ranger layout, whether it holds an .h5 or an mtx trio.
+
+    b2c.read_visium (like sc.read_visium) reads only filtered_feature_bc_matrix.h5, so the mtx
+    fallback in _stage_spaceranger staged files that nothing downstream could open -- the sample
+    failed with a missing-.h5 error after its image had already been downloaded. sc.read_10x_mtx
+    reads the staged trio directly; spatial metadata is attached afterwards either way.
+    """
+    import bin2cell as b2c
+    import scanpy as sc
+    if (stage / "filtered_feature_bc_matrix.h5").exists():
+        return b2c.read_visium(stage, source_image_path=img_path, load_images=False)
+    d = stage / "filtered_feature_bc_matrix"
+    if d.is_dir():
+        return sc.read_10x_mtx(d)
+    raise FileNotFoundError("staged layout has neither filtered_feature_bc_matrix.h5 nor an mtx dir")
+
+
+def segment_one(source: str, accession: str, sample_id: str, image_url: str | None = None,
+                mpp: float = 0.3, prob_thresh: float = 0.01, keep_image: bool = False,
+                gex_mpp: float = 2.0, gex_prob_thresh: float = 0.05) -> dict:
+    """Download image -> bin2cell -> cell-level .h5ad -> DELETE image. Peak extra disk: one image.
+
+    With no image_url, segments on gene-expression density instead: b2c.grid_image() rasterises
+    per-bin total counts and StarDist's fluorescence model finds nuclei in that. This is the only
+    route for the 47 of 69 two-micron samples that have no public full-resolution H&E, so it is
+    worth having even though H&E segmentation is the better of the two. Where an image does exist
+    both are run and salvage_secondary_labels() fills H&E gaps with GEX calls, which is what the
+    bin2cell authors' own workflow does.
+    """
     import bin2cell as b2c
 
     rec = {"source": source, "accession": accession, "sample_id": sample_id, "status": "start"}
@@ -327,25 +406,35 @@ def segment_one(source: str, accession: str, sample_id: str, image_url: str,
         return {**rec, "status": "already_done", "path": str(out)}
 
     stage = IMG_TMP / f"stage_{tag}"
-    img_path = IMG_TMP / f"{tag}__{Path(image_url.split('?')[0]).name}"
+    use_he = bool(image_url)
+    img_path = (IMG_TMP / f"{tag}__{Path(image_url.split('?')[0]).name}") if use_he else None
     scaled = IMG_TMP / f"{tag}_scaled.tiff"
     labels = IMG_TMP / f"{tag}_labels.npz"
+    gex_img = IMG_TMP / f"{tag}_gex.tiff"
+    gex_labels = IMG_TMP / f"{tag}_gex_labels.npz"
     try:
         if _stage_spaceranger(source, accession, sample_id, stage) is None:
             return {**rec, "status": "cannot_stage_spaceranger_layout"}
 
-        if not img_path.exists():
+        if use_he and not img_path.exists():
             part = img_path.with_suffix(img_path.suffix + ".part")
             got, t0 = _fetch_image(image_url, part)
             if isinstance(got, str):
-                return {**rec, "status": got}
-            part.rename(img_path)
-        rec["image_gb"] = round(img_path.stat().st_size / 1e9, 2)
-        img_path = _prepare_image(img_path)       # gunzip / BigTIFF -> something cv2 can read
+                # A slow or missing image is no longer fatal: fall back to segmenting on gene
+                # expression. Returning here forfeited the sample entirely, which is the wrong
+                # trade when the GEX route is available and costs no download at all.
+                logger.warning("%s: %s -> falling back to GEX-only segmentation", sample_id, got)
+                rec["image_status"] = got
+                use_he, img_path = False, None
+            else:
+                part.rename(img_path)
+        if use_he:
+            rec["image_gb"] = round(img_path.stat().st_size / 1e9, 2)
+            img_path = _prepare_image(img_path)   # gunzip / BigTIFF -> something cv2 can read
 
         # load_images=False is required (the SR hires/lowres pngs were never downloaded), but that
         # code path also skips the tissue-position join, so attach positions + scalefactors here.
-        adata = b2c.read_visium(stage, source_image_path=img_path, load_images=False)
+        adata = _read_staged(stage, img_path)
         adata.var_names_make_unique()
         _attach_positions(adata, stage, img_path)
         adata = adata[:, adata.X.sum(0).A1 > 0].copy() if hasattr(adata.X, "A1") else adata
@@ -358,21 +447,53 @@ def segment_one(source: str, accession: str, sample_id: str, image_url: str,
             if key in adata.obs:
                 v = adata.obs[key].to_numpy(dtype=float)
                 adata.obs[key] = np.nan_to_num(v, nan=0.0, posinf=0.0, neginf=0.0)                                   # remove the HD row/column striping
-        b2c.scaled_he_image(adata, mpp=mpp, save_path=str(scaled))
-        b2c.stardist(image_path=str(scaled), labels_npz_path=str(labels),
-                     stardist_model="2D_versatile_he", prob_thresh=prob_thresh)
-        b2c.insert_labels(adata, labels_npz_path=str(labels), basis="spatial",
-                          spatial_key="spatial_cropped_150_buffer", mpp=mpp, labels_key="labels_he")
-        b2c.expand_labels(adata, labels_key="labels_he", expanded_labels_key="labels_he_expanded")
-        cells = b2c.bin_to_cell(adata, labels_key="labels_he_expanded",
-                                spatial_keys=["spatial", "spatial_cropped_150_buffer"])
+        primary = None
+        if use_he:
+            b2c.scaled_he_image(adata, mpp=mpp, save_path=str(scaled))
+            b2c.stardist(image_path=str(scaled), labels_npz_path=str(labels),
+                         stardist_model="2D_versatile_he", prob_thresh=prob_thresh,
+                         **_stardist_params(scaled))
+            b2c.insert_labels(adata, labels_npz_path=str(labels), basis="spatial",
+                              spatial_key="spatial_cropped_150_buffer", mpp=mpp,
+                              labels_key="labels_he")
+            primary = "labels_he"
+
+        # gene-expression nuclei: rasterise per-bin counts, then StarDist's fluorescence model
+        b2c.grid_image(adata, "n_counts_adjusted" if "n_counts_adjusted" in adata.obs
+                       else "n_counts", mpp=gex_mpp, sigma=5, save_path=str(gex_img))
+        b2c.stardist(image_path=str(gex_img), labels_npz_path=str(gex_labels),
+                     stardist_model="2D_versatile_fluo", prob_thresh=gex_prob_thresh,
+                     **_stardist_params(gex_img))
+        b2c.insert_labels(adata, labels_npz_path=str(gex_labels), basis="array",
+                          mpp=gex_mpp, labels_key="labels_gex")
+
+        # salvage_secondary_labels() expects the primary labels already EXPANDED -- its own default
+        # is labels_he_expanded -- so expand first and salvage into the final key, rather than
+        # salvaging raw labels and expanding the union afterwards.
+        if primary is None:
+            b2c.expand_labels(adata, labels_key="labels_gex",
+                              expanded_labels_key="labels_expanded")
+            method = f"stardist 2D_versatile_fluo mpp={gex_mpp} p={gex_prob_thresh} (GEX only)"
+            label_key = "labels_gex"
+        else:
+            b2c.expand_labels(adata, labels_key="labels_he",
+                              expanded_labels_key="labels_he_expanded")
+            b2c.salvage_secondary_labels(adata, primary_label="labels_he_expanded",
+                                         secondary_label="labels_gex",
+                                         labels_key="labels_expanded")
+            label_key = "labels_joint"
+            method = (f"stardist 2D_versatile_he mpp={mpp} p={prob_thresh} + GEX salvage "
+                      f"(2D_versatile_fluo mpp={gex_mpp})")
+        spatial_keys = ["spatial", "spatial_cropped_150_buffer"] if use_he else ["spatial"]
+        cells = b2c.bin_to_cell(adata, labels_key="labels_expanded", spatial_keys=spatial_keys)
         cells.uns["hsa"] = {"source": source, "accession": accession, "sample_id": sample_id,
                             "technology": "Visium HD", "unit": "cell",
-                            "cell_calling": f"bin2cell stardist 2D_versatile_he mpp={mpp} p={prob_thresh}",
-                            "image": Path(image_url).name, "image_url": image_url}
+                            "cell_calling": f"bin2cell {method}",
+                            "image": Path(image_url).name if use_he else None,
+                            "image_url": image_url}
         cells.write_h5ad(out, compression="gzip")
         rec.update(status="ok", n_cells=int(cells.n_obs), n_genes=int(cells.n_vars),
-                   n_bins=int(adata.n_obs), path=str(out))
+                   n_bins=int(adata.n_obs), path=str(out), label_source=label_key)
     except Exception as e:
         import traceback
         rec["status"] = f"error: {type(e).__name__}: {e}"[:220]
@@ -380,7 +501,7 @@ def segment_one(source: str, accession: str, sample_id: str, image_url: str,
         logger.error("%s / %s failed:\n%s", accession, sample_id, rec["traceback"])
     finally:
         if not keep_image:
-            for f in list(IMG_TMP.glob(f"{tag}*")) + [scaled, labels]:
+            for f in list(IMG_TMP.glob(f"{tag}*")) + [scaled, labels, gex_img, gex_labels]:
                 if f.is_file():
                     f.unlink()
             if stage.exists():
@@ -388,16 +509,50 @@ def segment_one(source: str, accession: str, sample_id: str, image_url: str,
     return rec
 
 
-def segment_all(csv: str = "runs/hd_ready_for_b2c.csv", limit: int | None = None) -> pd.DataFrame:
-    """Stream every ready sample: one image on disk at a time."""
+def build_queue() -> pd.DataFrame:
+    """Every genuine Visium HD sample at 2 um bins, with its image if one exists.
+
+    Supersedes the image-first eligibility, which required a full-resolution H&E on the same row
+    and so admitted only 22 of the 69 two-micron samples. Since segment_one() can segment on gene
+    expression alone, having no image is no longer disqualifying -- it only decides which label
+    source is used. 8 and 16 um samples are deliberately excluded: an 8 um bin is already roughly
+    cell-sized, so "cell calling" on it would not mean anything.
+    """
+    res = pd.read_csv(RUNS / "technology_resolved.csv")
+    key = ["source", "accession", "sample_id"]
+    res[key] = res[key].astype(str)
+    two = res[(res.resolved == "Visium HD") & (res.bin_um == 2.0)].copy()
+    surv = RUNS / "hd_image_survey_all.csv"
+    if surv.exists():
+        img = pd.read_csv(surv)
+        img[key] = img[key].astype(str)
+        two = two.merge(img[key + ["image_gb", "image_url"]], on=key, how="left")
+    else:
+        two["image_gb"], two["image_url"] = float("nan"), None
+    two["label_source"] = np.where(two.image_url.notna(), "he+gex", "gex")
+    out = two[key + ["bin_um", "n_cells", "image_gb", "image_url", "label_source"]]
+    out.to_csv(RUNS / "hd_b2c_queue.csv", index=False)
+    return out
+
+
+def segment_all(csv: str = "runs/hd_b2c_queue.csv", limit: int | None = None,
+                require_image: bool = False) -> pd.DataFrame:
+    """Stream every queued sample: one image on disk at a time."""
+    if not Path(csv).exists():
+        build_queue()
     todo = pd.read_csv(csv)
-    todo = todo[todo.image_gb > 0]
+    if require_image:
+        todo = todo[todo.image_gb > 0]
+    todo = todo.sort_values("image_url", na_position="last")   # H&E samples first
     if limit:
         todo = todo.head(limit)
     res, outcsv = [], Path("runs/bin2cell_results.csv")
     for i, (_, r) in enumerate(todo.iterrows(), 1):
-        logger.info("[%d/%d] %s / %s (%.1f GB image)", i, len(todo), r.accession, r.sample_id, r.image_gb)
-        rec = segment_one(r.source, r.accession, str(r.sample_id), r.image_url)
+        has_img = isinstance(r.get("image_url"), str) and r["image_url"].strip()
+        logger.info("[%d/%d] %s / %s (%s)", i, len(todo), r.accession, r.sample_id,
+                    f"{r.image_gb:.1f} GB H&E" if has_img else "no image -> GEX segmentation")
+        rec = segment_one(r.source, r.accession, str(r.sample_id),
+                          r["image_url"] if has_img else None)
         logger.info("    -> %s", rec.get("status"))
         res.append(rec)
         pd.DataFrame(res).to_csv(outcsv, index=False)
