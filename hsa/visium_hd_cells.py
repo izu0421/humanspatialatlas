@@ -14,6 +14,7 @@ import logging
 import hashlib
 import re
 import shutil
+import time
 from pathlib import Path
 
 import numpy as np
@@ -278,6 +279,36 @@ def _tag(accession: str, sample_id: str) -> str:
     return f"{slug}_{h}"
 
 
+def _fetch_image(url: str, dest: Path, min_bps: float = 1.5e6, grace_s: float = 600.0,
+                 max_s: float = 4 * 3600.0):
+    """Stream a tissue image, giving up on a connection that trickles.
+
+    requests' `timeout` with stream=True is a per-read deadline, not a total one, so a server that
+    delivers a few kilobytes at a time keeps the transfer alive forever: one 9 GB image arrived at
+    ~100 kB/s and held the batch for 17 hours without ever tripping the timeout. Enforce an actual
+    throughput floor and a hard ceiling, and resume with a Range request on the next attempt.
+    """
+    start = dest.stat().st_size if dest.exists() else 0
+    headers = {"Range": f"bytes={start}-"} if start else {}
+    t0 = time.time()
+    with T.S.get(url, stream=True, timeout=300, headers=headers) as r:
+        if r.status_code not in (200, 206):
+            return f"image_http_{r.status_code}", t0
+        n = 0
+        with open(dest, "ab" if start and r.status_code == 206 else "wb") as fh:
+            for chunk in r.iter_content(1 << 23):
+                fh.write(chunk)
+                n += len(chunk)
+                el = time.time() - t0
+                if el > max_s:
+                    return "image_download_exceeded_time_budget", t0
+                if el > grace_s and n / el < min_bps:
+                    logger.warning("image trickling at %.0f kB/s after %.0f s, abandoning (resumable)",
+                                n / el / 1e3, el)
+                    return "image_download_too_slow", t0
+    return n, t0
+
+
 def segment_one(source: str, accession: str, sample_id: str, image_url: str,
                 mpp: float = 0.3, prob_thresh: float = 0.01, keep_image: bool = False) -> dict:
     """Download image -> bin2cell -> cell-level .h5ad -> DELETE image. Peak extra disk: one image."""
@@ -303,12 +334,11 @@ def segment_one(source: str, accession: str, sample_id: str, image_url: str,
             return {**rec, "status": "cannot_stage_spaceranger_layout"}
 
         if not img_path.exists():
-            with T.S.get(image_url, stream=True, timeout=900) as r:
-                if r.status_code != 200:
-                    return {**rec, "status": f"image_http_{r.status_code}"}
-                with open(img_path, "wb") as fh:
-                    for chunk in r.iter_content(1 << 23):
-                        fh.write(chunk)
+            part = img_path.with_suffix(img_path.suffix + ".part")
+            got, t0 = _fetch_image(image_url, part)
+            if isinstance(got, str):
+                return {**rec, "status": got}
+            part.rename(img_path)
         rec["image_gb"] = round(img_path.stat().st_size / 1e9, 2)
         img_path = _prepare_image(img_path)       # gunzip / BigTIFF -> something cv2 can read
 
