@@ -39,21 +39,38 @@
       image (~14–26 MB) and fiducial JPEGs, which cannot resolve nuclei.
 
 ## PPI benchmark
-- [x] Atera benchmark running on two samples (breast, cervical) at a standardised 30,000-cell
-      budget so every method is scored on the identical pair list.
-- [x] LIANA+ bivariate added. It wins and it replicates: AUPRC 0.154 breast / 0.137 cervical
-      against a 0.091 random floor. Specificity is its weakness (7.4% / 12.2% of impossible
-      housekeeping x ligand pairs clear the decoy-95th threshold).
-- [x] COMMOT added. It does not replicate: 0.113 breast but 0.083 cervical against a 0.091 floor,
-      AUROC 0.453, i.e. slightly anti-correlated with CellPhoneDB in the second tissue.
-- [ ] SpatialDM running. The earlier `IndexError` was ours: `globle_st_compute()` sizes its
-      variance vector by counting pairs annotated `ECM-Receptor`/`Cell-Cell Contact`/
-      `Secreted Signaling`, and we had labelled every pair `custom`, so `st` came back length-0.
-- [ ] Celcomen still not evaluable at this scale: lr 1e-1 saturates every g2g entry to 1.0 and
-      lr 1e-6 leaves it at initialisation. Report as "not evaluated", never as "Celcomen fails".
-- [ ] Notebook with PR curves and the specificity plane (per-pair scores now persisted to
-      `results/scores_{sample}.parquet`).
-- [ ] Extend to a second platform once a multi-donor single-cell + wide-panel substrate exists.
+- [x] Two Atera tumours (breast, cervical) at a standardised 30,000-cell budget, all methods on an
+      identical pair list.
+- [x] **Answer: the two leading methods are the same statistic.** SpatialDM 0.1550 / 0.1483 and
+      LIANA+ bivariate 0.1540 / 0.1369 against a 0.091 floor — indistinguishable on breast
+      (Δ 0.001). Both are bivariate Moran's R; the kernel choice does not matter. Everything
+      structurally different is at or below the floor: COMMOT flips (0.1125 → 0.0826, AUROC 0.453),
+      naive and residualised cross-covariance sit at the floor. Ceiling of the field ≈ 1.6-1.7x
+      random while calling 6-13% of pairs that cannot physically interact.
+- [x] SpatialDM fixed. The `IndexError` was ours: `globle_st_compute()` sizes its variance vector by
+      counting pairs annotated `ECM-Receptor`/`Cell-Cell Contact`/`Secreted Signaling`, and we had
+      labelled every pair `custom`, so `st` came back length-0. The label also selects the kernel.
+- [x] **Negative control was abundance-confounded — corrected.** The 20 housekeeping genes have mean
+      detection 0.152 vs 0.066 for positives. Naive cross-covariance's "22% of impossible pairs
+      called", which we read as the co-location confound and as justification for residualising,
+      drops to **5.7%** against closed-compartment partners drawn from the same detection decile;
+      co-location's rate *doubles* (3.1 → 6.0%). So the naive statistic is abundance-biased, not
+      architecture-dominated, and residualisation bought little real specificity while costing the
+      discriminative signal. New class: 1,740 GO closed-compartment genes minus anything ever
+      annotated surface-exposed or secreted (`ppib/truth.py: intracellular_genes()`).
+- [x] Seed variance measured (`run_noise_floor.py`): AUPRC moves 0.012-0.019 between seeds for the
+      clustering-dependent methods, 0.001 for naive cross-cov. **Nothing under ~0.02 AUPRC is a
+      result.** Two earlier "independent replicates" shared `seed=0` and so were near-duplicates —
+      fixing the seed for cross-method comparability is not reproducibility.
+- [ ] Corrected (prevalence-matched) FDR for SpatialDM, LIANA+ and COMMOT — running. The 7.4-12.7%
+      figures currently quoted for them are the unmatched ones and will move.
+- [ ] Replicated depth sweep (4 budgets x 3 seeds x 2 tumours). Needed because residualised
+      cross-cov gave 0.112 at 80k and 0.097 at 30k, but its seed spread alone covers most of that.
+- [ ] Celcomen still not evaluated: saturates at the tutorial lr, sits at initialisation below it,
+      and costs ~5 h (44 s/epoch x 200 x 2 samples). Report as "not evaluated", never "fails".
+- [ ] Execute `notebooks/ppi_benchmark.ipynb` (20 cells, 8 figures) once the above land.
+- [ ] Possible upgrade: build the negative class from Zhang et al. 2026 (aem7299) validated
+      localisation markers — 2,011 organelle + 3,587 topology — instead of GO terms.
 
 ## Known caveats to keep visible
 - Public repo: earlier commits still contain `exports/hst_corpus_coverage.csv` with internal
