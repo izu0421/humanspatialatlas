@@ -28,6 +28,41 @@
 - [ ] Re-run metadata harmonisation for datasets recovered after the archive fixes.
 - [ ] Push refreshed dashboard + exports (one commit outstanding).
 
+## Visium HD / Xenium uniform preprocessing
+- [x] **Panel registry** (`hsa/panels.py`). Gene names read without the matrix (feature_type-filtered
+      h5, features.tsv, h5ad var index): 1,536 samples in 22 s vs ~7 h via `load_sample`, validated
+      exact against the loader on 5 of 6 samples (6th differs only by its duplicate renaming).
+      **1,536 samples -> 164 distinct gene panels.** Panel SIZE is not panel identity: the 164
+      samples reporting 541 genes span four panels sharing as little as 11% of their genes. Also
+      found `n_genes` in sample_qc.csv is inconsistent for 446 samples because Xenium/CellRanger h5
+      files carry control codewords alongside real genes (one 541-feature file: 300 Gene Expression
+      + 241 controls); the registry stores control-stripped counts.
+- [x] **No pan-Xenium gene space exists.** Intersection of all 34 panels with >=300 genes is ONE
+      gene; reaching ~300 shared genes requires discarding more than half the panels. Bears directly
+      on TERRA/Nicheformer-style shared-gene-space training.
+- [x] **Xenium cohorts**: 5K family 248 samples / 46 datasets / 4,277 genes; 377-family 231 / 43 /
+      377 genes; plus 12 smaller cohorts. See `runs/panel_cohorts.csv`.
+- [x] **Visium HD bin size resolved exactly.** Only 96 of 320 samples declare one. Geometry cannot
+      settle it (per-sample px/um ratio 0.25-6.17; three pitch estimators all plateaued near 57%),
+      but the grid is deterministic: Space Ranger lays a fixed bin count over the capture area, so
+      array_row's extent is an exact key -- 3350/838/419 rows for 2/8/16 um on the 6.5 mm slide,
+      5500/1375/688 on the 11 mm slide. 100% agreement on all 94 declared samples.
+- [x] **Only 205 of 320 samples labelled "Visium HD" are Visium HD** (`reclassify()`): 64 are on
+      classic Visium's 78x128 spot grid, 33 are Xenium (continuous coordinates from a
+      cells.parquet), 11 are cell-level WTA, 6 cell-level unknown, 1 unresolved. The dashboard's
+      HD counts need to use the resolved technology, not the depositor's label.
+- [x] **Uniform HD cohorts** (`runs/hd_cohorts.csv`): 2 um 69 samples / 40 datasets / 509.1M bins;
+      8 um 96 / 43 / 33.3M; 16 um 40 / 30 / 5.2M. All three share the same 17,699 genes, and all
+      205 genuine HD samples are covered with none excluded.
+- [ ] Wire the resolved technology into `export.py` so the dashboard stops counting 64 Visium and
+      33 Xenium samples as Visium HD (~21M units mis-attributed; the cell/bin split also shifts).
+- [ ] Normalise coordinates to microns. The grid gives the scale factor exactly: um per unit =
+      (grid_rows x bin_um) / coordinate extent. 225 samples store pixels, 92 microns.
+- [ ] Materialise the cohorts as standardised .h5ad. Blocked on disk: /data at 98%, 1.4 TB free,
+      full corpus estimated 1-1.5 TB -- plan is the three HD and two large Xenium cohorts only,
+      int32 CSR, no dense layers.
+- [ ] 2 samples on an unrecognised 280-row grid (GSE325706) left flagged, not guessed.
+
 ## Visium HD cell-level
 - [ ] bin2cell: 13 of 19 eligible samples segmented (18/19 in progress, the 11 mm colon section).
       Fixed a silent skip: the output filename truncated at 120 characters, so three distinct
