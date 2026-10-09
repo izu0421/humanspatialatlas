@@ -319,7 +319,8 @@ def segment_one(source: str, accession: str, sample_id: str, image_url: str,
     IMG_TMP.mkdir(parents=True, exist_ok=True)
     tag = _tag(accession, sample_id)
     out = HDOUT / f"{tag}.h5ad"
-    legacy = HDOUT / f"{re.sub(r"[^A-Za-z0-9]+", "_", f"{accession}__{sample_id}")[:120]}.h5ad"
+    legacy_slug = re.sub(r"[^A-Za-z0-9]+", "_", f"{accession}__{sample_id}")[:120]
+    legacy = HDOUT / f"{legacy_slug}.h5ad"
     if not out.exists() and legacy.exists():
         legacy.rename(out)                       # migrate off the collision-prone name
     if out.exists():

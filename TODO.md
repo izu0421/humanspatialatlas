@@ -15,14 +15,15 @@
       problem (716 of 978 failures), not a matrix one — a different fix from Visium's.
 
 ## Corpus
-- [ ] Raise loader coverage. **Root cause found for the largest single block:** GEO re-gzips 10x
-      parquet deposits, so Xenium centroids arrive as `cells.parquet.gz` and Visium HD positions as
-      `tissue_positions.parquet.gz`. `_read_coord_table()` tested `p.suffix == ".parquet"`, which is
-      `".gz"` for those, so a binary parquet went into `read_csv` and the exception was swallowed as
-      `no_coords`. 827 such files are on disk (575 Xenium + 150 Visium HD + 102 others); 8 of 8
-      previously-failing Xenium samples now load with 43k-253k cells each. Fixed; `qc_all(retry=
-      "no_coords")` added to roll the fix out over exactly the affected samples.
-      Still open afterwards: 3,039 `no_recognised_matrix` and whatever `no_coords` survives.
+- [x] **Gzipped-parquet coordinate fix rolled out.** GEO re-gzips 10x parquet deposits, so Xenium
+      centroids arrive as `cells.parquet.gz` and Visium HD positions as `tissue_positions.parquet.gz`;
+      `_read_coord_table()` tested `p.suffix == ".parquet"`, which is `".gz"`, so a binary parquet
+      went to `read_csv` and the exception was swallowed as `no_coords`. Retried all 1,894 affected
+      samples: **+733 now load (57.0% -> 63.3%)**, Xenium's loaded count doubled 596 -> 1,216
+      (+72,638,400 single cells, +57% on the atlas total), Visium HD +92 samples (+151M bins).
+- [ ] Remaining loader failures, now cleanly separated: 3,039 `no_recognised_matrix` (untouched by
+      the above) and 1,161 residual `no_coords` concentrated in Visium `tissue_positions` variants
+      and CosMx metadata conventions. Two distinct format families, two distinct pieces of work.
 - [ ] Decide whether to materialise standardised `.h5ad` per sample (needs ~1–1.5 TB; /data at 97%).
 - [ ] Re-run metadata harmonisation for datasets recovered after the archive fixes.
 - [ ] Push refreshed dashboard + exports (one commit outstanding).
