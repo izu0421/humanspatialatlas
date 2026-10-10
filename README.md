@@ -1,19 +1,45 @@
 <img src="logo.svg" width="96" align="right" alt="HSA logo">
 
-# HSA — Human Spatial Atlas
+# HSA — the Human Spatial Atlas and the Human Spatial Agents
 
-A uniformly collected catalogue of public **human** spatially-resolved transcriptomics data
-(Visium / Visium HD, Xenium, CosMx, MERFISH, Stereo-seq, Slide-seq, …), modelled on
-[scBaseCount](https://doi.org/10.1101/2025.02.27.640494). An LLM agent (Claude Sonnet 5.5) finds and
-curates datasets; everything that touches disk is deterministic code.
+Two things, built together.
+
+**The Human Spatial Atlas** is a uniformly processed catalogue of public **human** spatially-resolved
+transcriptomics (Visium / Visium HD, Xenium, CosMx, MERFISH, Stereo-seq, Slide-seq, GeoMx, …):
+cell- or spot-by-gene matrices with spatial coordinates and harmonised metadata, one record per sample.
+
+**The Human Spatial Agents** are the pipeline that builds it and keeps it current. They scout the
+repositories for new deposits, judge what is usable, fetch it, read it into one shape, harmonise the
+labels against public ontologies, and derive what the depositor did not state. Every stage is
+re-runnable, so the Atlas tracks the literature rather than being a snapshot of one afternoon.
+
+Modelled on [scBaseCount](https://doi.org/10.1101/2025.02.27.640494). The agent (Claude Sonnet 5.5)
+decides *what* to take; everything that touches disk is deterministic code.
 
 ```
- sources ──► candidates ──► curator agent ──► deterministic gate ──► catalogue ──► downloader ──► data/
-              (queue)        (1 per dataset)   (URL was listed?        (SQLite)    (matrix + coords
- GEO      : E-utilities keyword union                no images/transcripts?                only; remote-zip
- lists    : reference dataset lists                  'ready' needs both?)                  member reads;
- scouts   : 10x, Zenodo, HuBMAP, HTAN, vendors…                                             tar streaming)
- CELLxGENE: curation API (no LLM) ─────────────────────────────────────────►
+          ┌──────────────────── the Human Spatial Agents ────────────────────┐
+ SCOUT    13 lanes: GEO, Zenodo, figshare, Mendeley, CELLxGENE, 10x, HuBMAP,
+          HTAN, ArrayExpress, HCA, Broad SCP, vendor showcases, aggregators
+             │
+ CURATE   one judgement per candidate: human? spatial? matrix + coordinates
+          openly downloadable?  → deterministic gate → catalogue (SQLite)
+             │
+ FETCH    matrix and coordinate files per sample; resume, throughput floor,
+          remote-zip member reads, tar streaming, archives unpacked
+             │
+ STANDARDISE  ten matrix formats → one shape; coordinates found however the
+          platform stores them; every sample QC'd so failures are visible
+             │
+ HARMONISE  tissue · disease · sex · age · development stage · ethnicity
+          → UBERON, MONDO, HsapDv, HANCESTRO (OLS4); sex also inferred from
+          expression where the gene panel allows it
+             │
+ DERIVE    gene-panel identity · bin size from the bin grid · coordinate
+          scale in microns · platform corrected from file evidence ·
+          Visium HD segmented from 2 µm bins into cells (bin2cell)
+          └──────────────────────────────┬──────────────────────────────────┘
+                                         ▼
+                            the Human Spatial Atlas
 ```
 
 Current phase: **cell/spot-by-gene count matrix + spatial coordinates per sample**. Images, raw reads

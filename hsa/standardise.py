@@ -36,7 +36,7 @@ ARCHIVE_RE = re.compile(r"\.(tar\.gz|tgz|tar|zip)$", re.I)
 KEEP_MEMBER = re.compile(
     r"tissue_positions|scalefactors_json|barcodes\.tsv|features\.tsv|genes\.tsv|matrix\.mtx"
     r"|counts?\.mtx|count_matrix_sparse\.mtx|count_matrix_(genes|barcodes)\.tsv"
-    r"|cell_feature_matrix\.zarr\.zip"
+    r"|cell_feature_matrix\.zarr\.zip|feature_slice\.h5"
     r"|\.h5ad$|\.h5$|cells\.(csv|parquet)|cell_metadata|exprmat|cell_by_gene", re.I)
 
 
@@ -193,6 +193,62 @@ def _read_xenium_zarr(p: Path):
     return a
 
 
+def _read_feature_slice(p: Path):
+    """10x feature_slice.h5 -> AnnData of 2 um bins x genes.
+
+    Space Ranger writes this alongside binned_outputs and it holds the finest binning, one sparse
+    2D slice per gene over the full nrows x ncols grid, with the pitch in metadata_json. Several
+    depositors upload only the 8 or 16 um matrices but include this file, so it is the only route
+    to 2 um -- and therefore to cell segmentation -- for those samples.
+
+    Only bins with at least one count are kept: the full grid is 3350 x 3350 = 11.2M positions and
+    most are empty, so materialising all of them wastes memory and then gets dropped downstream.
+
+    The embedded images are NOT useful for nuclei: both microscope and cytassist are rasterised to
+    the bin grid at 2.00 um/px, where StarDist's H&E model expects 0.3-0.5 um/px.
+    """
+    import json
+
+    import anndata as ad
+    import h5py
+
+    with h5py.File(p, "r") as h:
+        md = json.loads(h.attrs["metadata_json"])
+        nrows, ncols = int(md["nrows"]), int(md["ncols"])
+        pitch = float(md.get("spot_pitch", 2.0))
+        names = [x.decode() if isinstance(x, bytes) else str(x) for x in h["features/name"][:]]
+        keys = list(h["feature_slices"].keys())
+        rows, cols, vals, gidx = [], [], [], []
+        for k in keys:
+            g = h[f"feature_slices/{k}"]
+            n = g["data"].shape[0]
+            if not n:
+                continue
+            rows.append(g["row"][:].astype(np.int64))
+            cols.append(g["col"][:].astype(np.int64))
+            vals.append(g["data"][:].astype(np.int32))
+            gidx.append(np.full(n, int(k), dtype=np.int64))
+
+    if not vals:
+        raise ValueError("feature_slice.h5 has no non-empty feature slices")
+    r = np.concatenate(rows); c = np.concatenate(cols)
+    v = np.concatenate(vals); gi = np.concatenate(gidx)
+    flat = r * np.int64(ncols) + c
+    uniq, inv = np.unique(flat, return_inverse=True)      # keep only occupied bins
+    X = sp.coo_matrix((v, (inv, gi)), shape=(uniq.size, len(names))).tocsr()
+    keep = np.asarray((X > 0).sum(0)).ravel() > 0         # genes with any count
+    a = ad.AnnData(X[:, keep])
+    a.var_names = [names[i] for i in np.flatnonzero(keep)]
+    br, bc = uniq // ncols, uniq % ncols
+    a.obs_names = [f"{int(i)}_{int(j)}" for i, j in zip(br, bc)]
+    a.obs["array_row"] = br.astype(np.int32)
+    a.obs["array_col"] = bc.astype(np.int32)
+    a.obsm["spatial"] = np.column_stack([bc * pitch, br * pitch]).astype(np.float32)
+    a.uns["feature_slice"] = {"nrows": nrows, "ncols": ncols, "spot_pitch_um": pitch,
+                              "source_file": p.name}
+    return a
+
+
 def load_sample(source: str, accession: str, sample_id: str):
     """-> (AnnData | None, info dict). Never raises; failures are reported in info['status']."""
     import anndata as ad
@@ -218,6 +274,12 @@ def load_sample(source: str, accession: str, sample_id: str):
             a, info["loader"] = _read_mtx_trio(p, paths), "mtx_trio"
         elif (p := _find(paths, r"(exprmat|cell_by_gene|stdata|_counts?\.|expression)")):
             a, info["loader"] = _read_csv_matrix(p), "csv_matrix"
+        elif (p := _find(paths, r"feature_slice\.h5$")):
+            # last resort: Space Ranger's multi-resolution file. Deliberately last so it cannot
+            # change how any sample that already has a conventional matrix is read -- it yields
+            # 2 um bins, which is a different object from the 8 um matrix a depositor may have
+            # chosen, and silently switching resolution would be worse than not reading the file.
+            a, info["loader"] = _read_feature_slice(p), "feature_slice"
         else:
             info["status"] = "no_recognised_matrix"
             return None, info
