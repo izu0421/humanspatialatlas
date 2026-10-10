@@ -174,6 +174,40 @@ def load_status():
             for t in tab.index]
 
 
+def hd_cells():
+    """Cell-level Visium HD produced by bin2cell, which the QC table does not know about.
+
+    These are a derived product: 2 um bins segmented into cells, so they are not rows in
+    sample_qc.csv and would otherwise be invisible on the page. The label source matters and is
+    reported alongside -- H&E segmentation sees nuclei directly, whereas the gene-expression route
+    infers them from transcript density and recovers roughly half as many on a matched sample.
+    """
+    import h5py
+    out = {"files": 0, "cells": 0, "by_method": {}}
+    d = ROOT / "visium_hd_cells"
+    if not d.exists():
+        return out
+    for f in sorted(d.glob("*.h5ad")):
+        try:
+            with h5py.File(f, "r") as h:
+                cols = list(h["obs"].attrs.get("column-order", []))
+                n = h["obs"][cols[0]].shape[0] if cols else 0
+                u = h.get("uns/hsa")
+                cc = u["cell_calling"][()].decode() if u and "cell_calling" in u else ""
+        except Exception:
+            continue
+        k = "H&E + GEX salvage" if "versatile_he" in cc else (
+            "gene expression only" if "fluo" in cc else "unknown")
+        out["files"] += 1
+        out["cells"] += int(n)
+        m = out["by_method"].setdefault(k, {"files": 0, "cells": 0})
+        m["files"] += 1
+        m["cells"] += int(n)
+    out["by_method"] = [[k, v["files"], v["cells"]] for k, v in
+                        sorted(out["by_method"].items(), key=lambda kv: -kv[1]["cells"])]
+    return out
+
+
 def run():
     OUT.mkdir(exist_ok=True)
     DASH.mkdir(exist_ok=True)
@@ -235,6 +269,7 @@ def run():
         "sources": src.fillna("").to_dict("records"),
         "samples": samples_payload,
         "headline": headline(),
+        "hd_cells": hd_cells(),
         "load_status": load_status(),
     }
     from .logo import svg

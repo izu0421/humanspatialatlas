@@ -121,6 +121,11 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
 
   <section class="kpis" id="kpis" aria-label="Summary"></section>
 
+  <section class="panel" id="hdCellPanel" hidden>
+    <h2>Visium HD, segmented to cells <span class="count" id="hdCellNote"></span></h2>
+    <div class="bars" id="byHdCell" role="img" aria-label="Cell-level Visium HD by label source"></div>
+  </section>
+
   <section class="panel" id="loadPanel" hidden>
     <h2>What actually opens, per technology <span class="count" id="loadNote"></span></h2>
     <div class="bars" id="byLoad" role="img" aria-label="Load outcome per technology"></div>
@@ -248,6 +253,21 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
         `<span class="trk"><span class="fill${unit === "cell" ? "" : " alt"}" style="width:${(100 * tot) / mx}%"></span>` +
         `<span class="val">${fmt(tot)} ${unit === "cell" ? "cells" : "spots/bins"}</span></span></div>`).join("");
     }
+  }
+
+  // Cell-level Visium HD: a derived product (2 um bins segmented with bin2cell), absent from the
+  // QC table. The two label sources are not equivalent, so they are shown separately.
+  const HC = D.hd_cells || {};
+  if (HC.files) {
+    $("hdCellPanel").hidden = false;
+    $("hdCellNote").textContent =
+      `${fmt(HC.cells)} cells from ${fmt(HC.files)} samples at 2\u00b5m resolution`;
+    const mx = Math.max(...HC.by_method.map((m) => m[2]));
+    $("byHdCell").innerHTML = HC.by_method.map(([lab, nf, nc]) =>
+      `<div class="bar"><span class="lab" title="${esc(lab)}">${esc(lab)}</span>` +
+      `<span class="trk"><span class="fill${lab.indexOf("expression") >= 0 ? " alt" : ""}" ` +
+      `style="width:${(100 * nc) / mx}%"></span>` +
+      `<span class="val">${fmt(nc)} cells &middot; ${fmt(nf)} samples</span></span></div>`).join("");
   }
 
   // Load outcome per technology. The failure modes are distinct and worth distinguishing: GeoMx
