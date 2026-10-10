@@ -21,9 +21,20 @@
       went to `read_csv` and the exception was swallowed as `no_coords`. Retried all 1,894 affected
       samples: **+733 now load (57.0% -> 63.3%)**, Xenium's loaded count doubled 596 -> 1,216
       (+72,638,400 single cells, +57% on the atlas total), Visium HD +92 samples (+151M bins).
-- [ ] Remaining loader failures, now cleanly separated: 3,039 `no_recognised_matrix` (untouched by
-      the above) and 1,161 residual `no_coords` concentrated in Visium `tissue_positions` variants
-      and CosMx metadata conventions. Two distinct format families, two distinct pieces of work.
+- [x] Three more matrix formats read (2026-10-10): gzipped 10x `.h5` (h5py cannot read a gzip
+      stream, so it is decompressed first), Xenium `cell_feature_matrix.zarr.zip` (a zipped zarr
+      store holding the matrix as CSR-over-features and/or CSC-over-cells; take whichever is
+      present and transpose, obs_names positional so coordinates join by order), and mtx trios
+      named `counts.mtx` / `count_matrix_sparse.mtx` with an orientation chosen from the sidecar
+      lengths rather than assumed. **+45 samples, +8.5M cells.**
+      Estimating from file-extension counts predicted ~280 samples and delivered 45 - extension
+      counts are not sample counts, and several of those samples had other problems too. Count
+      samples matching the new pattern before writing the reader next time.
+- [ ] Remaining: 2,899 `no_recognised_matrix`, of which 1,640 are GeoMx (region-level by design,
+      out of scope) and ~346 are R `.rds` Seurat objects that would need rpy2. ~900 unclassified.
+      Plus ~1,040 residual `no_coords` in Visium `tissue_positions` variants and CosMx conventions.
+      A deposit whose features.tsv does not describe its matrix (GSE287459: 37,082-row matrix,
+      18,085-line features) now fails with that stated, rather than an opaque length error.
 - [ ] Decide whether to materialise standardised `.h5ad` per sample (needs ~1–1.5 TB; /data at 97%).
 - [ ] Re-run metadata harmonisation for datasets recovered after the archive fixes.
 - [ ] Push refreshed dashboard + exports (one commit outstanding).

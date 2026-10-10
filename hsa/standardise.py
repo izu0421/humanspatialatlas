@@ -35,6 +35,8 @@ STD = DATA.parent / "standard"
 ARCHIVE_RE = re.compile(r"\.(tar\.gz|tgz|tar|zip)$", re.I)
 KEEP_MEMBER = re.compile(
     r"tissue_positions|scalefactors_json|barcodes\.tsv|features\.tsv|genes\.tsv|matrix\.mtx"
+    r"|counts?\.mtx|count_matrix_sparse\.mtx|count_matrix_(genes|barcodes)\.tsv"
+    r"|cell_feature_matrix\.zarr\.zip"
     r"|\.h5ad$|\.h5$|cells\.(csv|parquet)|cell_metadata|exprmat|cell_by_gene", re.I)
 
 
@@ -115,6 +117,82 @@ def _find(paths: list[Path], pattern: str) -> Path | None:
     return hits[0] if hits else None
 
 
+def _gunzip(p: Path) -> Path:
+    """Decompress alongside the original and return the new path; a no-op for plain files.
+
+    h5py reads a file handle, not a gzip stream, so a .h5.gz has to land on disk uncompressed.
+    """
+    if not p.name.endswith(".gz"):
+        return p
+    out = p.with_suffix("")
+    if not out.exists() or out.stat().st_size == 0:
+        import gzip as _gz
+        with _gz.open(p, "rb") as fi, open(out, "wb") as fo:
+            shutil.copyfileobj(fi, fo, 1 << 24)
+    return out
+
+
+def _read_xenium_zarr(p: Path):
+    """Xenium cell_feature_matrix.zarr.zip -> AnnData (cells x genes).
+
+    Xenium ships the matrix as a zipped zarr store rather than an .h5 for a large fraction of
+    deposits, and those samples were all reported as having no recognised matrix. The store holds
+    the same matrix twice: a CSR compressed over features (indptr length n_features+1) and a CSC
+    compressed over cells. We take the CSC, which is (features x cells) with cells as the
+    compressed axis, and transpose.
+
+    Cell ids are stored as uint32 pairs rather than the strings used in cells.parquet, so obs_names
+    are positional; _load_coords() already supports joining coordinates by order for Xenium.
+    """
+    import json
+    import zipfile
+
+    import anndata as ad
+
+    with zipfile.ZipFile(p) as z:
+        attrs = json.loads(z.read("cell_features/.zattrs"))
+        n_cells = int(attrs["number_cells"])
+        n_feat = int(attrs["number_features"])
+        genes = list(attrs.get("feature_keys") or attrs.get("feature_ids") or [])
+        ftypes = list(attrs.get("feature_types") or [])
+
+        def arr(name):
+            import numcodecs
+            meta = json.loads(z.read(f"cell_features/{name}/.zarray"))
+            dtype = np.dtype(meta["dtype"])
+            comp = meta.get("compressor")
+            codec = numcodecs.get_codec(comp) if comp else None
+            chunk = meta["chunks"][0]
+            total = meta["shape"][0]
+            out = np.empty(total, dtype=dtype)
+            for i in range(0, -(-total // chunk)):
+                raw = z.read(f"cell_features/{name}/{i}")
+                buf = codec.decode(raw) if codec else raw
+                block = np.frombuffer(buf, dtype=dtype)
+                out[i * chunk:i * chunk + len(block)] = block[:total - i * chunk]
+            return out
+
+        # Not every store ships both encodings. The csc group is compressed over cells, the
+        # top-level arrays over features; either reconstructs the same (features x cells) matrix,
+        # so take whichever is present rather than assuming csc as an earlier version did.
+        names = set(z.namelist())
+        if "cell_features/csc/indptr/.zarray" in names:
+            data, indices, indptr = arr("csc/data"), arr("csc/indices"), arr("csc/indptr")
+            M = sp.csc_matrix((data, indices, indptr), shape=(n_feat, n_cells))
+        else:
+            data, indices, indptr = arr("data"), arr("indices"), arr("indptr")
+            M = sp.csr_matrix((data, indices, indptr), shape=(n_feat, n_cells))
+
+    X = M.T.tocsr()
+    a = ad.AnnData(X)
+    if len(genes) == n_feat:
+        a.var_names = [str(g) for g in genes]
+        if len(ftypes) == n_feat:
+            a.var["feature_type"] = ftypes
+    a.obs_names = [str(i) for i in range(n_cells)]
+    return a
+
+
 def load_sample(source: str, accession: str, sample_id: str):
     """-> (AnnData | None, info dict). Never raises; failures are reported in info['status']."""
     import anndata as ad
@@ -130,9 +208,13 @@ def load_sample(source: str, accession: str, sample_id: str):
     try:
         if (p := _find(paths, r"\.h5ad$")):
             a, info["loader"] = ad.read_h5ad(p), "h5ad"
-        elif (p := _find(paths, r"(cell_feature_matrix|filtered_feature_bc_matrix|feature_bc_matrix)\.h5$")):
-            a, info["loader"] = sc.read_10x_h5(p), "10x_h5"
-        elif (p := _find(paths, r"matrix\.mtx(\.gz)?$")):
+        elif (p := _find(paths, r"(cell_feature_matrix|filtered_feature_bc_matrix|feature_bc_matrix)\.h5(\.gz)?$")):
+            # h5py cannot read a gzip stream, so a .h5.gz is decompressed to a sibling first;
+            # 154 samples deposit the matrix that way and were reported as having no matrix.
+            a, info["loader"] = sc.read_10x_h5(_gunzip(p)), "10x_h5"
+        elif (p := _find(paths, r"cell_feature_matrix\.zarr\.zip$")):
+            a, info["loader"] = _read_xenium_zarr(p), "xenium_zarr"
+        elif (p := _find(paths, r"(^|[/_-])(matrix|counts?|count_matrix_sparse)\.mtx(\.gz)?$")):
             a, info["loader"] = _read_mtx_trio(p, paths), "mtx_trio"
         elif (p := _find(paths, r"(exprmat|cell_by_gene|stdata|_counts?\.|expression)")):
             a, info["loader"] = _read_csv_matrix(p), "csv_matrix"
@@ -157,10 +239,28 @@ def load_sample(source: str, accession: str, sample_id: str):
 def _read_mtx_trio(mtx: Path, paths: list[Path]):
     import scanpy as sc
     import anndata as ad
-    a = ad.AnnData(sp.csr_matrix(sc.read_mtx(mtx).X).T.tocsr())
+    raw = sp.csr_matrix(sc.read_mtx(mtx).X)
     sib = [p for p in paths if p.parent == mtx.parent]
-    bc = _find(sib, r"barcodes\.tsv")
-    ft = _find(sib, r"(features|genes)\.tsv")
+    bc = _find(sib, r"(barcodes|count_matrix_barcodes)\.tsv")
+    ft = _find(sib, r"(features|genes|count_matrix_genes)\.tsv")
+    # Market Matrix files are usually genes x cells, but a sizeable minority of deposits are
+    # already cells x genes; transposing unconditionally made var_names length mismatch the
+    # matrix. Decide from the sidecar lengths instead of assuming.
+    n_ft = sum(1 for _ in open(ft, "rb")) if ft is not None and not str(ft).endswith(".gz") else None
+    if n_ft is None and ft is not None:
+        import gzip as _gz
+        with _gz.open(ft, "rt") as fh:
+            n_ft = sum(1 for _ in fh)
+    if n_ft is not None and n_ft not in raw.shape:
+        # The sidecar does not describe this matrix at all -- e.g. GSE287459 ships a 37,082-row
+        # matrix with an 18,085-line features.tsv. Loading it anyway would give an atlas sample
+        # with no usable gene identity, so fail with a status that names the real problem.
+        raise ValueError(f"features.tsv has {n_ft} rows but matrix is {raw.shape}: "
+                         f"annotation does not match the matrix")
+    if n_ft is not None and raw.shape[1] == n_ft and raw.shape[0] != n_ft:
+        a = ad.AnnData(raw)                      # already cells x genes
+    else:
+        a = ad.AnnData(raw.T.tocsr())            # genes x cells, the common case
     if bc is not None:
         a.obs_names = pd.read_csv(bc, header=None, sep="\t")[0].astype(str).values[: a.n_obs]
     if ft is not None:
