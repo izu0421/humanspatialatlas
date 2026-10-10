@@ -68,19 +68,48 @@ h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .stack { display: flex; height: 18px; border-radius: 3px; overflow: hidden; background: var(--grey-soft); }
 .stack i { display: block; height: 100%; }
 .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 3px 0 10px; vertical-align: baseline; }
-.agents .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(236px, 1fr)); gap: 12px; margin-top: 6px;
-  counter-reset: step; }
-.agents .step { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-  padding: 16px 16px 15px; counter-increment: step; transition: transform .18s ease, box-shadow .18s ease; }
-.agents .step::before { content: counter(step); position: absolute; top: -10px; left: 15px; width: 24px; height: 24px;
-  border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center;
-  font: 700 0.72rem var(--f-mono); box-shadow: var(--shadow); }
-.agents .step:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
-.agents .step b { display: block; font: 700 0.98rem/1.3 var(--f-display); margin: 4px 0 5px; }
-.agents .step span { color: var(--muted); font-size: 0.82rem; line-height: 1.5; display: block; }
-.agents .step:nth-child(n+5)::before { background: var(--eosin); }
+.agents .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0;
+  margin: 14px 0 2px; position: relative; }
+.agents .flow::before { content: ""; position: absolute; left: 6%; right: 6%; top: 34px; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--eosin)); opacity: .32; border-radius: 2px; }
+.stage { position: relative; text-align: center; padding: 0 6px; cursor: default; }
+.stage .disc { width: 54px; height: 54px; margin: 6px auto 0; border-radius: 16px; display: grid;
+  place-items: center; background: var(--panel); border: 2px solid var(--accent);
+  box-shadow: var(--shadow); transition: transform .2s cubic-bezier(.2,.8,.3,1.2), box-shadow .2s ease; }
+.stage:nth-child(n+5) .disc { border-color: var(--eosin); }
+.stage svg { width: 26px; height: 26px; stroke-width: 1.7; fill: none; stroke: var(--accent); }
+.stage:nth-child(n+5) svg { stroke: var(--eosin); }
+.stage b { display: block; margin-top: 9px; font: 700 0.78rem/1.2 var(--f-display);
+  letter-spacing: .04em; text-transform: uppercase; }
+.stage em { display: block; font: 0.72rem var(--f-mono); color: var(--muted); font-style: normal; margin-top: 2px; }
+.stage:hover .disc { transform: translateY(-5px) scale(1.06); box-shadow: var(--shadow-lift); }
+.stage .pop { position: absolute; left: 50%; top: 100%; transform: translate(-50%, 6px) scale(.97);
+  width: 250px; background: var(--panel); border: 1px solid var(--line); border-radius: 11px;
+  padding: 11px 13px; font-size: 0.79rem; line-height: 1.5; color: var(--muted); text-align: left;
+  box-shadow: var(--shadow-lift); opacity: 0; pointer-events: none; z-index: 20;
+  transition: opacity .16s ease, transform .16s ease; }
+.stage:hover .pop, .stage:focus-within .pop { opacity: 1; transform: translate(-50%, 6px) scale(1); }
+@media (prefers-reduced-motion: reduce) { .stage .disc, .stage .pop { transition: none; } }
+.info.dark { border-color: var(--line); color: var(--muted); }
+.info { position: relative; display: inline-block; margin-left: 10px; padding: 1px 9px 2px;
+  border-radius: 99px; border: 1px solid rgba(255,255,255,.35); font-size: 0.74rem; cursor: help;
+  color: rgba(255,255,255,.92); }
+.info .pop { position: absolute; left: 0; top: 100%; transform: translateY(6px); width: 290px;
+  background: var(--panel); color: var(--muted); border: 1px solid var(--line); border-radius: 11px;
+  padding: 11px 13px; font-size: 0.78rem; line-height: 1.5; box-shadow: var(--shadow-lift);
+  opacity: 0; pointer-events: none; transition: opacity .16s ease; z-index: 30; text-align: left; }
+.info:hover .pop, .info:focus .pop { opacity: 1; }
 .agentnote { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line);
   color: var(--muted); font-size: 0.84rem; line-height: 1.55; }
+.info.dark { border-color: var(--line); color: var(--muted); }
+.info { position: relative; display: inline-block; margin-left: 10px; padding: 1px 9px 2px;
+  border-radius: 99px; border: 1px solid rgba(255,255,255,.35); font-size: 0.74rem; cursor: help;
+  color: rgba(255,255,255,.92); }
+.info .pop { position: absolute; left: 0; top: 100%; transform: translateY(6px); width: 290px;
+  background: var(--panel); color: var(--muted); border: 1px solid var(--line); border-radius: 11px;
+  padding: 11px 13px; font-size: 0.78rem; line-height: 1.5; box-shadow: var(--shadow-lift);
+  opacity: 0; pointer-events: none; transition: opacity .16s ease; z-index: 30; text-align: left; }
+.info:hover .pop, .info:focus .pop { opacity: 1; }
 .agentnote { margin-top: 12px; color: var(--muted); font-size: 0.84rem; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 15px 17px;
@@ -164,24 +193,8 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   <section class="kpis" id="kpis" aria-label="Summary"></section>
 
   <section class="panel agents">
-    <h2>Human Spatial Agents <span class="count">the pipeline that builds and maintains the Atlas</span></h2>
-    <div class="flow">
-      <div class="step"><b>Scout</b><span>13 lanes &mdash; GEO, Zenodo, figshare, Mendeley, CELLxGENE, 10x,
-        HuBMAP, HTAN, ArrayExpress, HCA, vendor showcases and spatial aggregators &mdash; searched for human
-        spatial deposits and queued as candidates.</span></div>
-      <div class="step"><b>Curate</b><span>Each candidate is judged: is it human, is it spatial, are the
-        matrices and coordinates openly downloadable? Only then does it become a dataset.</span></div>
-      <div class="step"><b>Fetch</b><span>Matrix and coordinate files per sample, streamed with resume and a
-        throughput floor, archives unpacked, name collisions resolved.</span></div>
-      <div class="step"><b>Standardise</b><span>Ten matrix formats read into one shape, coordinates located
-        however the platform stores them, and every sample QC'd so failures are visible, not silent.</span></div>
-      <div class="step"><b>Harmonise</b><span>Tissue, disease, sex, age, development stage and ethnicity
-        resolved to UBERON, MONDO, HsapDv and HANCESTRO; sex also inferred from expression where the panel
-        allows it.</span></div>
-      <div class="step"><b>Derive</b><span>Gene-panel identity, bin size from the bin grid, coordinate scale
-        in microns, platform corrected from file evidence rather than the depositor's label, and Visium HD
-        segmented from bins into cells.</span></div>
-    </div>
+    <h2>Human Spatial Agents <span class="count">hover a stage for what it does</span></h2>
+    <div class="flow" id="agentFlow"></div>
     <div class="agentnote" id="agentNote"></div>
   </section>
 
@@ -304,10 +317,12 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     $("headline").innerHTML =
       `<b><span class="n">${fmt(H.cells)}</span> single cells and <span class="n">${fmt(H.spots)}</span> spots/bins ` +
       `across <span class="n">&ge;${fmt(H.donors)}</span> donors in <span class="n">${fmt(H.tissues)}</span> tissues</b>` +
-      `<div class="fine">Counted over the ${fmt(H.samples_loaded)} human samples from ${fmt(H.datasets)} datasets whose ` +
-      `matrix loads. Spots and bins are kept separate from cells because Visium HD contributes 2&nbsp;&micro;m bins, not ` +
-      `segmented cells. The donor count is a lower bound &mdash; only ${H.donor_frac}% of samples state a donor, and ` +
-      `donor identifiers are local to each study.</div>`;
+      `<div class="fine">${fmt(H.samples_loaded)} human samples \u00b7 ${fmt(H.datasets)} datasets` +
+      `<span class="info" tabindex="0">why cells and spots are not summed` +
+      `<span class="pop">Visium HD contributes 2\u00a0\u00b5m bins, not segmented cells, so adding them to the ` +
+      `cell count would overstate the Atlas roughly threefold. The donor figure is a lower bound: only ` +
+      `${H.donor_frac}% of samples state a donor, and donor identifiers are local to each study, so donors ` +
+      `are counted as (dataset, donor) pairs.</span></span></div>`;
     const u = (H.per_tech || []).slice(0, 12), mx = u.length ? u[0][3] : 1;
     if (u.length) {
       $("unitsPanel").hidden = false;
@@ -319,19 +334,42 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     }
   }
 
+  // Agent pipeline, drawn rather than written: icon + verb, the detail on hover.
+  const STAGES = [
+    ["Scout", "13 lanes", "m11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.3-4.3",
+     "GEO, Zenodo, figshare, Mendeley, CELLxGENE, 10x, HuBMAP, HTAN, ArrayExpress, HCA, Broad SCP, vendor showcases, spatial aggregators \u2014 plus the primary literature, where data-availability statements name accessions no keyword search surfaces."],
+    ["Curate", "one verdict", "M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
+     "Human? Spatial? Are the matrices and coordinates openly downloadable? Only then does a candidate become a dataset \u2014 and the verdict is recorded with its reasoning."],
+    ["Fetch", "resume-safe", "M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2",
+     "Matrix and coordinate files per sample. Resumable transfers with a throughput floor, remote-zip member reads, tar streaming, archives unpacked, name collisions resolved."],
+    ["Standardise", "10 formats", "M4 7h16M4 12h16M4 17h10",
+     "Ten matrix formats read into one shape \u2014 10x h5 (plain and gzipped), mtx trios in several namings, h5ad, CSV, Xenium zarr stores, feature_slice. Coordinates found however the platform stores them, and every sample QC\u2019d so a failure is visible rather than silent."],
+    ["Harmonise", "4 ontologies", "M12 2v4m0 12v4M2 12h4m12 0h4M5 5l3 3m8 8 3 3m0-14-3 3m-8 8-3 3",
+     "Tissue, disease, sex, age, development stage and ethnicity resolved against UBERON, MONDO, HsapDv and HANCESTRO. Sex is also inferred from the XIST:Y-gene ratio where the panel carries those genes \u2014 97% agreement with stated labels, abstaining when it cannot tell."],
+    ["Derive", "what is unsaid", "M12 3a9 9 0 0 0-5 16.5V21h10v-1.5A9 9 0 0 0 12 3Zm-3 18h6",
+     "Gene-panel identity by hashing the gene set, bin size from the bin grid, coordinate scale in microns, platform corrected from file evidence rather than the depositor\u2019s label, and Visium HD segmented from 2 \u00b5m bins into cells."],
+  ];
+  $("agentFlow").innerHTML = STAGES.map(([name, sub, d, detail]) =>
+    `<div class="stage" tabindex="0"><div class="disc"><svg viewBox="0 0 24 24" aria-hidden="true">` +
+    `<path d="${d}" stroke-linecap="round" stroke-linejoin="round"/></svg></div>` +
+    `<b>${esc(name)}</b><em>${esc(sub)}</em><span class="pop">${detail}</span></div>`).join("");
+
   $("agentNote").innerHTML =
-    `Run by <b>Claude Sonnet 5.5</b> against the public APIs of each repository. ` +
-    `Curation and scouting to date: <b>$${Number(D.kpi.usd).toFixed(2)}</b> of model spend across ` +
-    `${fmt(D.kpi.cand_total)} candidates assessed. The agents are re-runnable: new deposits are picked up by ` +
-    `re-scouting, and every derivation above is resumable per sample.`;
+    `Run by <b>Claude Sonnet 5.5</b>. <b>$${Number(D.kpi.usd).toFixed(2)}</b> spent across ` +
+    `${fmt(D.kpi.cand_total)} candidates assessed, and a cycle runs weekly, so the Atlas follows ` +
+    `new deposits rather than being a snapshot.`;
 
   // Cell-level Visium HD: a derived product (2 um bins segmented with bin2cell), absent from the
   // QC table. The two label sources are not equivalent, so they are shown separately.
   const HC = D.hd_cells || {};
   if (HC.files) {
     $("hdCellPanel").hidden = false;
-    $("hdCellNote").textContent =
-      `${fmt(HC.cells)} cells from ${fmt(HC.files)} samples at 2\u00b5m resolution`;
+    $("hdCellNote").innerHTML =
+      `${fmt(HC.cells)} cells \u00b7 ${fmt(HC.files)} samples` +
+      `<span class="info dark" tabindex="0">two label sources<span class="pop">H&amp;E segmentation sees ` +
+      `nuclei directly. The gene-expression route infers them from transcript density and recovers about ` +
+      `half as many on a matched sample, so the two are reported separately and should not be pooled ` +
+      `uncritically.</span></span>`;
     const mx = Math.max(...HC.by_method.map((m) => m[2]));
     $("byHdCell").innerHTML = HC.by_method.map(([lab, nf, nc]) =>
       `<div class="bar"><span class="lab" title="${esc(lab)}">${esc(lab)}</span>` +

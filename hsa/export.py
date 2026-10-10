@@ -266,7 +266,10 @@ def run():
         "generated": time.strftime("%Y-%m-%d %H:%M"),
         "kpi": {"datasets": len(ds), "ready": int((ds.verdict == "ready").sum()),
                 "samples": int(ds.loc[ds.verdict == "ready", "n_samples_with_files"].sum()),
-                "files_done": int((fs.dl_status == "done").sum()),
+                # numerator and denominator must span the SAME roles: counting every
+                # downloaded file against only the matrix/coords ones reported 106%.
+                "files_done": int((fs.role.isin(["matrix", "coords", "matrix+coords"])
+                                   & fs.dl_status.eq("done")).sum()),
                 "files_total": int(fs.role.isin(["matrix", "coords", "matrix+coords"]).sum()),
                 "disk_gb": round(disk_gb, 1), "usd": usage,
                 "cand_total": len(cand), "cand_done": int((cand.status != "pending").sum()) if len(cand) else 0},
