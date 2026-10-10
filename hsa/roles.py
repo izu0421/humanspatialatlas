@@ -280,6 +280,17 @@ LANES = {
     "Spatial databases": "Aggregator databases: SODB, STOmicsDB, SpatialDB, SOAR, Aquila, SPASCER, CROST, SpatialOmicsDB, SpatialTME, "
                          "Spatial Omics DataBase, 'Museum of spatial transcriptomics'. For each: note_source with access method. Where they "
                          "redistribute processed human data with direct links, record datasets (or queue the underlying GEO accessions).",
+    "Literature": "Primary literature rather than a repository. Search Europe PMC "
+                  "(https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=...&format=json&pageSize=100) and "
+                  "bioRxiv/medRxiv for HUMAN spatial transcriptomics papers, preferring the last 24 months and "
+                  "preprints, which repositories index late or not at all. Query the platform names (Visium, Visium HD, "
+                  "Xenium, CosMx, MERFISH, MERSCOPE, Stereo-seq, Slide-seq/Slide-tags, GeoMx, seqFISH, STARmap, Open-ST, "
+                  "Curio) and phrases like 'spatially resolved transcriptomics', 'spatial atlas'. For each paper, read the "
+                  "DATA AVAILABILITY statement and the methods for accession numbers (GSE/GSM, E-MTAB, PXD, zenodo DOI, "
+                  "figshare, dbGaP, EGA, Synapse, dryad) and for consortium portals. queue_candidates every accession that "
+                  "is not already in the catalogue; note_source any portal that needs its own harvesting. This lane exists "
+                  "to catch data that is published but not surfaced by a repository keyword search -- deposits with "
+                  "uninformative titles, data behind a lab portal, and very recent preprints.",
     "EBI BioStudies/ArrayExpress": "EBI BioStudies / ArrayExpress (www.ebi.ac.uk/biostudies/api/v1/search?query=...). Find human spatial "
                                    "transcriptomics studies; queue_candidates their accessions (E-MTAB-...).",
     "HCA / Broad SCP / other": "Human Cell Atlas data portal (Azul API service.azul.data.humancellatlas.org), Broad Single Cell Portal "

@@ -46,8 +46,16 @@ def _clean(a, meta: dict):
 
     X = a.X
     if not sp.issparse(X):
+        # a CSV-read matrix can arrive as object dtype (a stray text column, or pandas keeping
+        # mixed types); scipy.sparse refuses object, so coerce first and fail loudly if it cannot
+        if getattr(X, "dtype", None) is not None and X.dtype == object:
+            X = np.asarray(X, dtype=object)
+            X = np.vectorize(lambda v: pd.to_numeric(v, errors="coerce"))(X).astype(np.float64)
+            X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
         X = sp.csr_matrix(X)
     X = X.tocsr()
+    if X.dtype == object:
+        raise ValueError("matrix is object dtype after coercion; refusing to write")
     if np.allclose(X.data, np.round(X.data)) and X.data.max() < 2**31:
         X.data = X.data.astype(np.int32)         # counts, not a float normalisation
     out = ad.AnnData(X)

@@ -51,6 +51,7 @@ Catalogue tables are generated locally by `python -m hsa.export` and are not pub
 
 | file | content |
 |---|---|
+| `exports/hsa_master_sheet.csv` | **the master sheet** — one row per sample, 74 columns: identity, platform (as labelled and as resolved from file evidence), processing state (`usable` / `standardised` / `cell_called`), scale, harmonised biology with ontology ids, derived technical facts (panel id, bin size, capture area, µm per coordinate unit, inferred sex), artefact paths, and study context. Rebuilt on every `python -m hsa.export`. |
 | `exports/hsa_datasets.csv` | one row per dataset: source, accession, technology, tissue, disease, verdict, samples, files, GB, links |
 | `exports/hsa_files.csv` | one row per file: sample, URL, role (matrix / coords / matrix+coords / bundle), download status |
 | `exports/hsa_sources.csv` | database registry: URL, access method, estimated # human datasets |

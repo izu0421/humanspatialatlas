@@ -210,6 +210,13 @@ def hd_cells():
 
 def run():
     OUT.mkdir(exist_ok=True)
+    # Rebuild the master sheet first: it joins the QC table, the biological labels, the panel and
+    # grid derivations and the materialisation ledger, so it must not lag behind the page.
+    try:
+        from . import manifest
+        manifest.build()
+    except Exception as e:                       # a dashboard refresh should not die on this
+        print(f"warning: master sheet not rebuilt ({type(e).__name__}: {e})")
     DASH.mkdir(exist_ok=True)
     ds, fs, src, cand = tables()
     cols = ["source", "accession", "title", "technology_norm", "technology", "tissue", "disease", "verdict", "verdict_curator",
