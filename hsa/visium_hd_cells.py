@@ -263,8 +263,11 @@ def _attach_positions(adata, stage: Path, img_path: Path | None) -> None:
     if len(common) < 0.5 * adata.n_obs:
         raise ValueError(f"positions match only {len(common)}/{adata.n_obs} barcodes")
     adata._inplace_subset_obs(adata.obs_names.isin(common))
+    # Coerce to numeric: a positions table read from CSV can carry these as object dtype, and
+    # bin2cell's check_array_coordinates() correlates them with scipy.stats.pearsonr, which fails
+    # on object arrays with an opaque "ObjectDType has no attribute dtype".
     for c in ["in_tissue", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres"]:
-        adata.obs[c] = df.loc[adata.obs_names, c].to_numpy()
+        adata.obs[c] = pd.to_numeric(df.loc[adata.obs_names, c], errors="coerce").to_numpy(float)
     adata.obsm["spatial"] = adata.obs[["pxl_col_in_fullres", "pxl_row_in_fullres"]].to_numpy(float)
     sf_path = stage / "spatial" / "scalefactors_json.json"
     sf = _json.loads(sf_path.read_text()) if sf_path.exists() else {}
