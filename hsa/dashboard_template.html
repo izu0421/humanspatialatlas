@@ -151,6 +151,39 @@ input[type=search], select { font: inherit; font-size: 0.9rem; padding: 7px 10px
 input[type=search] { flex: 1 1 240px; min-width: 0; }
 input:focus-visible, select:focus-visible, button:focus-visible, th:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .count { font: 0.8rem var(--f-mono); color: var(--muted); }
+td.ds { max-width: 420px; }
+td.ds a { font: 600 0.84rem var(--f-mono); }
+td.ds .src-chip { display: inline-block; margin-left: 7px; padding: 0 6px; border-radius: 99px;
+  background: var(--grey-soft); color: var(--muted); font: 0.68rem var(--f-mono); vertical-align: 1px; }
+td.ds .ttl { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 410px; }
+td.tis { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dot { display: inline-block; width: 15px; height: 15px; border-radius: 50%;
+  background: conic-gradient(var(--accent) var(--f), var(--grey-soft) 0); vertical-align: -2px;
+  box-shadow: inset 0 0 0 2px var(--panel); }
+.dot.full { background: conic-gradient(var(--ok) 100%, var(--ok) 0); }
+tbody tr { transition: background .14s ease; }
+tbody tr:hover { background: var(--accent-soft); }
+
+/* a slow drift on the page wash; still, and cheap, for reduced-motion users */
+@keyframes drift { 0%,100% { transform: translate3d(0,0,0) } 50% { transform: translate3d(-26px,16px,0) } }
+body::before { animation: drift 34s ease-in-out infinite; will-change: transform; }
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+/* panels fade up as the page settles */
+@keyframes rise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: no-preference) {
+  .wrap > section { animation: rise .5s cubic-bezier(.2,.7,.3,1) both; }
+  .wrap > section:nth-of-type(1) { animation-delay: .02s } .wrap > section:nth-of-type(2) { animation-delay: .07s }
+  .wrap > section:nth-of-type(3) { animation-delay: .12s } .wrap > section:nth-of-type(4) { animation-delay: .17s }
+  .wrap > section:nth-of-type(n+5) { animation-delay: .22s }
+}
+.lockup { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 14px;
+  padding-top: 14px; border-top: 1px solid var(--line); }
+.lockup img { height: 26px; width: auto; opacity: .78; }
+/* the lockup is dark line-art on transparent, so invert it on a dark page */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lockup img { filter: invert(1) brightness(1.6); } }
+:root[data-theme="dark"] .lockup img { filter: invert(1) brightness(1.6); }
+.lockup span { color: var(--muted); font-size: 0.8rem; }
 .tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
 table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
 th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -252,16 +285,18 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <div class="tablebox">
       <table id="tbl">
         <thead><tr>
-          <th data-k="source" tabindex="0">Source</th><th data-k="accession" tabindex="0">Accession</th>
-          <th data-k="title" tabindex="0">Title</th><th data-k="technology_norm" tabindex="0">Tech</th>
-          <th data-k="tissue_norm" tabindex="0">Tissue</th><th data-k="verdict" tabindex="0">Verdict</th>
-          <th data-k="n_samples_with_files" tabindex="0">Samples</th><th data-k="n_files_downloaded" tabindex="0">Files on disk</th>
-          <th data-k="gb" tabindex="0">GB</th>
+          <th data-k="accession" tabindex="0">Dataset</th>
+          <th data-k="technology_norm" tabindex="0">Tech</th>
+          <th data-k="tissue_norm" tabindex="0">Tissue</th>
+          <th data-k="verdict" tabindex="0">Verdict</th>
+          <th data-k="n_samples_with_files" tabindex="0" class="num">Samples</th>
+          <th data-k="gb" tabindex="0" class="num">GB</th>
+          <th data-k="n_files_downloaded" tabindex="0" class="num">Files</th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>
-    <button class="more" id="more" type="button">Show 100 more</button>
+    <button class="more" id="more" type="button">Show 25 more</button>
   </section>
 
   <section class="panel src">
@@ -269,7 +304,13 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <div class="tablebox"><table><thead><tr><th>Source</th><th>Est. human datasets</th><th>Access</th></tr></thead><tbody id="srcRows"></tbody></table></div>
   </section>
 
-  <footer>Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are linked but not downloaded). Regenerate with <code>python -m hsa.export</code>. Code: <a href="https://github.com/izu0421/humanspatialatlas">github.com/izu0421/humanspatialatlas</a>. Full tables (datasets, files, samples, sources) are available from the HSA team on request.</footer>
+  <footer>
+Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are linked but not downloaded). Regenerate with <code>python -m hsa.export</code>. Code: <a href="https://github.com/izu0421/humanspatialatlas">github.com/izu0421/humanspatialatlas</a>. Full tables (datasets, files, samples, sources) are available from the HSA team on request.    <div class="lockup">
+      <img src="teichlab_logo.svg" alt="Teichmann Lab" loading="lazy">
+      <span>Built in the Teichmann Lab. The Atlas is assembled from public deposits; each dataset
+      links to its original record and retains its own licence.</span>
+    </div>
+  </footer>
 </div>
 
 <script type="application/json" id="hsa-data">__HSA_DATA__</script>
@@ -422,7 +463,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   opt("fVerdict", "All verdicts", VERDICTS.filter((v) => vc[v]), VLABEL);
   opt("fTech", "All technologies", uniq("technology_norm"));
   opt("fSource", "All sources", uniq("source"));
-  let sortK = "verdict", sortDir = 1, shown = 100;
+  let sortK = "verdict", sortDir = 1, shown = 25;
   function filtered() {
     const q = $("q").value.trim().toLowerCase(), v = $("fVerdict").value, t = $("fTech").value, s = $("fSource").value;
     return D.datasets.filter((d) => (!v || d.verdict === v) && (!t || d.technology_norm === t) && (!s || d.source === s) &&
@@ -438,18 +479,26 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     $("count").textContent = fmt(f.length) + " of " + fmt(D.datasets.length);
     $("rows").innerHTML = f.slice(0, shown).map((d) => {
       const full = d.n_files && d.n_files_downloaded === d.n_files;
-      return `<tr><td>${esc(d.source)}</td><td class="acc">${d.url ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.accession)}</a>` : esc(d.accession)}</td>
-      <td class="title">${esc(d.title)}</td><td>${esc(d.technology_norm)}</td><td>${esc(d.tissue_norm)}</td>
-      <td><span class="pill v-${esc(d.verdict)}">${VLABEL[d.verdict] || esc(d.verdict)}</span></td>
-      <td class="num">${d.n_samples_with_files || ""}</td>
-      <td class="num"><span class="prog${full ? " full" : ""}">${d.n_files ? d.n_files_downloaded + "/" + d.n_files : d.n_bundles ? d.n_bundles + " archive" + (d.n_bundles > 1 ? "s" : "") : ""}</span></td>
-      <td class="num">${d.gb ? Number(d.gb).toFixed(2) : ""}</td></tr>`;
+      const frac = d.n_files ? d.n_files_downloaded / d.n_files : (d.n_bundles ? 1 : 0);
+      const files = d.n_files ? `${d.n_files_downloaded}/${d.n_files}`
+                  : d.n_bundles ? `${d.n_bundles} arch` : "";
+      return `<tr><td class="ds">` +
+        `${d.url ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.accession)}</a>`
+                 : esc(d.accession)}` +
+        `<span class="src-chip">${esc(d.source)}</span>` +
+        `<span class="ttl" title="${esc(d.title)}">${esc(d.title)}</span></td>` +
+        `<td>${esc(d.technology_norm)}</td><td class="tis">${esc(d.tissue_norm)}</td>` +
+        `<td><span class="pill v-${esc(d.verdict)}">${VLABEL[d.verdict] || esc(d.verdict)}</span></td>` +
+        `<td class="num">${d.n_samples_with_files || ""}</td>` +
+        `<td class="num">${d.gb ? Number(d.gb).toFixed(1) : ""}</td>` +
+        `<td class="num"><span class="dot${full ? " full" : ""}" style="--f:${(frac*100).toFixed(0)}%" ` +
+        `title="${esc(files)}"></span></td></tr>`;
     }).join("");
     $("more").hidden = f.length <= shown;
     document.querySelectorAll("th[data-k]").forEach((th) => th.setAttribute("aria-sort", th.dataset.k === sortK ? (sortDir > 0 ? "ascending" : "descending") : "none"));
   }
-  ["q", "fVerdict", "fTech", "fSource"].forEach((id) => $(id).addEventListener("input", () => { shown = 100; render(); }));
-  $("more").addEventListener("click", () => { shown += 100; render(); });
+  ["q", "fVerdict", "fTech", "fSource"].forEach((id) => $(id).addEventListener("input", () => { shown = 25; render(); }));
+  $("more").addEventListener("click", () => { shown += 25; render(); });
   document.querySelectorAll("th[data-k]").forEach((th) => {
     const go = () => { if (sortK === th.dataset.k) sortDir = -sortDir; else { sortK = th.dataset.k; sortDir = ["gb", "n_samples_with_files", "n_files_downloaded"].includes(sortK) ? -1 : 1; } render(); };
     th.addEventListener("click", go);

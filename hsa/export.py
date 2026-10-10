@@ -84,7 +84,10 @@ def xlsx_coverage(ds):
 
 # technologies that measure a spot or a bin, not a cell. Visium HD alone contributes ~260M 2um
 # bins, so folding them into a "cells" total would overstate the atlas by a factor of three.
-SPOT_TECH = ("Visium", "Visium HD", "Slide-seq", "Stereo-seq", "DBiT-seq", "GeoMx", "ST")
+# Exact names, not substrings. "ST" as a substring matched STARmap, a single-cell imaging
+# platform, and filed its cells as spots. Matching is exact against the resolved technology.
+SPOT_TECH = ("Visium", "Visium HD", "Slide-seq", "Stereo-seq", "DBiT-seq", "GeoMx",
+             "ST (legacy)", "ST")
 # the resolver emits these for samples whose coordinates are one-per-cell rather than a grid
 CELL_TECH = ("cell-level WTA", "cell-level (unknown platform)")
 
@@ -124,7 +127,7 @@ def headline():
     hum = m[m.species.isin(["homo_sapiens", "human_in_mouse_xenograft"])]
     ok = hum[hum.status.eq("ok") & hum.n_cells.notna()].copy()
     is_spot = ok.technology.astype(str).apply(
-        lambda t: t not in CELL_TECH and any(x in t for x in SPOT_TECH))
+        lambda t: t not in CELL_TECH and t in SPOT_TECH)
     d = hum[hum.donor_id.notna() & ~hum.donor_id.isin(["unknown", ""])]
     t = hum[hum.tissue_ontology_term_id.str.startswith("UBERON", na=False)]
     per_tech = (ok.assign(unit=np.where(is_spot, "spot/bin", "cell"))
