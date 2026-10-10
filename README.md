@@ -45,6 +45,28 @@ decides *what* to take; everything that touches disk is deterministic code.
 Current phase: **cell/spot-by-gene count matrix + spatial coordinates per sample**. Images, raw reads
 and per-transcript tables are linked in the catalogue but not downloaded.
 
+## Keeping it current
+
+The agents are re-runnable, and one cycle is scheduled weekly:
+
+```
+17 3 * * 1   runs/hsa_cycle.sh      # python run_hsa.py cycle --budget 40
+```
+
+A cycle is scout → curate → download → QC → panels → materialise → export, each stage
+resumable and writing its own ledger, logged to `runs/cycles/cycle_<stamp>.log`. Two guards
+make it safe to leave unattended: the agent stages stop at both a per-cycle budget and an
+absolute lifetime cap, so a looping lane cannot drain the account; and materialisation
+refuses to start below a disk floor, because deleting raw files to make room for their
+replacements is only safe while there is room for the replacements.
+
+**What it does not do.** It acquires and judges autonomously, but it does not diagnose or
+repair. Every matrix format it reads was added by hand, and a failing sample is recorded
+faithfully and then stays failed. Worse, it cannot notice a result that is wrong but
+plausible: segmenting Visium HD at 2 µm per pixel produced valid files with eight times
+too few cells, and that surfaced only by comparing against H&E siblings. Treat the load
+rate and the derived counts as things to check, not things the system defends.
+
 ## Outputs
 
 Catalogue tables are generated locally by `python -m hsa.export` and are not published in this repository.

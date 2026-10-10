@@ -3,6 +3,7 @@
   python run_hsa.py harvest              # deterministic: CELLxGENE spatial human datasets
   python run_hsa.py scout [LANE ...]     # Sonnet scouts per database (all lanes if none given)
   python run_hsa.py curate [-n N]        # Sonnet curates queued candidates (parallel)
+  python run_hsa.py cycle --budget 40    # one full maintenance pass, for a scheduler
   python run_hsa.py download             # fetch matrix + coords files
   python run_hsa.py bundles              # extract matrix + coords members from tar/zip bundles
   python run_hsa.py status
@@ -92,6 +93,9 @@ def main():
     elif a.cmd == "bundles":
         from hsa import download
         download.run_bundles(workers=a.workers, source=a.source, limit=a.n)
+    elif a.cmd == "cycle":
+        from hsa.cycle import cycle
+        print(cycle(budget_usd=a.budget, lifetime_cap_usd=500.0))
     elif a.cmd == "status":
         status()
     else:
