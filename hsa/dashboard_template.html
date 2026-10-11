@@ -10,6 +10,7 @@
   --accent: #3a3f9a; --accent-soft: #e4e5f6; --eosin: #c24d7a; --eosin-soft: #f7e3ec;
   --ok: #2f7d4f; --ok-soft: #e1f1e7; --warn: #a86a0c; --warn-soft: #f8ecd6; --bad: #b2412f; --bad-soft: #f6e1dc;
   --grey: #7a7c90; --grey-soft: #ececf2;
+  --teal: #1f9b97; --teal-soft: #ddf2f1;
   --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
   --f-body: "Source Sans 3", "Segoe UI", Roboto, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
@@ -22,7 +23,7 @@
   --bg: #12121c; --panel: #1b1b28; --fg: #e8e8f2; --muted: #a0a2bb; --line: #2d2d40;
   --accent: #9da3f2; --accent-soft: #2a2c52; --eosin: #ec8fb2; --eosin-soft: #46263a;
   --ok: #6fcf95; --ok-soft: #1f3a2a; --warn: #e5b45a; --warn-soft: #3d3020; --bad: #ef8a77; --bad-soft: #43251f;
-  --grey: #9a9cb2; --grey-soft: #282838;
+  --grey: #9a9cb2; --grey-soft: #282838; --teal: #4ecdc8; --teal-soft: #15343a;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px -8px rgba(0,0,0,.5);
   --shadow-lift: 0 2px 6px rgba(0,0,0,.4), 0 16px 36px -12px rgba(0,0,0,.65);
   color-scheme: dark } }
@@ -30,7 +31,7 @@
   --bg: #12121c; --panel: #1b1b28; --fg: #e8e8f2; --muted: #a0a2bb; --line: #2d2d40;
   --accent: #9da3f2; --accent-soft: #2a2c52; --eosin: #ec8fb2; --eosin-soft: #46263a;
   --ok: #6fcf95; --ok-soft: #1f3a2a; --warn: #e5b45a; --warn-soft: #3d3020; --bad: #ef8a77; --bad-soft: #43251f;
-  --grey: #9a9cb2; --grey-soft: #282838;
+  --grey: #9a9cb2; --grey-soft: #282838; --teal: #4ecdc8; --teal-soft: #15343a;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px -8px rgba(0,0,0,.5);
   --shadow-lift: 0 2px 6px rgba(0,0,0,.4), 0 16px 36px -12px rgba(0,0,0,.65);
   color-scheme: dark }
@@ -46,9 +47,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto 0; height: 560px; b
 @media (max-width: 520px) { .logo { width: 48px; height: 48px; } }
 header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 28px; }
 .hdr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
-.hdr-right .tl { height: 23px; width: auto; opacity: .62; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hdr-right .tl { filter: invert(1) brightness(1.7); } }
-:root[data-theme="dark"] .hdr-right .tl { filter: invert(1) brightness(1.7); }
+.hdr-right .tl { height: 26px; width: auto; }
 .tabs { display: flex; gap: 4px; margin: 2px 0 14px; border-bottom: 1px solid var(--line); }
 .tab { font: 600 0.8rem var(--f-body); padding: 7px 13px; border: 0; background: none; cursor: pointer;
   color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
@@ -78,17 +77,33 @@ h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .stack { display: flex; height: 18px; border-radius: 3px; overflow: hidden; background: var(--grey-soft); }
 .stack i { display: block; height: 100%; }
 .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 3px 0 10px; vertical-align: baseline; }
-.agents .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0;
-  margin: 14px 0 2px; position: relative; }
-.agents .flow::before { content: ""; position: absolute; left: 6%; right: 6%; top: 34px; height: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--eosin)); opacity: .32; border-radius: 2px; }
+.loop { display: grid; grid-template-columns: 1fr 120px 250px; gap: 0; align-items: stretch; }
+@media (max-width: 860px) { .loop { grid-template-columns: 1fr; } .loop .link { display: none; } }
+.node { border-radius: 14px; padding: 16px 18px; }
+.agentsNode { background: var(--accent-soft); }
+.atlasNode { background: var(--teal-soft); display: flex; flex-direction: column; justify-content: center; }
+.node > b { display: block; font: 700 0.76rem/1 var(--f-display); text-transform: uppercase;
+  letter-spacing: .09em; margin-bottom: 10px; }
+.agentsNode > b { color: var(--accent); } .atlasNode > b { color: var(--teal); }
+.link { width: 120px; height: auto; align-self: center; }
+.atlasStat b { display: block; font: 700 1.5rem/1.15 var(--f-display); font-variant-numeric: tabular-nums;
+  color: var(--teal); letter-spacing: -0.02em; }
+.atlasStat span { display: block; color: var(--muted); font-size: 0.78rem; margin-bottom: 9px; }
+.loopLabels { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; font-size: 0.78rem; color: var(--muted); }
+.loopLabels i { display: inline-block; width: 16px; height: 2px; margin-right: 7px; vertical-align: 4px; }
+.loopLabels .lt i { background: var(--teal); }
+.loopLabels .la i { background: var(--accent); }
+.agents .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 0;
+  margin: 2px 0; position: relative; }
+.agents .flow::before { content: ""; position: absolute; left: 8%; right: 8%; top: 30px; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--teal)); opacity: .4; border-radius: 2px; }
 .stage { position: relative; text-align: center; padding: 0 6px; cursor: default; }
-.stage .disc { width: 54px; height: 54px; margin: 6px auto 0; border-radius: 16px; display: grid;
+.stage .disc { width: 46px; height: 46px; margin: 6px auto 0; border-radius: 16px; display: grid;
   place-items: center; background: var(--panel); border: 2px solid var(--accent);
   box-shadow: var(--shadow); transition: transform .2s cubic-bezier(.2,.8,.3,1.2), box-shadow .2s ease; }
-.stage:nth-child(n+5) .disc { border-color: var(--eosin); }
+.stage:nth-child(n+5) .disc { border-color: var(--teal); }
 .stage svg { width: 26px; height: 26px; stroke-width: 1.7; fill: none; stroke: var(--accent); }
-.stage:nth-child(n+5) svg { stroke: var(--eosin); }
+.stage:nth-child(n+5) svg { stroke: var(--teal); }
 .stage b { display: block; margin-top: 9px; font: 700 0.78rem/1.2 var(--f-display);
   letter-spacing: .04em; text-transform: uppercase; }
 .stage em { display: block; font: 0.72rem var(--f-mono); color: var(--muted); font-style: normal; margin-top: 2px; }
@@ -239,8 +254,32 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   <section class="kpis" id="kpis" aria-label="Summary"></section>
 
   <section class="panel agents">
-    <h2>Human Spatial Agents <span class="count">hover a stage for what it does</span></h2>
-    <div class="flow" id="agentFlow"></div>
+    <h2>Agents <span class="count">and the Atlas they maintain &mdash; hover a stage</span></h2>
+    <div class="loop">
+      <div class="node agentsNode">
+        <b>Human Spatial Agents</b>
+        <div class="flow" id="agentFlow"></div>
+      </div>
+      <svg class="link" viewBox="0 0 120 150" aria-hidden="true" preserveAspectRatio="none">
+        <defs>
+          <marker id="aT" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0 0 L7 3.5 L0 7 z" fill="var(--teal)"/></marker>
+          <marker id="aA" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0 0 L7 3.5 L0 7 z" fill="var(--accent)"/></marker>
+        </defs>
+        <path d="M4 48 H112" stroke="var(--teal)" stroke-width="2" fill="none" marker-end="url(#aT)"/>
+        <path d="M112 100 H4" stroke="var(--accent)" stroke-width="2" fill="none"
+              stroke-dasharray="5 4" marker-end="url(#aA)"/>
+      </svg>
+      <div class="node atlasNode">
+        <b>Human Spatial Atlas</b>
+        <div class="atlasStat" id="atlasStat"></div>
+      </div>
+    </div>
+    <div class="loopLabels">
+      <span class="lt"><i></i>acquire, standardise, derive</span>
+      <span class="la"><i></i>the catalogue says what is already held, so each cycle queues only new deposits</span>
+    </div>
     <div class="agentnote" id="agentNote"></div>
   </section>
 
@@ -405,6 +444,14 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     `<div class="stage" tabindex="0"><div class="disc"><svg viewBox="0 0 24 24" aria-hidden="true">` +
     `<path d="${d}" stroke-linecap="round" stroke-linejoin="round"/></svg></div>` +
     `<b>${esc(name)}</b><em>${esc(sub)}</em><span class="pop">${detail}</span></div>`).join("");
+
+  // the Atlas side of the loop, in its own figures
+  if (H.cells !== undefined) {
+    $("atlasStat").innerHTML =
+      `<b>${fmt(H.cells)}</b><span>single cells</span>` +
+      `<b>${fmt(H.spots)}</b><span>spots &amp; bins</span>` +
+      `<b>${fmt(D.kpi.ready)}</b><span>datasets, ${fmt(H.tissues)} tissues</span>`;
+  }
 
   $("agentNote").innerHTML =
     `Run by <b>Claude Sonnet 5.5</b>. <b>$${Number(D.kpi.usd).toFixed(2)}</b> spent across ` +
