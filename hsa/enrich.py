@@ -16,7 +16,8 @@ XIST = ["XIST", "TSIX"]
 CHRY = ["RPS4Y1", "DDX3Y", "UTY", "USP9Y", "KDM5D", "EIF1AY", "NLGN4Y", "ZFY", "TXLNGY", "TMSB4Y"]
 
 
-def sex_from_expression(a, min_counts: int = 30, ratio: float = 3.0):
+def sex_from_expression(a, min_counts: int = 30, ratio: float = 3.0,
+                        min_frac: float = 1e-4):
     """-> (call, evidence dict). Returns ('unknown', ...) when the data cannot answer.
 
     Uses the RATIO of XIST to Y-linked counts, not either one's share of the library. A fraction
@@ -41,8 +42,19 @@ def sex_from_expression(a, min_counts: int = 30, ratio: float = 3.0):
     tot = lambda idx: float(X[:, idx].sum()) if idx else 0.0
     cx, cy = tot(xi), tot(yi)
     ev.update(xist_counts=int(cx), y_counts=int(cy))
+    total = float(X.sum()) or 1.0
+    ev["total_counts"] = int(total)
     if max(cx, cy) < min_counts:
         return "unknown", {**ev, "reason": f"fewer than {min_counts} informative counts"}
+
+    # A marker family missing from the PANEL reads as zero counts, which is not the same as
+    # measured-and-absent. Comparing against that zero called five whole-transcriptome samples
+    # male on 32-81 Y counts out of millions -- ambient noise, where a real male shows thousands.
+    # So when only one side was measurable, require it to clear a library-size-relative floor too.
+    one_sided = not xi or not yi
+    if one_sided and max(cx, cy) / total < min_frac:
+        return "unknown", {**ev, "reason": "only one marker family in the panel and its signal is "
+                                           f"below {min_frac:g} of the library"}
     if cy >= min_counts and cy > ratio * max(cx, 1.0):
         return "male", ev
     if cx >= min_counts and cx > ratio * max(cy, 1.0):

@@ -39,12 +39,22 @@ body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--f-body); }
 body::before { content: ""; position: fixed; inset: 0 0 auto 0; height: 560px; background: var(--wash);
   pointer-events: none; z-index: 0; }
 .wrap > * { position: relative; z-index: 1; }
-.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: grid; gap: 22px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; display: grid; gap: 30px; }
 .brand { display: flex; gap: 16px; align-items: center; min-width: 0; }
 .brand > div { min-width: 0; }
 .logo { width: 68px; height: 68px; flex: none; filter: drop-shadow(0 4px 10px rgba(58,63,154,.22)); }
 @media (max-width: 520px) { .logo { width: 48px; height: 48px; } }
-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 28px; }
+.hdr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+.hdr-right .tl { height: 23px; width: auto; opacity: .62; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hdr-right .tl { filter: invert(1) brightness(1.7); } }
+:root[data-theme="dark"] .hdr-right .tl { filter: invert(1) brightness(1.7); }
+.tabs { display: flex; gap: 4px; margin: 2px 0 14px; border-bottom: 1px solid var(--line); }
+.tab { font: 600 0.8rem var(--f-body); padding: 7px 13px; border: 0; background: none; cursor: pointer;
+  color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+.pane { display: none; }
+.pane.on { display: grid; }
 h1 { font: 700 clamp(1.6rem, 3.5vw, 2.2rem)/1.1 var(--f-display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
 h1 span { color: var(--accent); }
 h2 { font: 600 0.78rem/1 var(--f-display); text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin: 0 0 12px; }
@@ -218,7 +228,10 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
       <b>the Agents</b> that find, fetch and curate it, and keep doing so as new data is deposited.</div>
       </div>
     </div>
-    <div class="stamp" id="stamp"></div>
+    <div class="hdr-right">
+      <img class="tl" src="teichlab_logo.svg" alt="Teichmann Lab" loading="lazy">
+      <div class="stamp" id="stamp"></div>
+    </div>
   </header>
 
   <section class="headline" id="headline" hidden></section>
@@ -231,19 +244,16 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <div class="agentnote" id="agentNote"></div>
   </section>
 
-  <section class="panel" id="hdCellPanel" hidden>
-    <h2>Visium HD, segmented to cells <span class="count" id="hdCellNote"></span></h2>
-    <div class="bars" id="byHdCell" role="img" aria-label="Cell-level Visium HD by label source"></div>
-  </section>
-
-  <section class="panel" id="loadPanel" hidden>
-    <h2>What actually opens, per technology <span class="count" id="loadNote"></span></h2>
-    <div class="bars" id="byLoad" role="img" aria-label="Load outcome per technology"></div>
-  </section>
-
-  <section class="panel" id="unitsPanel" hidden>
-    <h2>Measured units per technology <span class="count" id="unitsNote"></span></h2>
-    <div class="bars" id="byUnits" role="img" aria-label="Cells or spots per technology"></div>
+  <section class="panel" id="techPanel" hidden>
+    <h2>By technology <span class="count" id="techNote"></span></h2>
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-p="byUnits" role="tab">Measured units</button>
+      <button class="tab" data-p="byLoad" role="tab">What opens</button>
+      <button class="tab" data-p="byHdCell" role="tab">HD cells</button>
+    </div>
+    <div class="bars pane on" id="byUnits"></div>
+    <div class="bars pane" id="byLoad"></div>
+    <div class="bars pane" id="byHdCell"></div>
   </section>
 
   <section class="panel">
@@ -300,16 +310,13 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   </section>
 
   <section class="panel src">
-    <h2>Source registry</h2>
+    <details><summary><h2 style="display:inline">Source registry</h2></summary>
     <div class="tablebox"><table><thead><tr><th>Source</th><th>Est. human datasets</th><th>Access</th></tr></thead><tbody id="srcRows"></tbody></table></div>
+    </details>
   </section>
 
   <footer>
-Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are linked but not downloaded). Regenerate with <code>python -m hsa.export</code>. Code: <a href="https://github.com/izu0421/humanspatialatlas">github.com/izu0421/humanspatialatlas</a>. Full tables (datasets, files, samples, sources) are available from the HSA team on request.    <div class="lockup">
-      <img src="teichlab_logo.svg" alt="Teichmann Lab" loading="lazy">
-      <span>Built in the Teichmann Lab. The Atlas is assembled from public deposits; each dataset
-      links to its original record and retains its own licence.</span>
-    </div>
+Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are linked but not downloaded). Regenerate with <code>python -m hsa.export</code>. Code: <a href="https://github.com/izu0421/humanspatialatlas">github.com/izu0421/humanspatialatlas</a>. Full tables (datasets, files, samples, sources) are available from the HSA team on request.
   </footer>
 </div>
 
@@ -366,14 +373,18 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
       `are counted as (dataset, donor) pairs.</span></span></div>`;
     const u = (H.per_tech || []).slice(0, 12), mx = u.length ? u[0][3] : 1;
     if (u.length) {
-      $("unitsPanel").hidden = false;
-      $("unitsNote").textContent = "cells in blue, spots or bins in pink";
+      $("techPanel").hidden = false;
+      $("techNote").textContent = "cells in blue, spots or bins in pink";
       $("byUnits").innerHTML = u.map(([tech, unit, n, tot]) =>
         `<div class="bar"><span class="lab" title="${esc(tech)} &mdash; ${fmt(n)} samples">${esc(tech)}</span>` +
         `<span class="trk"><span class="fill${unit === "cell" ? "" : " alt"}" style="width:${(100 * tot) / mx}%"></span>` +
         `<span class="val">${fmt(tot)} ${unit === "cell" ? "cells" : "spots/bins"}</span></span></div>`).join("");
     }
   }
+
+  // Tab notes are assigned inside the panel blocks below but read by the tab handler, so they
+  // are declared here: a `const` inside an `if` is block-scoped and the handler cannot see it.
+  let _loadLegend = "", _hdNote = "";
 
   // Agent pipeline, drawn rather than written: icon + verb, the detail on hover.
   const STAGES = [
@@ -404,8 +415,8 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
   // QC table. The two label sources are not equivalent, so they are shown separately.
   const HC = D.hd_cells || {};
   if (HC.files) {
-    $("hdCellPanel").hidden = false;
-    $("hdCellNote").innerHTML =
+    $("techPanel").hidden = false;
+    _hdNote =
       `${fmt(HC.cells)} cells \u00b7 ${fmt(HC.files)} samples` +
       `<span class="info dark" tabindex="0">two label sources<span class="pop">H&amp;E segmentation sees ` +
       `nuclei directly. The gene-expression route infers them from transcript density and recovers about ` +
@@ -419,15 +430,22 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
       `<span class="val">${fmt(nc)} cells &middot; ${fmt(nf)} samples</span></span></div>`).join("");
   }
 
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("on", x === t));
+    document.querySelectorAll(".pane").forEach((x) => x.classList.toggle("on", x.id === t.dataset.p));
+    $("techNote").innerHTML = t.dataset.p === "byLoad" ? _loadLegend
+      : t.dataset.p === "byHdCell" ? _hdNote : "cells in blue, spots or bins in pink";
+  }));
+
   // Load outcome per technology. The failure modes are distinct and worth distinguishing: GeoMx
   // is region-level by design, legacy ST has no standard matrix, and Xenium usually fails at the
   // coordinate step rather than the matrix step.
   const LS = D.load_status || [];
   if (LS.length) {
-    $("loadPanel").hidden = false;
+    $("techPanel").hidden = false;
     const cols = ["var(--ok)", "var(--eosin)", "var(--accent)", "var(--grey-soft)"];
     const labs = ["loads", "no coordinates", "no matrix found", "read error"];
-    $("loadNote").innerHTML = labs.map((l, i) =>
+    _loadLegend = labs.map((l, i) =>
       `<span class="swatch" style="background:${cols[i]}"></span>${l}`).join("");
     $("byLoad").innerHTML = LS.map(([tech, a, b, c, e, n]) => {
       const parts = [a, b, c, e].map((v, i) =>

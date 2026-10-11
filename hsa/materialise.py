@@ -196,3 +196,47 @@ def convert_all(limit: int | None = None, delete_raw: bool = False,
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     convert_all()
+
+
+def refresh_sex(limit: int | None = None) -> pd.DataFrame:
+    """Recompute inferred_sex in already-written .h5ad files, in place.
+
+    A fix to the inference does not reach back into files already materialised. The first version
+    could not tell "XIST absent from the panel" from "XIST measured as zero", and called five
+    whole-transcriptome samples male on ambient Y counts; ~75% of the calls written before the fix
+    came from such one-sided panels. Recomputing needs only the stored matrix, so this reads each
+    file rather than reloading anything from the raw deposits.
+    """
+    import anndata as ad
+
+    if not LEDGER.exists():
+        return pd.DataFrame()
+    L = pd.read_csv(LEDGER)
+    todo = L[(L.status == "ok") & L.path.notna()]
+    if limit:
+        todo = todo.head(limit)
+    rows = []
+    for i, (_, r) in enumerate(todo.iterrows(), 1):
+        f = Path(r.path)
+        if not f.exists():
+            continue
+        try:
+            a = ad.read_h5ad(f)
+            before = a.uns.get("hsa", {}).get("inferred_sex")
+            call, ev = enrich.sex_from_expression(a)
+            if call == before:
+                rows.append({"path": str(f), "changed": False, "sex": call})
+                continue
+            a.uns.setdefault("hsa", {})
+            a.uns["hsa"]["inferred_sex"] = call
+            a.uns["hsa"]["inferred_sex_evidence"] = json.loads(json.dumps(ev, default=str))
+            a.write_h5ad(f, compression="gzip")
+            rows.append({"path": str(f), "changed": True, "was": before, "sex": call})
+        except Exception as e:
+            rows.append({"path": str(f), "error": f"{type(e).__name__}: {e}"[:120]})
+        if i % 100 == 0:
+            logger.info("[%d/%d] %d changed", i, len(todo),
+                        sum(1 for x in rows if x.get("changed")))
+    df = pd.DataFrame(rows)
+    df.to_csv(RUNS / "sex_refresh.csv", index=False)
+    return df
