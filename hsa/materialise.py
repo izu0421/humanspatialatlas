@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
 import re
 from pathlib import Path
 
@@ -83,8 +84,21 @@ def convert_one(source: str, accession: str, sample_id: str, delete_raw: bool = 
     OUT.mkdir(parents=True, exist_ok=True)
     out = OUT / f"{_tag(source, accession, sample_id)}.h5ad"
     if out.exists() and not overwrite:
-        return {**rec, "status": "already_done", "path": str(out),
-                "bytes_out": out.stat().st_size}
+        # An existing file is not evidence of a finished one. A Xenium sample was recorded
+        # already_done against a truncated h5ad (HDF5 claiming data past EOF, only obs written):
+        # the shortcut returned before the read-back check that the write path does perform. Open
+        # it; if it will not open, treat it as absent and convert again.
+        try:
+            import anndata as _ad
+            _b = _ad.read_h5ad(out, backed="r")
+            if _b.n_obs and _b.n_vars:
+                return {**rec, "status": "already_done", "path": str(out),
+                        "bytes_out": out.stat().st_size}
+            raise ValueError(f"empty: {_b.shape}")
+        except Exception as e:
+            logger.warning("existing h5ad unreadable (%s), reconverting: %s",
+                           str(e)[:70], out.name)
+            out.unlink()
 
     meta = manifest.for_sample(source, accession, sample_id)
     try:
@@ -93,6 +107,15 @@ def convert_one(source: str, accession: str, sample_id: str, delete_raw: bool = 
         return {**rec, "status": f"load_error: {type(e).__name__}: {e}"[:200]}
     if a is None or not str(info.get("status", "")).startswith("ok"):
         return {**rec, "status": f"not_loadable: {info.get('status')}"[:200]}
+    # A sample with no gene axis is not a transcriptome. GSE288178 deposits spatial-ATAC h5ads
+    # holding fragment counts and obs-level QC (n_fragment, tsse) with shape (N, 0); these reached
+    # the writer and failed there as "scipy.sparse does not support dtype object", which named the
+    # symptom and hid the cause. Reject them here with the reason.
+    if a.n_vars == 0:
+        return {**rec, "status": "not_transcriptomic: no gene axis (0 vars) -- "
+                                 "source holds a non-expression modality"}
+    if a.n_obs == 0:
+        return {**rec, "status": "empty: 0 observations"}
 
     try:
         clean = _clean(a, meta)
@@ -153,44 +176,86 @@ def convert_one(source: str, accession: str, sample_id: str, delete_raw: bool = 
 
 
 def convert_all(limit: int | None = None, delete_raw: bool = False,
-                technologies=None, min_free_gb: float = 80.0) -> pd.DataFrame:
-    """Stream over every loadable sample, newest-largest first, stopping if disk runs low."""
+                technologies=None, min_free_gb: float = 80.0, workers: int = 3,
+                max_cells: int | None = 4_000_000,
+                retry_failed: bool = False) -> pd.DataFrame:
+    """Stream over every loadable sample, smallest first, stopping if disk runs low."""
     m = pd.read_csv(manifest.MANIFEST) if manifest.MANIFEST.exists() else manifest.build()
     todo = m[m.usable.fillna(False)]
     if technologies:
         todo = todo[todo.technology_resolved.isin(technologies)]
-    todo = todo.sort_values("n_cells", ascending=False)
-    if limit:
-        todo = todo.head(limit)
+    # Smallest first. Largest-first put a multi-million-cell sample at the head of every batch,
+    # so a single batch of 25 spent 2.5 h and 150 GB on one whole-transcriptome CosMx table while
+    # 1,500 small samples waited behind it. Ascending order clears the bulk and leaves the few
+    # giants at the end, where max_cells defers them for a streaming writer.
+    todo = todo.sort_values("n_cells", ascending=True)
 
     done = set()
     rows = []
     if LEDGER.exists():
         prev = pd.read_csv(LEDGER)
         rows = prev.to_dict("records")
+        # Every sample already attempted is skipped, not just the successful ones. Counting only
+        # ok/already_done left the failures permanently at the head of the ascending queue, so the
+        # batch wrapper re-attempted the same 25 unloadable samples on every pass and the
+        # conversion count never moved. retry_failed=True is the way to revisit them after a
+        # loader fix.
+        statuses = ("ok", "already_done") if retry_failed else None
         done = {(str(r["source"]), str(r["accession"]), str(r["sample_id"]))
-                for r in rows if str(r.get("status")) in ("ok", "already_done")}
+                for r in rows
+                if statuses is None or str(r.get("status")) in statuses}
 
-    for i, (_, r) in enumerate(todo.iterrows(), 1):
-        key = (str(r.source), str(r.accession), str(r.sample_id))
-        if key in done:
-            continue
+    # Sequential, but the caller is expected to run this in short batches from a fresh process
+    # (see runs/materialise_loop.sh). One long-lived process reached 158 GB RSS: each sample
+    # allocates large sparse arrays and glibc does not hand freed arenas back to the OS. A
+    # ProcessPoolExecutor was tried first and deadlocked with its worker blocked in pipe_read,
+    # so the batch-and-exit approach is used instead -- less clever and it actually runs.
+    keys = [(str(r.source), str(r.accession), str(r.sample_id))
+            for _, r in todo.iterrows()
+            if (str(r.source), str(r.accession), str(r.sample_id)) not in done]
+    cells = {(str(r.source), str(r.accession), str(r.sample_id)): r.n_cells
+             for _, r in todo.iterrows()}
+    if limit:
+        keys = keys[:int(limit)]          # limit the REMAINING work, not the whole list
+    logger.info("%d samples to convert this batch", len(keys))
+    for i, key in enumerate(keys, 1):
         free_gb = os.statvfs(str(DATA))[4] * os.statvfs(str(DATA))[0] / 1e9
         if free_gb < min_free_gb:
             logger.error("stopping: only %.0f GB free (floor %.0f)", free_gb, min_free_gb)
             break
+        n_cells = int(cells.get(key) or 0)
+        if max_cells and n_cells > max_cells:
+            logger.info("[%d/%d] defer %s (%s cells > cap)", i, len(keys), key[2], f"{n_cells:,}")
+            rows.append({"source": key[0], "accession": key[1], "sample_id": key[2],
+                         "status": f"deferred_too_large: {n_cells:,} cells"})
+            continue
+        t0 = time.time()
         rec = convert_one(*key, delete_raw=delete_raw)
+        # Per-sample line: the earlier loop only logged every 25th sample, so a batch stuck on
+        # sample 1 looked identical to a batch making progress.
+        logger.info("[%d/%d] %s %s (%s cells, %.0fs)", i, len(keys),
+                    str(rec.get("status"))[:40], key[2][:40], f"{n_cells:,}", time.time() - t0)
         rows.append(rec)
-        if i % 20 == 0 or rec["status"] != "ok":
+        if i % 10 == 0:
             pd.DataFrame(rows).to_csv(LEDGER, index=False)
-        if i % 50 == 0:
-            ok = [x for x in rows if x.get("status") == "ok"]
+        if i % 25 == 0:
+            okr = [x for x in rows if x.get("status") == "ok"]
             logger.info("[%d/%d] ok=%d  written=%.1f GB  freed=%.1f GB  free=%.0f GB",
-                        i, len(todo), len(ok),
-                        sum(x.get("bytes_out", 0) for x in ok) / 1e9,
-                        sum(x.get("bytes_freed", 0) or 0 for x in ok) / 1e9, free_gb)
-    pd.DataFrame(rows).to_csv(LEDGER, index=False)
-    return pd.DataFrame(rows)
+                        i, len(keys), len(okr),
+                        sum(x.get("bytes_out", 0) for x in okr) / 1e9,
+                        sum(x.get("bytes_freed", 0) or 0 for x in okr) / 1e9, free_gb)
+    out = pd.DataFrame(rows)
+    if len(out):
+        k = ["source", "accession", "sample_id"]
+        pref = ~(out.status.astype(str).str.startswith("ok")
+                 | out.status.astype(str).eq("already_done"))
+        out = (out.assign(_r=pref.astype(int)).sort_values("_r")
+                  .drop_duplicates(k, keep="first").drop(columns="_r"))
+    out.to_csv(LEDGER, index=False)
+    # The return value is the whole accumulated ledger, so its length never reaches zero and the
+    # batch wrapper's "nothing left to do" exit never fired. Carry this batch's size separately.
+    out.attrs["n_batch"] = len(keys)
+    return out
 
 
 if __name__ == "__main__":
@@ -198,14 +263,22 @@ if __name__ == "__main__":
     convert_all()
 
 
-def refresh_sex(limit: int | None = None) -> pd.DataFrame:
-    """Recompute inferred_sex in already-written .h5ad files, in place.
+SEX_SUBSAMPLE = 300_000
 
-    A fix to the inference does not reach back into files already materialised. The first version
-    could not tell "XIST absent from the panel" from "XIST measured as zero", and called five
-    whole-transcriptome samples male on ambient Y counts; ~75% of the calls written before the fix
-    came from such one-sided panels. Recomputing needs only the stored matrix, so this reads each
-    file rather than reloading anything from the raw deposits.
+
+def refresh_derived(limit: int | None = None, pieces: bool = True,
+                    resume: bool = True) -> pd.DataFrame:
+    """Recompute inferred_sex, and count tissue pieces, in already-written .h5ad files.
+
+    Sex is rewritten into the file because it is a per-sample fact the file should carry; the
+    piece count goes to a sidecar CSV instead. Adding a new uns key to every file would rewrite
+    all 310 GB of the atlas to store one integer per sample, so the manifest joins it on instead.
+
+    A fix to the inference does not reach back into files already materialised, and the marker
+    list has now changed twice: first to tell "XIST absent from the panel" from "XIST measured as
+    zero", and then to drop the pseudoautosomal genes and demote RPS4Y1 after measuring every
+    candidate against 800 depositor-labelled samples. Recomputing needs only the stored matrix, so
+    this reads each file rather than reloading anything from the raw deposits.
     """
     import anndata as ad
 
@@ -213,30 +286,67 @@ def refresh_sex(limit: int | None = None) -> pd.DataFrame:
         return pd.DataFrame()
     L = pd.read_csv(LEDGER)
     todo = L[(L.status == "ok") & L.path.notna()]
+    rows = []
+    done = set()
+    ck = RUNS / "sex_refresh.csv"
+    if resume and ck.exists():
+        prev = pd.read_csv(ck)
+        rows = prev.to_dict("records")
+        done = set(prev.path.astype(str))
+        todo = todo[~todo.path.astype(str).isin(done)]
+        logger.info("resuming: %d already done, %d to go", len(done), len(todo))
     if limit:
         todo = todo.head(limit)
-    rows = []
     for i, (_, r) in enumerate(todo.iterrows(), 1):
+        if i % 100 == 1 and i > 1:
+            logger.info("[%d/%d] %d changed", i - 1, len(todo),
+                        sum(1 for x in rows if x.get("changed")))
+            pd.DataFrame(rows).to_csv(RUNS / "sex_refresh.csv", index=False)
         f = Path(r.path)
         if not f.exists():
             continue
         try:
-            a = ad.read_h5ad(f)
+            a = ad.read_h5ad(f, backed="r")
             before = a.uns.get("hsa", {}).get("inferred_sex")
-            call, ev = enrich.sex_from_expression(a)
+            # The sex call is a ratio of two marker families over the whole library, so a random
+            # subsample estimates it as well as the full matrix. Reading every cell of a 27-million
+            # bin Visium HD section to compute one ratio cost 40 GB of RSS.
+            n = a.n_obs
+            if n > SEX_SUBSAMPLE:
+                idx = np.sort(np.random.default_rng(0).choice(n, SEX_SUBSAMPLE, replace=False))
+                sub = a[idx].to_memory()
+            else:
+                sub = a.to_memory()
+            call, ev = enrich.sex_from_expression(sub)
+            if n > SEX_SUBSAMPLE:
+                ev["subsampled_cells"] = int(SEX_SUBSAMPLE)
+            rec = {"path": str(f), "sex": call, "was": before,
+                   "reason": str(ev.get("reason", ""))[:90],
+                   "core_y_detected": ev.get("core_y_genes_detected"),
+                   "xist_cpm": ev.get("xist_cpm"), "y_cpm": ev.get("y_cpm"),
+                   "par_excluded": ";".join(ev.get("pseudoautosomal_excluded", []))[:60]}
+            if pieces:
+                rec.update({k: v for k, v in enrich.tissue_pieces(sub if n <= SEX_SUBSAMPLE
+                                                                  else a).items()
+                            if k in ("n_pieces", "frac_in_largest", "piece_sizes", "n_fragments",
+                                     "frac_in_fragments")})
             if call == before:
-                rows.append({"path": str(f), "changed": False, "sex": call})
+                rows.append({**rec, "changed": False})
                 continue
-            a.uns.setdefault("hsa", {})
-            a.uns["hsa"]["inferred_sex"] = call
-            a.uns["hsa"]["inferred_sex_evidence"] = json.loads(json.dumps(ev, default=str))
-            a.write_h5ad(f, compression="gzip")
-            rows.append({"path": str(f), "changed": True, "was": before, "sex": call})
+            # only now is the whole file needed, and only for the samples whose call changed
+            full = ad.read_h5ad(f)
+            full.uns.setdefault("hsa", {})
+            full.uns["hsa"]["inferred_sex"] = call
+            full.uns["hsa"]["inferred_sex_evidence"] = json.loads(json.dumps(ev, default=str))
+            full.write_h5ad(f, compression="gzip")
+            del full
+            rows.append({**rec, "changed": True})
         except Exception as e:
             rows.append({"path": str(f), "error": f"{type(e).__name__}: {e}"[:120]})
-        if i % 100 == 0:
-            logger.info("[%d/%d] %d changed", i, len(todo),
-                        sum(1 for x in rows if x.get("changed")))
     df = pd.DataFrame(rows)
     df.to_csv(RUNS / "sex_refresh.csv", index=False)
     return df
+
+
+# kept so existing callers and the cycle do not break
+refresh_sex = refresh_derived

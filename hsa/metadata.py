@@ -6,6 +6,7 @@
   python -m hsa.metadata pilot N   |  run  |  validate
 """
 import json
+import logging
 import re
 import sys
 import threading
@@ -17,6 +18,8 @@ import anthropic
 
 from . import db, tools_api as T
 from .config import MODEL, PRICE, load_key
+
+logger = logging.getLogger(__name__)
 
 load_key()
 CLIENT = anthropic.Anthropic(max_retries=6, timeout=900)
@@ -33,6 +36,7 @@ CREATE TABLE IF NOT EXISTS sample_meta (
   disease_ontology_term_id_level1 TEXT, disease_ontology_term_id_level2 TEXT, disease_ontology_term_id_level3 TEXT,
   disease_match TEXT, condition TEXT,
   self_reported_ethnicity TEXT, self_reported_ethnicity_ontology_term_id TEXT, donor_id TEXT,
+  preservation TEXT, multi_piece INTEGER,
   metadata_source TEXT, confidence TEXT, evidence TEXT, llm_json TEXT, updated REAL,
   PRIMARY KEY (source, accession, sample_id));
 CREATE TABLE IF NOT EXISTS ontology_cache (ontology TEXT, query TEXT, obo_id TEXT, label TEXT, match TEXT,
@@ -204,38 +208,119 @@ def samples_for(ds):
 SAMPLE_SCHEMA = {
     "type": "object", "additionalProperties": False,
     "required": ["sample_id", "species", "tissue", "sex", "age_num", "age_unit", "prenatal", "disease_state", "disease",
-                 "condition", "ethnicity", "donor_id", "confidence", "evidence"],
+                 "condition", "ethnicity", "donor_id", "multi_piece", "preservation", "confidence", "evidence"],
     "properties": {
         "sample_id": {"type": "string"},
         "species": {"type": "string", "enum": ["homo_sapiens", "mus_musculus", "human_in_mouse_xenograft", "other", "unknown"]},
         "tissue": {"type": "string", "description": "most specific anatomical site stated, as an UBERON-style label (e.g. 'dorsolateral prefrontal cortex', 'colonic mucosa'); 'unknown' if not stated"},
         "sex": {"type": "string", "enum": ["female", "male", "unknown"]},
-        "age_num": {"type": ["number", "null"], "description": "numeric age if stated (midpoint for ranges)"},
+        "age_num": {"type": ["number", "null"], "description": "numeric age if stated ANYWHERE in the deposit, "
+                                                               "including the sample title; midpoint for ranges and "
+                                                               "decades ('60s' -> 65); null only if truly absent"},
         "age_unit": {"type": "string", "enum": ["year", "month", "week", "day", "unknown"]},
         "prenatal": {"type": "boolean", "description": "true if embryonic/fetal (age is post-conception)"},
-        "disease_state": {"type": "string", "enum": ["healthy", "disease", "unknown"],
-                          "description": "healthy = normal / control / non-lesional / adjacent normal tissue"},
+        "disease_state": {"type": "string", "enum": ["healthy", "disease", "mixed", "unknown"],
+                          "description": "healthy = normal / control / non-lesional / adjacent normal tissue; "
+                                         "mixed = the section carries both diseased and normal pieces"},
         "disease": {"type": "string", "description": "most specific diagnosis as a MONDO-style label (e.g. 'invasive ductal breast carcinoma', 'Alzheimer disease'); 'normal' if healthy; 'unknown'"},
         "condition": {"type": "string", "description": "other sample-level context: treatment, lesion vs non-lesional, region, timepoint, FFPE/fresh frozen; '' if none"},
         "ethnicity": {"type": "string", "description": "self-reported ethnicity / ancestry as stated (e.g. 'European', 'African American', 'Han Chinese'); 'unknown'"},
-        "donor_id": {"type": "string", "description": "patient/donor identifier if stated, else ''"},
+        "donor_id": {"type": "string", "description": "patient/donor identifier if stated, else ''; leave empty "
+                                                      "when the section pools more than one donor"},
+        "multi_piece": {"type": "boolean", "description": "true if this capture area carries more than one tissue "
+                                                          "piece, core, region or donor (TMA, paired tumour/normal, "
+                                                          "multiple sections mounted together)"},
+        "preservation": {"type": "string",
+                         "enum": ["FFPE", "fresh_frozen", "fixed_frozen", "fresh", "unknown"],
+                         "description": "how the tissue was preserved. FFPE = formalin-fixed paraffin-embedded "
+                                        "(probe-based chemistry); fresh_frozen = snap-frozen / OCT / cryosectioned "
+                                        "(poly-A capture); fixed_frozen = fixed then frozen (e.g. methanol, PAXgene, "
+                                        "Visium FFPE-on-fresh-frozen); fresh = neither fixed nor frozen"},
         "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
-        "evidence": {"type": "string", "description": "the raw fields you used, briefly"}}}
+        "evidence": {"type": "string", "description": "the raw fields you used, briefly; when age or disease_state "
+                                                      "is unknown, name where you looked"}}}
 SCHEMA = {"type": "object", "additionalProperties": False, "required": ["samples"],
           "properties": {"samples": {"type": "array", "items": SAMPLE_SCHEMA}}}
 
 SYSTEM = """You harmonise sample metadata for HSA, a catalogue of human spatial transcriptomics data.
-For EVERY listed sample return one record. Use only what the provided metadata states or clearly implies at the \
-dataset level (e.g. a series on 'healthy adult human kidney' implies tissue=kidney, disease_state=healthy for all \
-samples); never guess sex, age or ethnicity. Prefer the most specific tissue and disease that are stated. \
-Tumour-adjacent normal tissue: disease_state=healthy, mention 'tumour-adjacent' in condition. \
-Cell lines / organoids: put that in condition. Write labels the way UBERON/MONDO name them."""
+For EVERY listed sample return one record.
+
+SEARCH HARD FOR AGE AND DISEASE STATUS. Across the current atlas, age is present for only 24% of \
+samples and disease status for 80%, and most of what is missing was in fact stated somewhere in \
+the deposit. Before returning "unknown" for either, look through ALL the text you were given: \
+the per-sample characteristics, the sample TITLE (often the only place age appears, as 'PCW12', \
+'P14', '67y', 'E15.5', 'aged 72'), the series summary and design, the overall design, the \
+protocol text, supplementary file names, and the dataset page. Age hides in these forms and all \
+of them count as stated:
+  - post-conception for prenatal material: 'PCW 12', '12 weeks gestation', 'GW12', 'E15' \
+(set prenatal=true and age_unit=week)
+  - decades or ranges: '60s' -> 65, '40-50' -> 45, 'sixth decade' -> 55 (midpoint; say so in evidence)
+  - age at diagnosis, age at death, age at surgery, post-mortem age -- all usable
+  - a donor table in the series summary keyed by donor_id that maps to this sample
+Disease status likewise: a diagnosis, a stage or grade (e.g. 'Gleason 7', 'IDH-wildtype', \
+'Braak IV'), a treatment that implies a disease, or the word control/normal/non-lesional/\
+adjacent, all determine disease_state even when no tidy 'disease:' field exists.
+
+NEVER INVENT. Searching harder is not guessing: if the text does not state or directly imply a \
+value, return 'unknown' and say in evidence where you looked. An inferred-but-unstated age is \
+worse than a missing one, because a missing one is visibly missing. Never infer sex from a name, \
+a tissue, or a disease -- sex is determined separately from gene expression and your guess would \
+override a measurement. Never infer ethnicity from country, institution or surname.
+
+SEARCH JUST AS HARD FOR TISSUE. Tissue is missing for 15% of the current atlas, and in a third \
+of those cases the organ is written plainly in the series title that was supplied -- titles like \
+'An atlas of healthy and injured cell states and niches in the human kidney', 'Immune memory \
+niches in inflammatory skin diseases', 'RA synovium Xenium pre-treatment' were all returned as \
+tissue=unknown. Read the series title, the sample title, the sample_id, the summary, the overall \
+design and the condition text before concluding there is no anatomical site. Three rules:
+  - THE TITLE COUNTS. A series named for an organ sets the tissue for its samples unless a \
+sample contradicts it. This is the single largest source of recoverable tissue.
+  - A DIAGNOSIS IMPLIES ITS ORGAN, and that is direct implication, not a guess: colorectal \
+cancer -> colon, glioblastoma -> brain, hepatocellular carcinoma -> liver, head and neck \
+squamous cell carcinoma -> head and neck, invasive ductal carcinoma -> breast, clear cell renal \
+cell carcinoma -> kidney, rheumatoid arthritis synovium -> synovial membrane. Where the \
+diagnosis names a site more precisely than the title, prefer the diagnosis.
+  - ORGANOIDS AND CELL LINES ARE NOT 'unknown'. Give the organ being modelled when it is stated \
+('iPSC-derived cerebral organoid' -> brain; 'hemanoid' -> blood/haematopoietic) and record \
+'organoid' or the cell line in condition. Reserve tissue=unknown for material with no \
+anatomical origin at all.
+Return 'unknown' only when nothing in any supplied text names or implies a site, and say in \
+evidence what you checked.
+
+Use what the provided metadata states or clearly implies at the dataset level (e.g. a series on \
+'healthy adult human kidney' implies tissue=kidney, disease_state=healthy for all samples). \
+Prefer the most specific tissue and disease that are stated. Tumour-adjacent normal tissue: \
+disease_state=healthy, mention 'tumour-adjacent' in condition. Cell lines / organoids: put that \
+in condition. Write labels the way UBERON/MONDO name them.
+
+RECORD HOW THE TISSUE WAS PRESERVED. FFPE and fresh-frozen are different assay chemistries -- \
+probe hybridisation versus poly-A capture -- so they differ in gene detection, in which genes are \
+detectable at all, and in RNA degradation, and samples of the two kinds are not directly \
+comparable. It is usually stated plainly somewhere: 'FFPE', 'formalin-fixed', 'paraffin', \
+'CytAssist FFPE', 'probe-based' all mean FFPE; 'OCT', 'snap-frozen', 'cryosection', 'fresh \
+frozen', 'FF' mean fresh_frozen; 'methanol-fixed', 'PAXgene', 'fixed frozen' mean fixed_frozen. \
+A protocol or kit name often settles it (Visium CytAssist and Visium FFPE v2 are FFPE; Visium \
+v1 poly-A, Slide-seq and Stereo-seq are fresh_frozen; Xenium runs on both, so do not assume). \
+Return 'unknown' rather than inferring it from the platform alone.
+
+ONE SECTION IS NOT ALWAYS ONE DONOR. A capture area often carries several biopsies -- paired \
+tumour and normal cores, a tissue microarray, multiple regions, or sections from different \
+donors mounted together. Watch for titles and characteristics naming more than one piece \
+('tumour + adjacent normal', 'TMA', 'cores A-D', 'patients 3 and 4', 'two sections per slide'). \
+When a sample covers more than one piece or donor, set multi_piece=true, describe it in \
+condition, and give donor-level fields only where they hold for EVERY piece: if the pieces differ \
+in disease state, set disease_state='mixed'; if they come from different donors, leave donor_id \
+empty and age_num null rather than reporting one donor's values for the whole section."""
 
 
 def llm_extract(ctx, sample_ids, run):
     out = []
-    for i in range(0, len(sample_ids), 80):            # chunk very large series
-        chunk = sample_ids[i:i + 80]
+    # Chunk size was 80. Each record now carries five more fields and a longer evidence string,
+    # and on a 401-sample series the model silently returned only ~167 of them -- the rest were
+    # written as "unknown", overwriting good tissue labels on 234 samples. Smaller chunks plus the
+    # retry below fix the loss; see the caller, which also refuses to downgrade an existing row.
+    for i in range(0, len(sample_ids), 40):
+        chunk = sample_ids[i:i + 40]
         user = json.dumps({"dataset": ctx["dataset"], "samples": {s: ctx["samples"].get(s, {}) for s in chunk}},
                           default=str)[:150000]
         with CLIENT.messages.stream(
@@ -251,6 +336,44 @@ def llm_extract(ctx, sample_ids, run):
         if msg.stop_reason == "refusal":
             raise RuntimeError(f"refusal {msg.stop_details}")
         out += json.loads(next(b.text for b in msg.content if b.type == "text"))["samples"]
+    # A model that returns fewer records than it was asked for is the main source of lost labels:
+    # the caller can only record the missing ones as unknown. Ask again for exactly those, in
+    # small batches, before giving up on them.
+    seen = {r.get("sample_id") for r in out}
+    missing = [s_ for s_ in sample_ids if s_ not in seen]
+    for attempt in range(2):
+        if not missing:
+            break
+        logger.warning("%s: %d of %d samples not returned; retrying (attempt %d)",
+                       run, len(missing), len(sample_ids), attempt + 1)
+        again = []
+        for i in range(0, len(missing), 15):
+            chunk = missing[i:i + 15]
+            user = json.dumps({"dataset": ctx["dataset"],
+                               "samples": {s_: ctx["samples"].get(s_, {}) for s_ in chunk}},
+                              default=str)[:150000]
+            try:
+                with CLIENT.messages.stream(
+                        model=MODEL, max_tokens=32000, system=SYSTEM,
+                        messages=[{"role": "user", "content": user}],
+                        output_config={"effort": "low",
+                                       "format": {"type": "json_schema", "schema": SCHEMA}}) as st:
+                    msg = st.get_final_message()
+                u = msg.usage
+                step = {"in": u.input_tokens or 0, "out": u.output_tokens or 0,
+                        "cache_read": u.cache_read_input_tokens or 0,
+                        "cache_write": u.cache_creation_input_tokens or 0}
+                db.log_usage(run, step, (step["in"] * PRICE["in"] + step["out"] * PRICE["out"]
+                                         + step["cache_read"] * PRICE["cache_read"]
+                                         + step["cache_write"] * PRICE["cache_write"]) / 1e6)
+                again.extend(json.loads(msg.content[0].text)["samples"])
+            except Exception as e:
+                logger.warning("%s: retry chunk failed: %s", run, str(e)[:120])
+        out.extend(again)
+        seen = {r.get("sample_id") for r in out}
+        missing = [s_ for s_ in sample_ids if s_ not in seen]
+    if missing:
+        logger.error("%s: %d samples never returned by the model", run, len(missing))
     return out
 
 
@@ -299,8 +422,27 @@ def resolve(ds, rec, source_tag):
             "disease_ontology_term_id_level3": l3[1], "disease_match": dmatch, "condition": rec.get("condition", ""),
             "self_reported_ethnicity": snake(e_lab) if e_id != "unknown" else "unknown",
             "self_reported_ethnicity_ontology_term_id": e_id, "donor_id": rec.get("donor_id", ""),
+            "preservation": (rec.get("preservation") or "unknown"),
+            "multi_piece": int(bool(rec.get("multi_piece"))),
             "metadata_source": source_tag, "confidence": rec.get("confidence", ""), "evidence": (rec.get("evidence", "")[:480] + implied),
             "llm_json": json.dumps(rec) if source_tag == "llm" else "", "updated": time.time()}
+
+
+def _ensure_columns():
+    """Add columns introduced after the table was first created.
+
+    sample_meta is created with IF NOT EXISTS, so a schema change does not reach an existing
+    database; without this an INSERT naming a new column fails on every deployed catalogue.
+    """
+    have = {r[1] for r in db.CON.execute("PRAGMA table_info(sample_meta)")}
+    for col, decl in [("preservation", "TEXT"), ("multi_piece", "INTEGER")]:
+        if col not in have:
+            db.CON.execute(f"ALTER TABLE sample_meta ADD COLUMN {col} {decl}")
+            logger.info("sample_meta: added column %s", col)
+    db.CON.commit()
+
+
+_ensure_columns()
 
 
 def write(row):
@@ -335,10 +477,21 @@ def harmonise_dataset(ds):
     recs = llm_extract(ctx, sids, f"meta_{ds['source']}_{ds['accession']}"[:120])
     got = {r["sample_id"]: r for r in recs}
     n = 0
+    # A sample the model did not return carries no information, so it must never be written over
+    # an annotation that already exists: re-curating a 401-sample series dropped 234 of them and
+    # replaced 'fallopian_tube_epithelium' with 'unknown'. Keep whatever is already stored.
+    existing = {r["sample_id"] for r in db.query(
+        "SELECT sample_id FROM sample_meta WHERE source=? AND accession=?",
+        (ds["source"], ds["accession"]))}
     for s in sids:
         r = got.get(s)
-        if r is None:   # model skipped a sample: record as unknown rather than invent
-            r = {"sample_id": s, "species": "unknown", "confidence": "low", "evidence": "not returned by model"}
+        if r is None:
+            if s in existing:
+                logger.warning("%s/%s: not returned by model, keeping the stored annotation",
+                               ds["accession"], s)
+                continue
+            r = {"sample_id": s, "species": "unknown", "confidence": "low",
+                 "evidence": "not returned by model"}
         r["sample_id"] = s
         write(resolve(ds, r, "llm"))   # xlsx values are merged afterwards by apply_xlsx()
         n += 1

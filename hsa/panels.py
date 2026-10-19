@@ -236,6 +236,47 @@ def _grid_from_coords(source: str, accession: str, sample_id: str):
     return best
 
 
+def _grid_rows_from_h5ad(source, accession, sample_id):
+    """Rows in the bin grid, counted from the written .h5ad's coordinates."""
+    import h5py
+    led = RUNS / "materialise_ledger.csv"
+    if not led.exists():
+        return None
+    try:
+        L = pd.read_csv(led)
+        hit = L[(L.source.astype(str) == str(source))
+                & (L.accession.astype(str) == str(accession))
+                & (L.sample_id.astype(str) == str(sample_id))
+                & L.status.astype(str).str.startswith("ok")]
+        if not len(hit):
+            return None
+        with h5py.File(str(hit.path.iloc[0]), "r") as h:
+            if "obsm/spatial" not in h:
+                return None
+            xy = np.asarray(h["obsm/spatial"][:], dtype=float)[:, :2]
+        xy = xy[np.isfinite(xy).all(1)]
+        if len(xy) < 100:
+            return None
+        # Rows = extent / pitch, NOT the count of distinct coordinate values. obsm["spatial"]
+        # holds pixel coordinates for Visium HD, so distinct values count occupied bins, which
+        # is smaller than the grid and does not match the row counts HD_GRID_UM is keyed on.
+        # The pitch is the modal nearest-neighbour step, which survives any linear rescaling.
+        from sklearn.neighbors import NearestNeighbors
+        sub = xy if len(xy) <= 20000 else xy[np.random.default_rng(0).choice(len(xy), 20000,
+                                                                             replace=False)]
+        d_, _ = NearestNeighbors(n_neighbors=2).fit(sub).kneighbors(sub)
+        nn = d_[:, 1]; nn = nn[nn > 0]
+        if not len(nn):
+            return None
+        pitch = float(np.median(nn))
+        span = float(max(xy[:, 0].max() - xy[:, 0].min(), xy[:, 1].max() - xy[:, 1].min()))
+        if pitch <= 0 or span <= 0:
+            return None
+        return int(round(span / pitch)) + 1
+    except Exception:
+        return None
+
+
 def grid_geometry(technology: str = "Visium HD") -> pd.DataFrame:
     """Per-sample bin size, from the bin grid rather than from the filename or the coordinates.
 
@@ -255,6 +296,14 @@ def grid_geometry(technology: str = "Visium HD") -> pd.DataFrame:
             g = _grid_rows(r.source, r.accession, str(r.sample_id))
         except Exception as e:
             g, rec["note"] = None, f"{type(e).__name__}"
+        if g is None:
+            # The raw positions table is deleted once a sample is materialised, but the written
+            # .h5ad carries the same coordinates in obsm["spatial"]. Deriving the grid from there
+            # keeps this answerable for the whole atlas rather than only for samples whose raw
+            # has not yet been reclaimed.
+            g = _grid_rows_from_h5ad(r.source, r.accession, str(r.sample_id))
+            if g is not None:
+                rec["note"] = "grid from materialised h5ad"
         if g is None or g <= 1:
             try:
                 g = _grid_from_coords(r.source, r.accession, str(r.sample_id))
@@ -266,6 +315,13 @@ def grid_geometry(technology: str = "Visium HD") -> pd.DataFrame:
         rec["bin_um"] = next((v for k, v in HD_GRID_UM.items() if g and abs(g - k) / k < 0.04), None)
         rec["capture_mm"] = None if rec["bin_um"] is None else (
             11.0 if any(abs(g - k) / k < 0.04 for k in (5500, 2750, 1375, 688)) else 6.5)
+        if rec["bin_um"] is None and rec["declared_um"]:
+            # A grid derived from the h5ad measures the TISSUE extent, not the capture area, so
+            # a section covering part of the slide under-counts rows and matches no entry in
+            # HD_GRID_UM. Where the depositor states the bin size in the sample id
+            # ("square_008um") that is direct evidence and better than a derived lower bound.
+            rec["bin_um"] = float(rec["declared_um"])
+            rec["note"] = (str(rec.get("note") or "") + " declared in sample_id").strip()
         if g in NOT_HD_GRID:
             rec["verdict"] = "not_visium_hd"            # classic Visium spot grid
         elif rec["bin_um"] is not None:
@@ -338,7 +394,15 @@ def reclassify(technology: str = "Visium HD") -> pd.DataFrame:
             return "Visium HD", "bin grid %d um" % r.bin_um
         if r.verdict == "not_visium_hd":
             return "Visium", "classic spot grid (%d rows)" % r.grid_rows
-        if u is not None and u > 0.95:                    # one position per cell
+        if u is not None and u > 0.95:                    # one position per unit
+            # One position per unit does NOT mean one cell per unit: a bin grid also has a
+            # unique coordinate per bin. This test is only informative where the grid evidence
+            # has already ruled an HD grid out. Without it, 152 samples that declare themselves
+            # Visium HD -- one of them with 11,222,500 units, exactly 3350^2, the 6.5 mm capture
+            # at 2 um -- were called cell-level, moving 229 million bins into the cell count.
+            if str(r.technology) == "Visium HD" and r.verdict in (
+                    "unrecognised_grid", "no_positions_table"):
+                return "Visium HD", "declared HD; grid evidence unavailable, bin size unknown"
             if str(r.coord_source) == "xenium":
                 return "Xenium", "cells.parquet, continuous coordinates"
             if pd.notna(r.n_genes) and r.n_genes > 10000:
@@ -346,11 +410,34 @@ def reclassify(technology: str = "Visium HD") -> pd.DataFrame:
             return "cell-level (unknown platform)", "continuous coordinates"
         return "unknown", r.verdict
 
-    out = []
+    # A previous run's answer is kept when this run has no evidence. The grid verdict is read
+    # from the raw positions table, which materialisation deletes once a sample is converted, so
+    # re-running this after a materialise pass turns "hd_grid" into "no_positions_table" and the
+    # call into "unknown" -- which silently reclassified 223 Visium HD samples as Visium and
+    # moved hundreds of millions of units across the cell/bin split. Absence of evidence is not
+    # evidence of a different technology.
+    prev = {}
+    pf = RUNS / "technology_resolved.csv"
+    if pf.exists():
+        old = pd.read_csv(pf)
+        old[key] = old[key].astype(str)
+        prev = {tuple(r[k] for k in key): (r["resolved"], r.get("evidence"), r.get("bin_um"))
+                for _, r in old.iterrows()
+                if str(r.get("resolved")) not in ("unknown", "nan", "")}
+
+    out, kept = [], 0
     for (_, r), u in zip(m.iterrows(), uniq):
         tech, why = call(r, None if pd.isna(u) else float(u))
+        bin_um = r.bin_um
+        if tech == "unknown":
+            p_ = prev.get(tuple(str(r[k]) for k in key))
+            if p_:
+                tech, why, bin_um = p_[0], f"kept from previous run ({p_[1]})", p_[2]
+                kept += 1
         out.append({**{k: r[k] for k in key}, "labelled": technology, "resolved": tech,
-                    "evidence": why, "bin_um": r.bin_um, "n_cells": r.n_cells})
+                    "evidence": why, "bin_um": bin_um, "n_cells": r.n_cells})
+    if kept:
+        logger.warning("kept %d prior technology calls where this run had no evidence", kept)
     df = pd.DataFrame(out)
     df.to_csv(RUNS / "technology_resolved.csv", index=False)
     return df

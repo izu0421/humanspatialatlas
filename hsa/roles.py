@@ -280,6 +280,17 @@ LANES = {
     "Spatial databases": "Aggregator databases: SODB, STOmicsDB, SpatialDB, SOAR, Aquila, SPASCER, CROST, SpatialOmicsDB, SpatialTME, "
                          "Spatial Omics DataBase, 'Museum of spatial transcriptomics'. For each: note_source with access method. Where they "
                          "redistribute processed human data with direct links, record datasets (or queue the underlying GEO accessions).",
+    "10x Publications": "The 10x Genomics publications list (https://www.10xgenomics.com/publications), "
+                        "which indexes papers by product. It is behind a bot checkpoint, so use WEB SEARCH "
+                        "rather than fetching it directly: search for 10xgenomics.com/publications entries and "
+                        "for the papers they list, restricted to the SPATIAL products -- Visium, Visium HD, "
+                        "Xenium, Xenium Prime 5K -- and to HUMAN tissue. This list is valuable because it is "
+                        "curated by the vendor from citations, so it surfaces papers whose titles and abstracts "
+                        "never say 'spatial transcriptomics' and which keyword searches of GEO therefore miss. "
+                        "For each paper, find the data availability statement and queue_candidates every "
+                        "accession (GSE/GSM, E-MTAB, zenodo DOI, figshare, dbGaP, EGA, Synapse, HTAN, "
+                        "institutional portals). Prefer 2024-2026. Skip anything already in the catalogue -- "
+                        "queue_candidates deduplicates, so queue freely rather than guessing.",
     "Literature": "Primary literature rather than a repository. Search Europe PMC "
                   "(https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=...&format=json&pageSize=100) and "
                   "bioRxiv/medRxiv for HUMAN spatial transcriptomics papers, preferring the last 24 months and "

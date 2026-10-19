@@ -105,6 +105,26 @@ def build() -> pd.DataFrame:
         if "tech_resolved" in m.columns else m.technology
     # one honest flag for "can a downstream user open this and get coordinates"
     m["usable"] = m.status.astype(str).str.startswith("ok")
+
+    # Quarantine has to be consulted here, not applied afterwards. It lives in a file outside the
+    # pipeline, so every rebuild of this table silently marked the quarantined samples usable
+    # again -- 50 mouse sections and 4 simulated datasets came back into a human atlas twice
+    # before this was wired in.
+    qf = RUNS.parent / "quarantine" / "quarantine_manifest.csv"
+    if qf.exists():
+        try:
+            q = pd.read_csv(qf)
+            keys = set(zip(q.accession.astype(str), q.sample_id.astype(str)))
+            if keys:
+                hit = [(str(a), str(sid)) in keys
+                       for a, sid in zip(m.accession, m.sample_id)]
+                n = int(sum(hit))
+                m.loc[hit, "usable"] = False
+                if "verdict" in m.columns:
+                    m.loc[hit, "verdict"] = "quarantined"
+                logger.info("quarantine: %d samples held out", n)
+        except Exception as e:                       # never let this break the manifest
+            logger.warning("could not apply quarantine: %s", e)
     m["unit"] = pd.Series("cell", index=m.index).where(
         ~m.technology_resolved.astype(str).isin(
             ["Visium", "Visium HD", "Slide-seq", "Stereo-seq", "DBiT-seq", "GeoMx", "ST (legacy)"]),
@@ -122,10 +142,39 @@ def build() -> pd.DataFrame:
     return m
 
 
+_CACHE: dict | None = None
+
+
+def _indexed() -> dict:
+    """The manifest once, keyed by sample, held in memory.
+
+    for_sample() used to re-read and re-parse the whole 7.4 MB sheet on every call. In a
+    materialisation pass that is once per sample, and it dominated the runtime completely: the
+    conversion itself takes about 5 s for a median Xenium sample but the pass was managing 7
+    samples an hour.
+    """
+    global _CACHE
+    if _CACHE is None:
+        if not MANIFEST.exists():
+            build()
+        m = pd.read_csv(MANIFEST, low_memory=False)
+        for c in KEY:
+            m[c] = m[c].astype(str)
+        _CACHE = {(r[0], r[1], r[2]): r[3] for r in
+                  zip(m[KEY[0]], m[KEY[1]], m[KEY[2]], m.to_dict("records"))}
+    return _CACHE
+
+
 def for_sample(source: str, accession: str, sample_id: str) -> dict:
     """The manifest row for one sample, as a JSON-safe dict for embedding in .h5ad uns."""
-    if not MANIFEST.exists():
-        build()
+    d = _indexed().get((str(source), str(accession), str(sample_id)))
+    if d is None:
+        return {}
+    return {k: (None if pd.isna(v) else (v.item() if hasattr(v, "item") else v))
+            for k, v in d.items()}
+
+
+def _for_sample_slow(source: str, accession: str, sample_id: str) -> dict:
     m = pd.read_csv(MANIFEST)
     for c in KEY:
         m[c] = m[c].astype(str)

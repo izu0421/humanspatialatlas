@@ -125,6 +125,15 @@ def headline():
         m["technology"] = m.resolved.where(m.resolved.notna() & ~m.resolved.eq("unknown"),
                                            m.technology)
     hum = m[m.species.isin(["homo_sapiens", "human_in_mouse_xenograft"])]
+    # Drop sections that reached us twice. Zenodo mints a record id per version and authors mirror
+    # GEO series elsewhere, so 92 rows are byte-identical copies of another row -- 29.2M units that
+    # would otherwise be counted twice. See hsa/dedupe.py; copies are confirmed by hashing X, not
+    # by matching shapes.
+    from . import dedupe
+    red = dedupe.redundant_keys()
+    if red:
+        k = list(zip(hum.source.astype(str), hum.accession.astype(str), hum.sample_id.astype(str)))
+        hum = hum[[x not in red for x in k]]
     ok = hum[hum.status.eq("ok") & hum.n_cells.notna()].copy()
     is_spot = ok.technology.astype(str).apply(
         lambda t: t not in CELL_TECH and t in SPOT_TECH)
@@ -133,9 +142,51 @@ def headline():
     per_tech = (ok.assign(unit=np.where(is_spot, "spot/bin", "cell"))
                   .groupby(["technology", "unit"]).n_cells.agg(["size", "sum"])
                   .reset_index().sort_values("sum", ascending=False))
+    # Two different questions, and conflating them overstates the atlas. "cells"/"spots" below
+    # count every unit materialised. But a Visium HD section that bin2cell segmented appears
+    # BOTH as millions of bins and as its segmented cells, and the tissue is the same tissue --
+    # so the honest answer to "how much of this atlas is single cells" subtracts those bins and
+    # adds the segmented cells instead. 552M of the 598M spot total is Visium HD, and 67 of those
+    # sections are segmented, so the distinction moves hundreds of millions of units.
+    seg_cells, seg_n = 0, 0
+    seg_dir = RUNS.parent / "visium_hd_cells"
+    if seg_dir.exists():
+        import h5py
+        for f in seg_dir.glob("*.h5ad"):
+            try:
+                with h5py.File(f, "r") as h:
+                    g = h["obs"]; idx = g[str(g.attrs.get("_index", "_index"))]
+                    v = idx["values"] if isinstance(idx, h5py.Group) else idx
+                    seg_cells += int(v.shape[0]); seg_n += 1
+            except Exception:
+                pass
+    # which HD sections have a segmentation: the manifest knows, this table does not
+    seg_keys = set()
+    mf = RUNS / "sample_manifest.csv"
+    if mf.exists():
+        mm = pd.read_csv(mf, low_memory=False)
+        if "hd_cells_path" in mm.columns:
+            seg_keys = {(str(a), str(sid)) for a, sid in
+                        zip(mm.loc[mm.hd_cells_path.notna(), "accession"],
+                            mm.loc[mm.hd_cells_path.notna(), "sample_id"])}
+    hd_seg_mask = pd.Series(
+        [(str(a), str(sid)) in seg_keys for a, sid in zip(ok.accession, ok.sample_id)],
+        index=ok.index)
+    bins_unsegmented = int(ok.loc[is_spot & ~hd_seg_mask, "n_cells"].sum())
+
+    # The headline pair is the segmentation-aware one: a Visium HD section that bin2cell
+    # segmented contributes its CELLS, and its bins are not also counted, because they are the
+    # same tissue measured twice. The unadjusted totals stay beside them so the adjustment is
+    # visible rather than implied -- it moves 423M units between the two.
+    cells_raw = int(ok.loc[~is_spot, "n_cells"].sum())
+    spots_raw = int(ok.loc[is_spot, "n_cells"].sum())
     return {
-        "cells": int(ok.loc[~is_spot, "n_cells"].sum()),
-        "spots": int(ok.loc[is_spot, "n_cells"].sum()),
+        "cells": cells_raw + seg_cells,
+        "spots": bins_unsegmented,
+        "cells_raw": cells_raw,
+        "spots_raw": spots_raw,
+        "hd_segmented_samples": seg_n,
+        "hd_segmented_cells": seg_cells,
         "donors": int(d.set_index(["accession", "donor_id"]).index.nunique()),
         "donor_frac": round(100 * len(d) / max(1, len(hum)), 1),
         "tissues": int(t.tissue_ontology_term_id.nunique()),

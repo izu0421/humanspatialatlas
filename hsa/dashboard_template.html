@@ -396,8 +396,10 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     const max = arr.length ? arr[0][1] : 1;
     $(el).innerHTML = arr.map(([lab, n]) => `<div class="bar"><span class="lab" title="${esc(lab)}">${esc(lab)}</span><span class="trk"><span class="fill${alt ? " alt" : ""}" style="width:${(100 * n) / max}%"></span><span class="val">${fmt(n)}</span></span></div>`).join("") || "<span class='count'>No ready datasets yet</span>";
   }
-  // Headline: cells and spots are deliberately NOT summed. ~260M of the units are Visium HD 2um
-  // bins; calling them cells would inflate the atlas threefold. Donors are a floor, not a count.
+  // Headline: cells and spots are deliberately NOT summed, and neither is a raw total. A Visium
+  // HD section that bin2cell segmented contributes its segmented CELLS; its 2 um bins are then
+  // excluded, because they are the same tissue measured twice. That adjustment moves 423M units.
+  // Donors are a floor, not a count.
   const H = D.headline || {};
   if (H.cells !== undefined) {
     $("headline").hidden = false;
@@ -405,11 +407,17 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
       `<b><span class="n">${fmt(H.cells)}</span> single cells and <span class="n">${fmt(H.spots)}</span> spots/bins ` +
       `across <span class="n">&ge;${fmt(H.donors)}</span> donors in <span class="n">${fmt(H.tissues)}</span> tissues</b>` +
       `<div class="fine">${fmt(H.samples_loaded)} human samples \u00b7 ${fmt(H.datasets)} datasets` +
-      `<span class="info" tabindex="0">why cells and spots are not summed` +
-      `<span class="pop">Visium HD contributes 2\u00a0\u00b5m bins, not segmented cells, so adding them to the ` +
-      `cell count would overstate the Atlas roughly threefold. The donor figure is a lower bound: only ` +
-      `${H.donor_frac}% of samples state a donor, and donor identifiers are local to each study, so donors ` +
-      `are counted as (dataset, donor) pairs.</span></span></div>`;
+      `<span class="info" tabindex="0">how cells and spots are counted` +
+      `<span class="pop"><b>Cells</b> are individually segmented: imaging platforms (Xenium, CosMx, ` +
+      `MERFISH) plus ${fmt(H.hd_segmented_cells || 0)} cells segmented with bin2cell from ` +
+      `${fmt(H.hd_segmented_samples || 0)} Visium HD sections. <b>Spots/bins</b> are everything ` +
+      `measured on a grid with no segmentation available \u2014 55\u00a0\u00b5m Visium spots, ` +
+      `Visium HD bins, Stereo-seq and Slide-seq arrays. The two are never summed, and a section ` +
+      `that was segmented counts its cells only: its bins are excluded so the same tissue is not ` +
+      `counted twice. Unadjusted, the raw totals are ${fmt(H.cells_raw || 0)} and ` +
+      `${fmt(H.spots_raw || 0)}. The donor figure is a lower bound: only ${H.donor_frac}% of ` +
+      `samples state a donor, and donor identifiers are local to each study, so donors are ` +
+      `counted as (dataset, donor) pairs.</span></span></div>`;
     const u = (H.per_tech || []).slice(0, 12), mx = u.length ? u[0][3] : 1;
     if (u.length) {
       $("techPanel").hidden = false;

@@ -7,7 +7,21 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from . import db
 from .config import DATA, MAX_FILE_GB, MIN_FREE_TB
+import logging
+
+from . import pget
 from .tools_api import S, ZIP_SEP, _throttle, zip_extract
+
+# Hosts that cap a single connection hard enough to be worth opening several.
+PARALLEL_HOSTS = ("ftp.ncbi.nlm.nih.gov", "ftp.cngb.org", "ftp.ebi.ac.uk", "ftp.sra.ebi.ac.uk")
+PARALLEL_MIN_GB = 0.5
+
+logger = logging.getLogger(__name__)
+
+
+def have_part(part):
+    """A part file from an interrupted single-stream fetch; resume that rather than restart."""
+    return part.exists() and part.stat().st_size > 0
 
 GET_ROLES = ("matrix", "coords", "matrix+coords")
 
@@ -66,6 +80,22 @@ def _one(f):
         zip_extract(f["url"], part)
         os.replace(part, dest)
         return "done", str(dest), f"{dest.stat().st_size/1e6:.1f} MB (zip member)"
+    # Large files from hosts that throttle a single connection are fetched in parallel ranges.
+    # NCBI caps one stream at ~70 KB/s, which makes a 4.5 GB deposit a 16-hour job; four
+    # concurrent ranges finish it in minutes. Deliberately narrow: only above PARALLEL_MIN_GB,
+    # only for hosts known to throttle, and never more than 4 connections because the download
+    # pool already runs 8 workers and 8x8 streams at one host would be abusive. Any failure
+    # falls through to the ordinary single-stream path below.
+    if (size and size >= PARALLEL_MIN_GB * 1e9
+            and any(h in f["url"] for h in PARALLEL_HOSTS) and not have_part(part)):
+        try:
+            _throttle(f["url"])
+            pget.get(f["url"], part, conns=4, chunk_mb=256)
+            os.replace(part, dest)
+            return "done", str(dest), f"{dest.stat().st_size/1e6:.1f} MB (parallel)"
+        except Exception as e:
+            logger.warning("parallel fetch failed, falling back: %s", str(e)[:90])
+
     have = part.stat().st_size if part.exists() else 0
     hdr = {"Range": f"bytes={have}-"} if have else {}
     for attempt in range(5):

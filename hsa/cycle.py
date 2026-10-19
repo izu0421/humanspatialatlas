@@ -49,7 +49,7 @@ def _run(label: str, args: list[str], log, timeout_s: int) -> int:
 
 def cycle(budget_usd: float = 40.0, lifetime_cap_usd: float = 500.0,
           min_free_gb: float = 150.0, scout: bool = True) -> dict:
-    """Scout -> curate -> download -> QC -> harmonise -> materialise -> export."""
+    """Scout -> curate -> download -> QC -> harmonise -> materialise -> audit -> export."""
     LOGDIR.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d_%H%M")
     out = {"started": stamp, "spend_before": db.total_usd(), "free_gb_before": round(_free_gb())}
@@ -77,6 +77,9 @@ def cycle(budget_usd: float = 40.0, lifetime_cap_usd: float = 500.0,
                  % min_free_gb], log, 43200)
         else:
             log.write(f"\n===== materialise SKIPPED: only {_free_gb():.0f} GB free\n")
+        # Audit before export, so the numbers that reach the dashboard have been checked against
+        # the files rather than against the ledger's own claims.
+        _run("audit", ["-c", "from hsa import audit; audit.run()"], log, 7200)
         _run("export", ["-m", "hsa.export"], log, 1800)
 
     out.update(spend_after=db.total_usd(), free_gb_after=round(_free_gb()),

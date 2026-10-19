@@ -280,6 +280,14 @@ def load_sample(source: str, accession: str, sample_id: str):
             # 2 um bins, which is a different object from the 8 um matrix a depositor may have
             # chosen, and silently switching resolution would be worse than not reading the file.
             a, info["loader"] = _read_feature_slice(p), "feature_slice"
+        elif (p := _find(paths, r"\.(rds|RDS)$")):
+            # Seurat objects, read through R. Deliberately LAST: a deposit that also ships a
+            # matrix should be read from the matrix, because the .rds is the depositor's analysed
+            # object and may be filtered, normalised or subset relative to the raw data. 416 of
+            # the 425 .rds files surveyed are Seurat, 376 GB that was previously rejected outright.
+            from . import rds as _rds
+            a, _rinfo = _rds.convert(p)
+            info["loader"], info["rds_info"] = "seurat_rds", _rinfo
         else:
             info["status"] = "no_recognised_matrix"
             return None, info
@@ -305,6 +313,19 @@ def _read_mtx_trio(mtx: Path, paths: list[Path]):
     sib = [p for p in paths if p.parent == mtx.parent]
     bc = _find(sib, r"(barcodes|count_matrix_barcodes)\.tsv")
     ft = _find(sib, r"(features|genes|count_matrix_genes)\.tsv")
+    # GEO series often deposit one features.tsv named after a single GSM and let the sibling
+    # samples share it, so a sample's own directory can hold only matrix + barcodes. Restricting
+    # the search to mtx.parent then left var_names as positional integers -- silently, with no
+    # error -- and GSE300380/GSM9059356 reached the atlas with 36,945 genes called "0".."36944".
+    # Fall back to any features file elsewhere under the accession whose length matches an axis.
+    if ft is None:
+        for cand in [q for q in paths if q.parent != mtx.parent]:
+            if not re.search(r"(features|genes)\.tsv", cand.name, re.I):
+                continue
+            if _n_lines(cand) in raw.shape:
+                ft = cand
+                logger.warning("features.tsv taken from a sibling directory: %s", cand.name)
+                break
     # Market Matrix files are usually genes x cells, but a sizeable minority of deposits are
     # already cells x genes; transposing unconditionally made var_names length mismatch the
     # matrix. Decide from the sidecar lengths instead of assuming.
@@ -325,26 +346,96 @@ def _read_mtx_trio(mtx: Path, paths: list[Path]):
         a = ad.AnnData(raw.T.tocsr())            # genes x cells, the common case
     if bc is not None:
         a.obs_names = pd.read_csv(bc, header=None, sep="\t")[0].astype(str).values[: a.n_obs]
-    if ft is not None:
-        f = pd.read_csv(ft, header=None, sep="\t")
-        a.var_names = f[min(1, f.shape[1] - 1)].astype(str).values[: a.n_vars]
-        if f.shape[1] > 1:
-            a.var["ensembl_id"] = f[0].astype(str).values[: a.n_vars]
+    if ft is None:
+        # Positional integers are not gene identities. Failing here is better than writing a
+        # sample that looks complete and cannot be joined to any other.
+        raise ValueError(f"no features/genes sidecar for {mtx.name}: gene identity unavailable")
+    f = pd.read_csv(ft, header=None, sep="\t")
+    a.var_names = f[min(1, f.shape[1] - 1)].astype(str).values[: a.n_vars]
+    if f.shape[1] > 1:
+        a.var["ensembl_id"] = f[0].astype(str).values[: a.n_vars]
     return a
 
 
+def _n_lines(p: Path) -> int:
+    if str(p).endswith(".gz"):
+        import gzip as _gz
+        with _gz.open(p, "rt") as fh:
+            return sum(1 for _ in fh)
+    with open(p, "rb") as fh:
+        return sum(1 for _ in fh)
+
+
 def _read_csv_matrix(p: Path):
+    """Read a dense CSV count table into a sparse AnnData.
+
+    Two traps live in this format. First, platform tables prefix the counts with integer identifier
+    columns -- CosMx writes "fov,cell_ID,<gene>..." -- and a naive index_col=0 makes the non-unique
+    fov the cell index and leaves cell_ID looking like a gene. On a whole-transcriptome kidney
+    sample that fake gene carried 23% of the library. Second, a whole-transcriptome table is
+    436,787 x 20,379; read dense that is 8.9e9 entries, and one such sample sat at 150 GB RSS for
+    2.5 h. So identifier columns are recognised by name and the counts are read in row chunks,
+    each converted to sparse before the next is read.
+    """
     import anndata as ad
-    df = pd.read_csv(p, index_col=0, compression="gzip" if p.name.endswith(".gz") else None)
-    # orient so rows are cells: gene tables are usually taller than wide
-    if df.shape[0] > df.shape[1] * 3 and df.shape[1] < 2000:
-        pass
-    elif df.shape[1] > df.shape[0] * 3:
-        df = df.T
+    comp = "gzip" if p.name.endswith(".gz") else None
+    # Identifier columns are not always the first ones. GSE253474 writes
+    # "","sampleID","slide","case","fov","cell_ID","AATK",... so fov and cell_ID sit at positions
+    # 4 and 5; a window of the first four columns missed them and 112 samples reached the atlas
+    # with case/fov/cell_ID stored as genes. Scan the whole leading metadata block instead, which
+    # ends at the first column that is not a known identifier name.
+    ID_COLS = {"fov", "cell_id", "cell", "cellid", "cell_index", "barcode", "cell_barcode",
+               "sampleid", "sample_id", "sample", "slide", "slide_id", "case", "case_id",
+               "patient", "patient_id", "donor", "donor_id", "roi", "tile", "tma", "well",
+               "unnamed: 0", "index", "x", "y", "x_global_px", "y_global_px",
+               "x_local_px", "y_local_px", "area", "width", "height", "aspect_ratio",
+               "cellcomp", "orientation", "z", "cell_type", "celltype", "cluster", "leiden"}
+
+    head = pd.read_csv(p, compression=comp, nrows=0)
+    cols = list(head.columns)
+    lead = []
+    for c in cols[:25]:                     # identifiers live in the leading block, never deep in
+        if str(c).strip().lower() in ID_COLS:
+            lead.append(c)
+    gene_cols = [c for c in cols if c not in lead]
+
+    # Wide tables are cells-by-genes and must be streamed; narrow ones are cheap to read whole.
+    if len(gene_cols) >= 2000:
+        # dtype is declared up front: letting pandas infer and then calling
+        # apply(pd.to_numeric) iterates column-by-column in Python, which over 20,379 columns
+        # dominated the runtime.
+        dt = {c: np.float32 for c in gene_cols}
+        chunks, ids = [], []
+        for ch in pd.read_csv(p, compression=comp, usecols=cols, chunksize=20000, dtype=dt):
+            if lead:
+                ids.append(ch[lead].astype(str).agg("_".join, axis=1))
+            chunks.append(sp.csr_matrix(ch[gene_cols].to_numpy(dtype=np.float32)))
+            del ch
+        X = sp.vstack(chunks, format="csr") if len(chunks) > 1 else chunks[0]
+        obs_index = (pd.concat(ids, ignore_index=True).values if ids
+                     else np.arange(X.shape[0]).astype(str))
+        a = ad.AnnData(X, obs=pd.DataFrame(index=pd.Index(obs_index, dtype=str)),
+                       var=pd.DataFrame(index=pd.Index(gene_cols, dtype=str)))
+        a.obs_names_make_unique()
+        return a
+
+    if lead:
+        df = pd.read_csv(p, compression=comp)
+        idx = df[lead].astype(str).agg("_".join, axis=1)
+        df = df[gene_cols].set_index(pd.Index(idx, dtype=str))
+    else:
+        df = pd.read_csv(p, index_col=0, compression=comp)
+        # orient so rows are cells: gene tables are usually taller than wide
+        if df.shape[0] > df.shape[1] * 3 and df.shape[1] < 2000:
+            pass
+        elif df.shape[1] > df.shape[0] * 3:
+            df = df.T
     num = df.select_dtypes(include=[np.number])
-    return ad.AnnData(sp.csr_matrix(num.to_numpy(dtype=np.float32)),
-                      obs=pd.DataFrame(index=num.index.astype(str)),
-                      var=pd.DataFrame(index=num.columns.astype(str)))
+    a = ad.AnnData(sp.csr_matrix(num.to_numpy(dtype=np.float32)),
+                   obs=pd.DataFrame(index=num.index.astype(str)),
+                   var=pd.DataFrame(index=num.columns.astype(str)))
+    a.obs_names_make_unique()
+    return a
 
 
 def _read_coord_table(p: Path) -> pd.DataFrame:
@@ -379,10 +470,34 @@ def _read_coord_table(p: Path) -> pd.DataFrame:
 
 def _load_coords(paths: list[Path], a) -> tuple[np.ndarray | None, dict]:
     """Coordinates from whatever convention the platform used; returns (coords, info)."""
-    if "spatial" in getattr(a, "obsm", {}):
-        return np.asarray(a.obsm["spatial"], dtype=np.float32)[:, :2], {"coord_source": "h5ad_obsm"}
+    # obsm key names vary. scanpy and squidpy write "spatial", but a deposit that stored the
+    # coordinates as a dimensionality reduction writes "X_spatial" -- which is what 59 of 60
+    # checked studies use. Looking only for "spatial" left ~110 studies recorded as no_coords
+    # while their coordinates sat in the file we had already opened.
+    obsm = getattr(a, "obsm", {}) or {}
+    for key in ("spatial", "X_spatial", "spatial_coords", "X_spatial_coords",
+                "coordinates", "X_coordinates", "centroids", "X_centroids"):
+        if key in obsm:
+            xy = np.asarray(obsm[key], dtype=np.float32)
+            if xy.ndim == 2 and xy.shape[1] >= 2 and np.isfinite(xy[:, :2]).any():
+                return xy[:, :2], {"coord_source": f"h5ad_obsm:{key}"}
+    # some deposits keep x/y as obs COLUMNS instead
+    obs = getattr(a, "obs", None)
+    if obs is not None:
+        low = {str(c).lower(): c for c in obs.columns}
+        for xk, yk in [("x", "y"), ("x_coord", "y_coord"), ("x_centroid", "y_centroid"),
+                       ("imagecol", "imagerow"), ("array_col", "array_row"),
+                       ("spatial_1", "spatial_2"), ("sdimx", "sdimy")]:
+            if xk in low and yk in low:
+                xy = obs[[low[xk], low[yk]]].to_numpy(dtype=float)
+                if np.isfinite(xy).all(1).mean() > 0.5:
+                    return xy.astype(np.float32), {"coord_source": f"h5ad_obs:{xk},{yk}"}
+    # The filename says which pipeline wrote the table, not which columns are in it: both CosMx
+    # and Vizgen name theirs "cell_metadata". Labelling 10 MERFISH samples "cosmx" from the
+    # filename alone is what sent a later audit looking for a CosMx bug, so the columns actually
+    # used get appended to the label below.
     for pat, kind in [(r"tissue_positions", "visium"), (r"cells\.(parquet|csv)", "xenium"),
-                      (r"(cell_)?metadata_file|cell_metadata", "cosmx"),
+                      (r"(cell_)?metadata_file|cell_metadata", "cell_metadata"),
                       (r"_coords|bead|position|centroid", "generic")]:
         p = _find(paths, pat)
         if p is None:
@@ -398,10 +513,13 @@ def _load_coords(paths: list[Path], a) -> tuple[np.ndarray | None, dict]:
                 continue
             common = a.obs_names.intersection(df.index)
             if len(common) >= 0.5 * a.n_obs:
+                cols = ",".join(str(c) for c in xy.columns)
                 a._inplace_subset_obs(a.obs_names.isin(common))
-                return xy.loc[a.obs_names].to_numpy(np.float32), {"coord_source": kind}
+                return (xy.loc[a.obs_names].to_numpy(np.float32),
+                        {"coord_source": f"{kind}:{cols}"})
             if len(df) == a.n_obs:                  # ids do not match but the rows line up
-                return xy.to_numpy(np.float32), {"coord_source": f"{kind}_by_order"}
+                cols = ",".join(str(c) for c in xy.columns)
+                return xy.to_numpy(np.float32), {"coord_source": f"{kind}_by_order:{cols}"}
         except Exception as e:
             logger.debug("coord read failed for %s: %s", p.name, e)
             continue
@@ -409,17 +527,35 @@ def _load_coords(paths: list[Path], a) -> tuple[np.ndarray | None, dict]:
 
 
 def _pick_xy(df: pd.DataFrame):
+    # "cell_metadata" is written by both CosMx and Vizgen/MERFISH with different column names,
+    # so matching the FILENAME is not enough: 10 MERFISH samples were read with the CosMx
+    # convention, found an x and no y, and were written with a coordinate column that was 100%
+    # NaN. center_x/center_y is the Vizgen spelling.
     cands = [("x_centroid", "y_centroid"), ("pxl_col_in_fullres", "pxl_row_in_fullres"),
              ("CenterX_global_px", "CenterY_global_px"), ("x_global_px", "y_global_px"),
+             ("center_x", "center_y"), ("centroid_x", "centroid_y"),
+             ("global_x", "global_y"), ("sdimx", "sdimy"), ("adj_x", "adj_y"),
              ("x", "y"), ("X", "Y"), ("xcoord", "ycoord"), ("array_col", "array_row"),
              ("spatial_1", "spatial_2"), ("imagecol", "imagerow")]
     low = {c.lower(): c for c in df.columns}
+
+    def _usable(sub):
+        """Both columns must actually hold coordinates, not just exist."""
+        v = sub.apply(pd.to_numeric, errors="coerce")
+        return bool(np.isfinite(v.to_numpy(dtype=float)).all(1).mean() > 0.5
+                    and (v.nunique() > 1).all())
+
     for cx, cy in cands:
         if cx.lower() in low and cy.lower() in low:
-            return df[[low[cx.lower()], low[cy.lower()]]]
+            sub = df[[low[cx.lower()], low[cy.lower()]]]
+            if _usable(sub):
+                return sub
+            logger.warning("coordinate columns %s/%s present but unusable; trying others", cx, cy)
     # Visium tissue_positions without a header
     if df.shape[1] >= 6 and all(pd.api.types.is_numeric_dtype(df[c]) for c in df.columns[-2:]):
-        return df[df.columns[-2:]]
+        sub = df[df.columns[-2:]]
+        if _usable(sub):
+            return sub
     return None
 
 
