@@ -347,6 +347,21 @@ def run():
     if len(sm):
         sm = sm.drop(columns=["llm_json"])
         sm["updated"] = pd.to_datetime(sm.updated, unit="s").dt.strftime("%Y-%m-%d %H:%M")
+        # What X actually holds travels with the metadata, because nothing downstream announces
+        # it: 676 of 7,733 matrices are not raw counts (319 log1p, 278 other, 79 carrying
+        # negative values), and a normalised matrix passes every call and returns confident
+        # nonsense. Measured from the values, not taken from any depositor label.
+        mfp = RUNS / "sample_manifest.csv"
+        if mfp.exists():
+            mm = pd.read_csv(mfp, low_memory=False)
+            kk = ["source", "accession", "sample_id"]
+            if "matrix_kind" in mm.columns:
+                mm[kk] = mm[kk].astype(str)
+                sm[kk] = sm[kk].astype(str)
+                cols = [c for c in ("matrix_kind", "matrix_is_integer", "coord_coord_units",
+                                    "coord_um_per_unit") if c in mm.columns]
+                sm = sm.merge(mm[kk + cols].drop_duplicates(kk), on=kk, how="left")
+                sm["matrix_is_counts"] = (sm.matrix_kind == "raw_counts")
         sm.to_csv(OUT / "hsa_samples.csv", index=False)
         hum = sm[sm.species.isin(["homo_sapiens", "human_in_mouse_xenograft"])]
         known = lambda c: int((~hum[c].isin(["unknown", "", None]) & hum[c].notna()).sum())
@@ -362,6 +377,9 @@ def run():
             "disease_level1": top("disease_level1", 12), "disease_level2": top("disease_level2", 14),
             "tissue": top("tissue", 16),
             "source": [[k, int(v)] for k, v in hum.metadata_source.value_counts().items()],
+            # measured from X, not from a label: a reader needs to know which matrices are counts
+            "matrix_kind": ([[k, int(v)] for k, v in hum.matrix_kind.value_counts().items()]
+                            if "matrix_kind" in hum.columns else []),
             "conflicts": len(conf)}
     if len(conf):
         PRIVATE.mkdir(exist_ok=True)

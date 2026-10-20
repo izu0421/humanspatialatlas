@@ -63,6 +63,11 @@ def build() -> pd.DataFrame:
         (RUNS / "grid_geometry.csv", ["bin_um", "capture_mm", "grid_rows", "verdict"], "grid_"),
         (RUNS / "technology_resolved.csv", ["resolved", "evidence"], "tech_"),
         (RUNS / "coordinate_scale.csv", ["um_per_unit", "coord_units"], "coord_"),
+        # What X actually holds, measured from the values rather than assumed. 676 of 7,733
+        # matrices are not raw counts -- 319 log1p, 278 some other transform, and 79 carrying
+        # negative values -- and nothing downstream announces it: a normalised matrix passes
+        # every call and returns confident nonsense.
+        (RUNS / "counts_audit.csv", ["kind", "is_integer", "frac_negative"], "matrix_"),
     ]:
         d = _read(path, cols)
         keep = [c for c in cols if c in d.columns]

@@ -312,6 +312,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <p class="sub" id="metaSub"></p>
     <div class="grid3">
       <div><h3>Field completeness (% of human samples)</h3><div class="bars" id="mComplete"></div></div>
+      <div><h3>What the matrix holds <span class="count">measured from X, not from a label</span></h3><div class="bars" id="mMatrix"></div></div>
       <div><h3>Sex</h3><div class="bars" id="mSex"></div>
            <h3>Disease state</h3><div class="bars" id="mState"></div></div>
       <div><h3>Age group</h3><div class="bars" id="mAge"></div></div>
@@ -517,6 +518,17 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
              `<span class="trk"><span class="stack">${parts}</span>` +
              `<span class="val">${fmt(a)} of ${fmt(n)}</span></span></div>`;
     }).join("");
+  }
+
+  // Which matrices are counts. 676 of 7,733 are not -- log1p, some other transform, or
+  // carrying negative values -- and nothing downstream announces it, so it belongs on the page
+  // beside the rest of the sample metadata rather than only in the exported table.
+  if ((S.matrix_kind || []).length) {
+    const mk = S.matrix_kind, mx = Math.max(...mk.map((r) => r[1]));
+    $("mMatrix").innerHTML = mk.map(([k, n]) =>
+      `<div class="bar"><span class="lab">${esc(k)}</span><span class="trk">` +
+      `<span class="fill${k === "raw_counts" ? "" : " alt"}" style="width:${(100 * n) / mx}%"></span>` +
+      `<span class="val">${fmt(n)}</span></span></div>`).join("");
   }
 
   bars("byTech", "technology_norm", 12);
