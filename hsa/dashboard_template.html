@@ -291,7 +291,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
       <button class="tab" data-p="byHdCell" role="tab">HD cells</button>
     </div>
     <div class="bars pane on" id="byUnits"></div>
-    <div class="bars pane" id="byLoad"></div>
+    <div class="bars pane" id="byLoad"><p class="fine" id="loadNote"></p></div>
     <div class="bars pane" id="byHdCell"></div>
   </section>
 
@@ -373,8 +373,8 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
   $("stamp").textContent = "Snapshot " + D.generated;
   const k = D.kpi;
   const tiles = [
-    ["hero", fmt(k.ready), "datasets ready", "matrix + coordinates"],
-    ["", fmt(k.samples), "samples with files", "ready datasets"],
+    ["hero", fmt(k.ready), "datasets ready", "assessed: matrix + coordinates"],
+    ["", fmt(k.samples), "samples with files", "in ready datasets, before loading"],
     ["", fmt(k.files_done) + " / " + fmt(k.files_total), "files downloaded", Math.round(100 * k.files_done / Math.max(1, k.files_total)) + "%"],
     ["", fmt(k.disk_gb) + " GB", "on disk", "data/"],
     ["", fmt(k.cand_done) + " / " + fmt(k.cand_total), "candidates curated", Math.round(100 * k.cand_done / Math.max(1, k.cand_total)) + "% of queue"],
@@ -406,7 +406,8 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     $("headline").innerHTML =
       `<b><span class="n">${fmt(H.cells)}</span> single cells and <span class="n">${fmt(H.spots)}</span> spots/bins ` +
       `across <span class="n">&ge;${fmt(H.donors)}</span> donors in <span class="n">${fmt(H.tissues)}</span> tissues</b>` +
-      `<div class="fine">${fmt(H.samples_loaded)} human samples \u00b7 ${fmt(H.datasets)} datasets` +
+      `<div class="fine">from ${fmt(H.samples_loaded)} human samples in the atlas \u00b7 ` +
+      `${fmt(H.datasets)} datasets` +
       `<span class="info" tabindex="0">how cells and spots are counted` +
       `<span class="pop"><b>Cells</b> are individually segmented: imaging platforms (Xenium, CosMx, ` +
       `MERFISH) plus ${fmt(H.hd_segmented_cells || 0)} cells segmented with bin2cell from ` +
@@ -422,6 +423,7 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     if (u.length) {
       $("techPanel").hidden = false;
       $("techNote").textContent = "cells in blue, spots or bins in pink";
+
       $("byUnits").innerHTML = u.map(([tech, unit, n, tot]) =>
         `<div class="bar"><span class="lab" title="${esc(tech)} &mdash; ${fmt(n)} samples">${esc(tech)}</span>` +
         `<span class="trk"><span class="fill${unit === "cell" ? "" : " alt"}" style="width:${(100 * tot) / mx}%"></span>` +
@@ -458,7 +460,7 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     $("atlasStat").innerHTML =
       `<b>${fmt(H.cells)}</b><span>single cells</span>` +
       `<b>${fmt(H.spots)}</b><span>spots &amp; bins</span>` +
-      `<b>${fmt(D.kpi.ready)}</b><span>datasets, ${fmt(H.tissues)} tissues</span>`;
+      `<b>${fmt(H.datasets)}</b><span>datasets, ${fmt(H.tissues)} tissues</span>`;
   }
 
   $("agentNote").innerHTML =
@@ -498,16 +500,22 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
   const LS = D.load_status || [];
   if (LS.length) {
     $("techPanel").hidden = false;
-    const cols = ["var(--ok)", "var(--eosin)", "var(--accent)", "var(--grey-soft)"];
-    const labs = ["loads", "no coordinates", "no matrix found", "read error"];
+    const cols = ["var(--ok)", "var(--eosin)", "var(--accent)", "var(--grey-soft)", "var(--grey-soft)"];
+    const labs = ["in atlas", "no coordinates", "no matrix found", "read error", "excluded"];
     _loadLegend = labs.map((l, i) =>
       `<span class="swatch" style="background:${cols[i]}"></span>${l}`).join("");
-    $("byLoad").innerHTML = LS.map(([tech, a, b, c, e, n]) => {
-      const parts = [a, b, c, e].map((v, i) =>
+    const _noteTxt =
+      "\u201cIn atlas\u201d is the same population the headline counts \u2014 human, "
+      + "de-duplicated, and written to disk \u2014 so these bars sum to it. "
+      + "\u201cExcluded\u201d samples opened but are kept out: quarantined, non-human, or a "
+      + "second copy of a section already counted.";
+    $("byLoad").innerHTML = `<p class="fine" id="loadNote">${_noteTxt}</p>` +
+      LS.map(([tech, a, b, c, e, x, n]) => {
+      const parts = [a, b, c, e, x].map((v, i) =>
         `<i style="width:${(100 * v) / Math.max(1, n)}%;background:${cols[i]}" title="${labs[i]}: ${fmt(v)}"></i>`).join("");
       return `<div class="bar"><span class="lab" title="${esc(tech)}">${esc(tech)}</span>` +
              `<span class="trk"><span class="stack">${parts}</span>` +
-             `<span class="val">${Math.round((100 * a) / Math.max(1, n))}% of ${fmt(n)}</span></span></div>`;
+             `<span class="val">${fmt(a)} of ${fmt(n)}</span></span></div>`;
     }).join("");
   }
 
@@ -518,7 +526,8 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
   // sample metadata
   const S = D.samples || {};
   if (!S.n) { $("metaPanel").hidden = true; } else {
-    $("metaSub").textContent = fmt(S.n) + " human samples harmonised (" + (S.source || []).map(([k, v]) => k + " " + fmt(v)).join(", ") +
+    $("metaSub").textContent = fmt(S.n) + " human samples curated (more than the atlas holds: "
+      + "a sample is curated when it is found, and enters the atlas only once its matrix loads) (" + (S.source || []).map(([k, v]) => k + " " + fmt(v)).join(", ") +
       "). Unknown means the source does not state it; nothing is guessed.";
     const pairs = (el, arr, cls, pct) => {
       const max = pct ? S.n : Math.max(1, ...arr.map((a) => a[1]));

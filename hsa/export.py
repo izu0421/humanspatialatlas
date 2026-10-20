@@ -134,6 +134,18 @@ def headline():
     if red:
         k = list(zip(hum.source.astype(str), hum.accession.astype(str), hum.sample_id.astype(str)))
         hum = hum[[x not in red for x in k]]
+    # A sample is in the atlas only if it is ON DISK. 103 rows pass QC with no .h5ad behind them
+    # -- 59 quarantined, 37 that were never materialised, 7 bundle-only -- and counting them put
+    # 47 samples in the headline that no one can open, which is also why the headline and the
+    # load panel disagreed by exactly that number.
+    mfp = RUNS / "sample_manifest.csv"
+    if mfp.exists():
+        mm = pd.read_csv(mfp, low_memory=False)
+        kk = ["source", "accession", "sample_id"]
+        mm[kk] = mm[kk].astype(str)
+        on_disk = set(map(tuple, mm.loc[mm.h5ad_path.notna(), kk].values))
+        k = list(zip(hum.source.astype(str), hum.accession.astype(str), hum.sample_id.astype(str)))
+        hum = hum[[x in on_disk for x in k]]
     ok = hum[hum.status.eq("ok") & hum.n_cells.notna()].copy()
     is_spot = ok.technology.astype(str).apply(
         lambda t: t not in CELL_TECH and t in SPOT_TECH)
@@ -197,35 +209,69 @@ def headline():
 
 
 def load_status():
-    """Per technology: how many samples actually open, and why the rest do not.
+    """Per technology: how many samples reached the atlas, and why the rest did not.
 
-    Worth showing on the page rather than hiding in a log, because the failure modes are not
-    uniform: GeoMx is region-level by design and legacy ST ships no standard matrix, whereas
-    Xenium mostly fails at the coordinate step (716 of its 978 failures), i.e. the matrix is
-    found but no cell-centroid table is located beside it.
+    The "in atlas" bucket is deliberately the SAME population the headline counts, so the two
+    agree: human, deduplicated, and with an .h5ad actually on disk. Before that it was simply
+    every row whose status began with "ok", which came to 7,820 against a headline of 7,662 --
+    two numbers for one quantity, on one page, with nothing to explain the gap.
+
+    The difference is itself worth showing rather than quietly subtracting, so samples that load
+    but are kept out get an "excluded" bucket: quarantined, non-human, or a second copy of a
+    section already counted. A reader can then see that the atlas is smaller than the number of
+    files that opened, and why.
     """
     qc = RUNS / "sample_qc.csv"
     if not qc.exists():
         return []
     q = pd.read_csv(qc)
+    key = ["source", "accession", "sample_id"]
+    q[key] = q[key].astype(str)
 
-    def bucket(x):
-        x = str(x)
-        if x.startswith("ok"):
-            return "loads"
-        if x.startswith("no_coords"):
-            return "no coordinates"
-        if x.startswith("no_recognised_matrix"):
-            return "no matrix found"
-        return "read error"
+    # the three things that keep a loadable sample out of the atlas
+    from . import dedupe
+    red = dedupe.redundant_keys()
+    have_h5ad, quarantined = set(), set()
+    mf = RUNS / "sample_manifest.csv"
+    if mf.exists():
+        mm = pd.read_csv(mf, low_memory=False)
+        mm[key] = mm[key].astype(str)
+        have_h5ad = set(map(tuple, mm.loc[mm.h5ad_path.notna(), key].values))
+        if "verdict" in mm.columns:
+            quarantined = set(map(tuple, mm.loc[mm.verdict.eq("quarantined"), key].values))
+    try:
+        sm = pd.DataFrame(db.query("SELECT source, accession, sample_id, species FROM sample_meta"))
+        sm[key] = sm[key].astype(str)
+        human = set(map(tuple, sm.loc[sm.species.isin(
+            ["homo_sapiens", "human_in_mouse_xenograft"]), key].values))
+    except Exception:
+        human = None
 
-    q["bucket"] = q.status.map(bucket)
+    def bucket(r):
+        x = str(r.status)
+        if not x.startswith("ok"):
+            if x.startswith("no_coords"):
+                return "no coordinates"
+            if x.startswith("no_recognised_matrix"):
+                return "no matrix found"
+            return "read error"
+        k = (r.source, r.accession, r.sample_id)
+        if k in quarantined or k in red or (human is not None and k not in human):
+            return "excluded"
+        if k not in have_h5ad:
+            return "excluded"            # passes QC but was never written; not in the atlas
+        return "in atlas"
+
+    q["bucket"] = [bucket(r) for r in q.itertuples(index=False)]
     tab = q.pivot_table(index="technology", columns="bucket", aggfunc="size", fill_value=0)
     tab["n"] = tab.sum(1)
-    tab = tab.sort_values("n", ascending=False).head(12)
-    keys = ["loads", "no coordinates", "no matrix found", "read error"]
-    return [[t] + [int(tab.loc[t, k]) if k in tab.columns else 0 for k in keys] + [int(tab.loc[t, "n"])]
-            for t in tab.index]
+    # Every technology, not the top 12. There are 15, and the three smallest hold 9 samples --
+    # truncating hid exactly those, so the bars summed to 2 fewer than the headline and the page
+    # had a discrepancy with no cause a reader could find.
+    tab = tab.sort_values("n", ascending=False)
+    keys = ["in atlas", "no coordinates", "no matrix found", "read error", "excluded"]
+    return [[t] + [int(tab.loc[t, k]) if k in tab.columns else 0 for k in keys]
+            + [int(tab.loc[t, "n"])] for t in tab.index]
 
 
 def hd_cells():
