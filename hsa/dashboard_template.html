@@ -450,6 +450,8 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
      "Tissue, disease, sex, age, development stage and ethnicity resolved against UBERON, MONDO, HsapDv and HANCESTRO. Sex is also inferred from the XIST:Y-gene ratio where the panel carries those genes \u2014 97% agreement with stated labels, abstaining when it cannot tell."],
     ["Derive", "what is unsaid", "M12 3a9 9 0 0 0-5 16.5V21h10v-1.5A9 9 0 0 0 12 3Zm-3 18h6",
      "Gene-panel identity by hashing the gene set, bin size from the bin grid, coordinate scale in microns, platform corrected from file evidence rather than the depositor\u2019s label, and Visium HD segmented from 2 \u00b5m bins into cells."],
+    ["Annotate", "per organ, per panel", "M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
+     "Cell types for every cell-resolution section, from a CellTypist model trained on CELLxGENE Census for that organ and restricted to that panel\u2019s own genes. A 20,000-gene model applied to a 477-gene Xenium panel would impute 97% of its input as zero and score on absence \u2014 and absence in a targeted panel means \u201cnot on the panel\u201d, not \u201cnot expressed\u201d."],
   ];
   $("agentFlow").innerHTML = STAGES.map(([name, sub, d, detail]) =>
     `<div class="stage" tabindex="0"><div class="disc"><svg viewBox="0 0 24 24" aria-hidden="true">` +

@@ -130,7 +130,9 @@ LATTICE_PITCH_UM = {"Visium": 100.0}
 # instrument and the tissue, not from this corpus, which is what makes them non-circular.
 LATTICE_FRAC_MIN = 0.90                           # below this the points are not on a grid
 SPAN_MIN_UM, SPAN_MAX_UM = 200.0, 60_000.0        # smaller than a usable section / bigger than a slide
-DENS_MIN, DENS_MAX = 20.0, 30_000.0               # cells per mm2: sparser than any tissue / denser than packed nuclei
+# Plausible nearest-neighbour spacing in microns for anything this atlas holds: tighter than
+# touching nuclei at one end, wider than a 100 um Visium pitch with room to spare at the other.
+NN_MIN_UM, NN_MAX_UM = 2.0, 400.0
 
 
 def _expected(technology: str, grid_bin_um=None) -> float | None:
@@ -194,14 +196,20 @@ def classify(nn: float | None, technology: str, grid_bin_um=None, frac_finite: f
             and span_x > 0 and span_y > 0 and n_units and n_units > 0):
         return None, None, "no_expected_spacing"
 
+    # Density is measured from the SPACING, not from the bounding box. A merged multi-section
+    # object, or any section whose tissue does not fill its own bounding rectangle, has most of
+    # that rectangle empty: one such sample spans 30 x 29 mm with 9,626 spots, giving 11 per mm2
+    # over the box while its spots sit exactly 100 um apart. Nearest-neighbour spacing is a local
+    # quantity and immune to that, and it scales with the unit in the same way, so requiring the
+    # converted spacing to be physically plausible does the same job without the empty space.
     ok_factors = []
     for name, f in UNIT_FACTORS.items():
         sx, sy = span_x * f, span_y * f
         if not (SPAN_MIN_UM <= max(sx, sy) <= SPAN_MAX_UM):
             continue
-        dens = n_units / ((sx * sy) / 1e6)
-        if DENS_MIN <= dens <= DENS_MAX:
-            ok_factors.append((name, f))
+        if not (NN_MIN_UM <= nn * f <= NN_MAX_UM):
+            continue
+        ok_factors.append((name, f))
 
     if not ok_factors:
         return None, None, "spacing_unexplained"
