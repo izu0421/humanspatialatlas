@@ -75,9 +75,49 @@ def _clean(a, meta: dict):
     return out
 
 
+def _ledger_upsert(rec: dict) -> None:
+    """Record one sample's outcome in the ledger.
+
+    convert_all writes the ledger in bulk at the end of a batch, so convert_one -- used to redo a
+    single sample -- left no trace at all: the .h5ad appeared on disk while the ledger still said
+    `deferred_too_large` or `not_loadable`, and manifest.build() reads h5ad_path FROM the ledger,
+    so the sample stayed invisible to every downstream count. That bit twice (the 8.2M-bin pancreas
+    and 13 recovered Visium sections) before being fixed here rather than patched by hand again.
+    """
+    k = ["source", "accession", "sample_id"]
+    try:
+        led = pd.read_csv(LEDGER) if LEDGER.exists() else pd.DataFrame()
+    except Exception:
+        led = pd.DataFrame()
+    if len(led):
+        for c in k:
+            led[c] = led[c].astype(str)
+        m = np.ones(len(led), dtype=bool)
+        for c in k:
+            m &= led[c].eq(str(rec[c])).to_numpy()
+        led = led[~m]
+    led = pd.concat([led, pd.DataFrame([rec])], ignore_index=True)
+    led.to_csv(LEDGER, index=False)
+
+
 def convert_one(source: str, accession: str, sample_id: str, delete_raw: bool = False,
-                overwrite: bool = False) -> dict:
-    """Load -> enrich -> write .h5ad -> verify -> (optionally) delete the raw files."""
+                overwrite: bool = False, record: bool = True) -> dict:
+    """Load -> enrich -> write .h5ad -> verify -> (optionally) delete the raw files.
+
+    `record` writes the outcome to the ledger. convert_all passes record=False because it writes
+    the whole batch itself; a direct caller wants the ledger updated, since nothing else will.
+    """
+    rec_out = _convert_one_inner(source, accession, sample_id, delete_raw, overwrite)
+    if record:
+        try:
+            _ledger_upsert(rec_out)
+        except Exception as e:
+            logger.warning("could not update ledger for %s/%s: %s", accession, sample_id, e)
+    return rec_out
+
+
+def _convert_one_inner(source: str, accession: str, sample_id: str, delete_raw: bool = False,
+                       overwrite: bool = False) -> dict:
     from . import standardise as St
 
     rec = {"source": source, "accession": accession, "sample_id": sample_id, "status": "start"}
@@ -230,7 +270,7 @@ def convert_all(limit: int | None = None, delete_raw: bool = False,
                          "status": f"deferred_too_large: {n_cells:,} cells"})
             continue
         t0 = time.time()
-        rec = convert_one(*key, delete_raw=delete_raw)
+        rec = convert_one(*key, delete_raw=delete_raw, record=False)
         # Per-sample line: the earlier loop only logged every 25th sample, so a batch stuck on
         # sample 1 looked identical to a batch making progress.
         logger.info("[%d/%d] %s %s (%s cells, %.0fs)", i, len(keys),

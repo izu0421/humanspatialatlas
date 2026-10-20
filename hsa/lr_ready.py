@@ -72,7 +72,14 @@ def _names(h, axis):
 
 
 def _scale_check(xy, technology, grid_bin_um=None, max_pts: int = 20_000):
-    """Nearest-neighbour spacing, and whether it matches a physical unit."""
+    """Nearest-neighbour spacing, and whether it matches a physical unit.
+
+    Every piece of evidence `classify` can use is passed, not just the spacing. Passing only the
+    spacing silently skipped the lattice gate -- the gate is keyed on measured quantisation, and
+    with that argument left as None it cannot fire -- so a Visium pitch was applied to samples
+    whose points are not on a grid, and this module reported 88 samples as needing a rescale that
+    hsa/coord_units.py had already judged unexplainable. One sample, two verdicts.
+    """
     from scipy.spatial import cKDTree
 
     from .coord_units import classify
@@ -82,9 +89,13 @@ def _scale_check(xy, technology, grid_bin_um=None, max_pts: int = 20_000):
     if len(p) < 50:
         return None, None, "too_few_points"
     d, _ = cKDTree(p).query(p, k=2)
-    nn = float(np.median(d[:, 1]))
-    unit, _um, verdict = classify(nn, str(technology), grid_bin_um, 1.0)
-    # a technology with no lattice (GeoMx ROIs, unknown bin size) cannot be judged this way
+    d1 = d[:, 1]
+    nn = float(np.median(d1))
+    frac_modal = float(np.mean(np.abs(d1 - nn) <= 0.05 * nn)) if nn > 0 else None
+    span = p.max(0) - p.min(0)
+    unit, _um, verdict = classify(nn, str(technology), grid_bin_um, 1.0,
+                                  float(span[0]), float(span[1]), len(xy), frac_modal)
+    # a technology with no lattice and no usable span/density (GeoMx ROIs) cannot be judged here
     if verdict in ("no_expected_spacing",):
         return nn, None, "ok"
     return nn, unit, verdict

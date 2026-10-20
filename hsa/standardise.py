@@ -270,7 +270,12 @@ def load_sample(source: str, accession: str, sample_id: str):
             a, info["loader"] = sc.read_10x_h5(_gunzip(p)), "10x_h5"
         elif (p := _find(paths, r"cell_feature_matrix\.zarr\.zip$")):
             a, info["loader"] = _read_xenium_zarr(p), "xenium_zarr"
-        elif (p := _find(paths, r"(^|[/_-])(matrix|counts?|count_matrix_sparse)\.mtx(\.gz)?$")):
+        # The separator before "matrix" was [/_-], which excluded the two namings GEO actually
+        # uses for a per-sample trio: a dot ("GSM7058757_C2.matrix.mtx.gz") and no separator at
+        # all ("GSM8655157_P02matrix.mtx.gz"). 25 samples were reported as having no matrix while
+        # their mtx sat on disk beside a barcodes and features file, so the prefix requirement is
+        # dropped: a basename ending in matrix.mtx or counts.mtx IS the matrix, whatever precedes it.
+        elif (p := _find(paths, r"(matrix|counts?|count_matrix_sparse)\.mtx(\.gz)?$")):
             a, info["loader"] = _read_mtx_trio(p, paths), "mtx_trio"
         elif (p := _find(paths, r"(exprmat|cell_by_gene|stdata|_counts?\.|expression)")):
             a, info["loader"] = _read_csv_matrix(p), "csv_matrix"
@@ -326,6 +331,26 @@ def _read_mtx_trio(mtx: Path, paths: list[Path]):
                 ft = cand
                 logger.warning("features.tsv taken from a sibling directory: %s", cand.name)
                 break
+    if ft is None:
+        # A series can deposit ONE features.tsv at the series level and nothing per sample, in
+        # which case it is not among this sample's registered files at all and the search above
+        # cannot see it. GSE283052 does exactly that: 12 samples each ship matrix + positions +
+        # scalefactors, and GSE283052_features.tsv.gz sits one directory up, 36,601 rows against
+        # a 36,601 x 4,992 matrix. Walk up to the accession directory and require the row count
+        # to match an axis, so a features file belonging to another matrix cannot be adopted.
+        for up in (mtx.parent.parent, mtx.parent.parent.parent):
+            if up is None or not up.is_dir():
+                continue
+            for cand in sorted(up.rglob("*")):
+                if not cand.is_file() or not re.search(r"(features|genes)\.tsv", cand.name, re.I):
+                    continue
+                if _n_lines(cand) in raw.shape:
+                    ft = cand
+                    logger.warning("features.tsv taken from the accession directory: %s",
+                                   cand.name)
+                    break
+            if ft is not None:
+                break
     # Market Matrix files are usually genes x cells, but a sizeable minority of deposits are
     # already cells x genes; transposing unconditionally made var_names length mismatch the
     # matrix. Decide from the sidecar lengths instead of assuming.
@@ -344,8 +369,17 @@ def _read_mtx_trio(mtx: Path, paths: list[Path]):
         a = ad.AnnData(raw)                      # already cells x genes
     else:
         a = ad.AnnData(raw.T.tocsr())            # genes x cells, the common case
+    # Deliberately NO fallback from tissue_positions_list to barcodes. It is tempting -- the file
+    # names every spot in its first column and its row count matches the matrix -- but the order
+    # is NOT the matrix's column order, and borrowing it silently attaches the wrong spot to every
+    # column. Tested on GSE283052/GSM8655157: the in_tissue mask is spatially coherent under those
+    # coordinates (Moran I 0.93), yet total counts come out at Moran I 0.014 against a shuffled
+    # control of 0.021, i.e. counts land at random with respect to position. A matrix deposited
+    # with no barcode list has lost its column identity at the depositor's end; it is not
+    # recoverable here, and failing is the only honest outcome.
     if bc is not None:
-        a.obs_names = pd.read_csv(bc, header=None, sep="\t")[0].astype(str).values[: a.n_obs]
+        col = pd.read_csv(bc, header=None, sep="\t" if ".tsv" in bc.name else ",")[0]
+        a.obs_names = col.astype(str).values[: a.n_obs]
     if ft is None:
         # Positional integers are not gene identities. Failing here is better than writing a
         # sample that looks complete and cannot be joined to any other.
@@ -518,6 +552,22 @@ def _load_coords(paths: list[Path], a) -> tuple[np.ndarray | None, dict]:
                 return (xy.loc[a.obs_names].to_numpy(np.float32),
                         {"coord_source": f"{kind}:{cols}"})
             if len(df) == a.n_obs:                  # ids do not match but the rows line up
+                # Matching by row order is sound for the imaging platforms, whose coordinate table
+                # is written in matrix order: across 128 such samples the total counts carry a
+                # median excess Moran I of 0.34 over a shuffled control, i.e. the assignment is
+                # real. It is NOT sound for Visium, whose tissue_positions_list is in barcode
+                # WHITELIST order rather than matrix order. The one Visium sample that reached the
+                # atlas this way scored 0.006 against a shuffled control of -0.005 -- its spots
+                # were effectively randomised -- and a direct test on GSE283052 gave the same
+                # answer. A matrix deposited without a barcode list has lost its column identity
+                # at the depositor's end, and no ordering assumption here can recover it.
+                # Keyed on the FILE, not on which pattern matched it: tissue_positions_list also
+                # matches the later "generic" pattern, so testing the pattern label let the same
+                # file back in as generic_by_order.
+                if re.search(r"tissue_positions", p.name, re.I):
+                    logger.warning("refusing by-order coordinates from %s: a Visium positions "
+                                   "file is in barcode whitelist order, not matrix order", p.name)
+                    continue
                 cols = ",".join(str(c) for c in xy.columns)
                 return xy.to_numpy(np.float32), {"coord_source": f"{kind}_by_order:{cols}"}
         except Exception as e:

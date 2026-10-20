@@ -144,6 +144,13 @@ def headline():
         kk = ["source", "accession", "sample_id"]
         mm[kk] = mm[kk].astype(str)
         on_disk = set(map(tuple, mm.loc[mm.h5ad_path.notna(), kk].values))
+        # Quarantine has to be applied here too, not only via "has no file". Every quarantined
+        # sample so far happened to lack an .h5ad, so the on-disk filter hid the gap; the first
+        # quarantined sample that DID have a file (GSE300380/GSM9059356, coordinates assigned by
+        # row order and demonstrably random) stayed in the headline while the load panel excluded
+        # it.
+        if "verdict" in mm.columns:
+            on_disk -= set(map(tuple, mm.loc[mm.verdict.eq("quarantined"), kk].values))
         k = list(zip(hum.source.astype(str), hum.accession.astype(str), hum.sample_id.astype(str)))
         hum = hum[[x in on_disk for x in k]]
     ok = hum[hum.status.eq("ok") & hum.n_cells.notna()].copy()
