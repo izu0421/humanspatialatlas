@@ -215,6 +215,27 @@ def headline():
     }
 
 
+def review_summary():
+    """What the consistency review found, for the page.
+
+    Worth showing rather than filing: the fields the corpus does NOT agree on are what break a
+    downstream join, because code written against the majority convention passes every test
+    until it meets one of the exceptions.
+    """
+    f = RUNS / "review_samples.csv"
+    if not f.exists():
+        return {}
+    d = pd.read_csv(f, low_memory=False)
+    out = {"n": len(d), "n_errors": int((d.n_errors > 0).sum()),
+           "n_warnings": int((d.n_warnings > 0).sum())}
+    for col, key in (("gene_dialect", "gene_dialect"), ("X_dtype", "dtype"),
+                     ("matrix_kind", "matrix"), ("coord_coord_units", "coord_units")):
+        if col in d.columns:
+            vc = d[col].fillna("(absent)").value_counts().head(5)
+            out[key] = [[str(k), int(v)] for k, v in vc.items()]
+    return out
+
+
 def load_status():
     """Per technology: how many samples reached the atlas, and why the rest did not.
 
@@ -406,6 +427,7 @@ def run():
         "headline": headline(),
         "hd_cells": hd_cells(),
         "load_status": load_status(),
+        "review": review_summary(),
     }
     from .logo import svg
     body = (TEMPLATE.read_text().replace("__HSA_LOGO__", svg(inline=True))

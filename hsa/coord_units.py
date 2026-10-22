@@ -132,7 +132,11 @@ LATTICE_FRAC_MIN = 0.90                           # below this the points are no
 SPAN_MIN_UM, SPAN_MAX_UM = 200.0, 60_000.0        # smaller than a usable section / bigger than a slide
 # Plausible nearest-neighbour spacing in microns for anything this atlas holds: tighter than
 # touching nuclei at one end, wider than a 100 um Visium pitch with room to spare at the other.
-NN_MIN_UM, NN_MAX_UM = 2.0, 400.0
+# The upper bound is for catching coordinates that are wrong by orders of magnitude, not for
+# enforcing a maximum sparsity. 400 um rejected real sections whose spots sit ~440 um apart
+# (sparse or heavily filtered grids, hand-placed ROIs) while the failures this is meant to catch
+# are at 33,866 um or 0.0007 -- far outside either bound.
+NN_MIN_UM, NN_MAX_UM = 2.0, 2_000.0
 
 
 def _expected(technology: str, grid_bin_um=None) -> float | None:
@@ -170,6 +174,15 @@ def classify(nn: float | None, technology: str, grid_bin_um=None, frac_finite: f
         return None, None, "coords_non_finite"
     if nn is None or not np.isfinite(nn) or nn <= 0:
         return None, None, "coords_degenerate"
+
+    # Array indices are not a unit, and no metric factor converts them. A 50 x 50 DBiT-seq grid
+    # numbered 1..50 has nn = 1.0, and because the candidate factors jump from 1 to 1,000 the
+    # only one that lands inside the plausible range is millimetres -- giving cells 1 mm apart.
+    # The real pitch (25 or 50 um for DBiT-seq) comes from the protocol, not from the numbers, so
+    # the honest answer is to refuse. Detected as consecutive integers on a small dense grid.
+    if (span_x is not None and span_y is not None and np.isfinite(span_x)
+            and abs(nn - 1.0) < 1e-6 and max(span_x, span_y) < 2_000):
+        return None, None, "array_index_not_a_unit"
 
     # --- lattice regime: the pitch is known, so the factor is a division -- but only once the
     # points are confirmed to sit on a grid, since the technology label alone is not evidence
@@ -223,9 +236,10 @@ def classify(nn: float | None, technology: str, grid_bin_um=None, frac_finite: f
     return name, f, ("ok" if name == "microns" else "rescale")
 
 
-def run(manifest_csv: str = "runs/sample_manifest.csv",
-        out_csv: str = "runs/coord_units.csv",
+def run(manifest_csv: str | None = None, out_csv: str | None = None,
         limit: int | None = None, log_every: int = 250) -> pd.DataFrame:
+    manifest_csv = manifest_csv or (RUNS / "sample_manifest.csv")
+    out_csv = out_csv or (RUNS / "coord_units.csv")
     m = pd.read_csv(manifest_csv, low_memory=False)
     m = m[m.h5ad_path.notna()]
     if limit:

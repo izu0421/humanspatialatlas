@@ -24,6 +24,8 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 
+from .config import RUNS
+
 logger = logging.getLogger(__name__)
 
 # lower number = preferred as the surviving copy
@@ -61,9 +63,10 @@ def _rank(row) -> tuple:
     return (meta_gaps, ARCHIVE_RANK.get(src, 9), newest, acc)
 
 
-def find(manifest_csv: str = "runs/sample_manifest.csv",
-         out_csv: str = "runs/duplicates.csv") -> pd.DataFrame:
+def find(manifest_csv: str | None = None, out_csv: str | None = None) -> pd.DataFrame:
     """One row per materialised sample that is a redundant copy of another."""
+    manifest_csv = manifest_csv or (RUNS / "sample_manifest.csv")
+    out_csv = out_csv or (RUNS / "duplicates.csv")
     m = pd.read_csv(manifest_csv, low_memory=False)
     m = m[m.h5ad_path.notna() & m.n_cells.notna()].copy()
 
@@ -109,8 +112,7 @@ def find(manifest_csv: str = "runs/sample_manifest.csv",
 AGG_RATIO = 1.05   # an aggregate holding no more units than its siblings adds nothing
 
 
-def series_aggregates(manifest_csv: str = "runs/sample_manifest.csv",
-                      out_csv: str = "runs/series_aggregates.csv") -> pd.DataFrame:
+def series_aggregates(manifest_csv: str | None = None, out_csv: str | None = None) -> pd.DataFrame:
     """Rows that are a whole series in one file, alongside that series' per-sample rows.
 
     GEO series often carry a merged, QC-filtered object in the series-level supplementary files
@@ -122,6 +124,8 @@ def series_aggregates(manifest_csv: str = "runs/sample_manifest.csv",
     adds units is contributing sections that were never deposited per-sample, and keeping it is
     then the right call even though it overlaps.
     """
+    manifest_csv = manifest_csv or (RUNS / "sample_manifest.csv")
+    out_csv = out_csv or (RUNS / "series_aggregates.csv")
     m = pd.read_csv(manifest_csv, low_memory=False)
     m = m[m.h5ad_path.notna()].copy()
     sib_n = m.groupby("accession").sample_id.nunique()
@@ -152,10 +156,11 @@ def series_aggregates(manifest_csv: str = "runs/sample_manifest.csv",
     return d
 
 
-def redundant_keys(csv: str = "runs/duplicates.csv",
-                   agg_csv: str = "runs/series_aggregates.csv") -> set[tuple[str, str, str]]:
+def redundant_keys(csv: str | None = None, agg_csv: str | None = None) -> set[tuple[str, str, str]]:
     """(source, accession, sample_id) of every copy that should not be counted."""
     from pathlib import Path
+    csv = csv or (RUNS / "duplicates.csv")
+    agg_csv = agg_csv or (RUNS / "series_aggregates.csv")
     out = set()
     for f in (csv, agg_csv):
         if not Path(f).exists():

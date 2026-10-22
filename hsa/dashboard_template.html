@@ -143,6 +143,10 @@ h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .kpi b { font: 700 1.75rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .kpi span { color: var(--muted); font-size: 0.85rem; }
 .kpi small { font: 0.75rem var(--f-mono); color: var(--muted); }
+.msbtn { display:inline-block; padding:9px 17px; border:1px solid var(--accent);
+  border-radius:7px; color:var(--accent); text-decoration:none; font-weight:600;
+  font-size:13.5px; transition:background .15s; }
+.msbtn:hover { background:var(--accent); color:#fff; }
 .kpi.hero { border-color: var(--accent); }
 .kpi.hero b { color: var(--accent); }
 
@@ -295,6 +299,14 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <div class="bars pane" id="byHdCell"></div>
   </section>
 
+  <section class="panel" id="reviewPanel" hidden>
+    <h2>Consistency review <span class="count" id="reviewNote"></span></h2>
+    <div class="grid2">
+      <div><h3>Structural integrity</h3><div class="bars" id="revErr"></div></div>
+      <div><h3>Conventions the corpus does not share</h3><div class="bars" id="revSplit"></div></div>
+    </div>
+  </section>
+
   <section class="panel">
     <h2>Curation outcome, all recorded datasets</h2>
     <div class="funnel" id="funnel" role="img" aria-label="Datasets by verdict"></div>
@@ -356,6 +368,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   </section>
 
   <footer>
+<a class="msbtn" href="manuscript.html">Manuscript figures &rarr;</a><br><br>
 Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are linked but not downloaded). Regenerate with <code>python -m hsa.export</code>. Code: <a href="https://github.com/izu0421/humanspatialatlas">github.com/izu0421/humanspatialatlas</a>. Full tables (datasets, files, samples, sources) are available from the HSA team on request.
   </footer>
 </div>
@@ -531,6 +544,35 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
       `<div class="bar"><span class="lab">${esc(k)}</span><span class="trk">` +
       `<span class="fill${k === "raw_counts" ? "" : " alt"}" style="width:${(100 * n) / mx}%"></span>` +
       `<span class="val">${fmt(n)}</span></span></div>`).join("");
+  }
+
+  // The consistency review: every file asked the same questions. A minority convention is what
+  // breaks a downstream join, so the split fields are shown beside the error count.
+  const R = D.review || {};
+  if (R.n) {
+    $("reviewPanel").hidden = false;
+    $("reviewNote").textContent = fmt(R.n) + " files checked";
+    $("revErr").innerHTML =
+      `<div class="bar"><span class="lab">no structural error</span><span class="trk">` +
+      `<span class="fill" style="width:${(100 * (R.n - R.n_errors)) / R.n}%"></span>` +
+      `<span class="val">${fmt(R.n - R.n_errors)}</span></span></div>` +
+      `<div class="bar"><span class="lab">structural error</span><span class="trk">` +
+      `<span class="fill alt" style="width:${Math.max(0.6, (100 * R.n_errors) / R.n)}%"></span>` +
+      `<span class="val">${fmt(R.n_errors)}</span></span></div>` +
+      `<div class="bar"><span class="lab">carries a warning</span><span class="trk">` +
+      `<span class="fill alt" style="width:${(100 * R.n_warnings) / R.n}%"></span>` +
+      `<span class="val">${fmt(R.n_warnings)}</span></span></div>`;
+    const rows = [];
+    for (const [key, lab] of [["gene_dialect", "gene identifier"], ["dtype", "X dtype"],
+                              ["matrix", "matrix holds"], ["coord_units", "coordinate unit"]]) {
+      for (const [k, v] of (R[key] || []))
+        rows.push([`${lab}: ${k}`, v]);
+    }
+    const mx = Math.max(...rows.map((r) => r[1]), 1);
+    $("revSplit").innerHTML = rows.map(([l, v]) =>
+      `<div class="bar"><span class="lab" title="${esc(l)}">${esc(l)}</span><span class="trk">` +
+      `<span class="fill${v / R.n > 0.9 ? "" : " alt"}" style="width:${(100 * v) / mx}%"></span>` +
+      `<span class="val">${fmt(v)}</span></span></div>`).join("");
   }
 
   bars("byTech", "technology_norm", 12);

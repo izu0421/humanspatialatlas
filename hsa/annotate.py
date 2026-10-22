@@ -32,6 +32,7 @@ from .config import RUNS
 
 logger = logging.getLogger(__name__)
 MODELS = RUNS.parent / "celltype_models"
+REFS = RUNS.parent / "celltype_refs"
 OUT = RUNS / "annotation_log.csv"
 
 CELL_TECH = ("Xenium", "CosMx", "MERFISH", "Atera", "cell-level WTA", "STARmap", "seqFISH")
@@ -41,7 +42,7 @@ MIN_REF_CELLS = 500       # per organ
 # so the extra rows buy very little and cost a lot: the 97,816-cell lung fetch died part way
 # through pulling its matrix. A bounded fetch that completes is worth more than a large one
 # that does not.
-MAX_REF_CELLS = 40_000    # per organ, balanced across types
+MAX_REF_CELLS = 25_000    # per organ, balanced across types; the fetch is the slow step
 MIN_CELLS_PER_TYPE = 50
 
 
@@ -64,7 +65,7 @@ ORGAN_MAP = {
     "prostate_gland": "prostate gland", "uterus": "uterus", "ovary": "ovary",
     "stomach": "stomach", "esophagus": "esophagus", "thymus": "thymus",
     "placenta": "placenta", "testis": "testis", "bladder_organ": "urinary bladder",
-    "synovial_membrane_of_synovial_joint": "blood", "tonsil": "tonsil",
+    "synovial_membrane_of_synovial_joint": "blood",
     # Sub-regions map to the organ Census indexes them under. Left out, a third of the
     # cell-resolution corpus had no reference at all -- 33 carotid artery sections, 22 frontal
     # cortex, 20 lung parenchyma -- not because the reference is missing but because the atlas
@@ -82,15 +83,23 @@ ORGAN_MAP = {
     "duodenum": "small intestine", "jejunum": "small intestine", "intestine": "small intestine",
     "heart_left_ventricle": "heart", "heart_right_ventricle": "heart",
     "cardiac_atrium": "heart", "cardiac_ventricle": "heart",
-    "carotid_artery_segment": "blood vessel", "ascending_aorta": "blood vessel",
-    "coronary_artery": "blood vessel", "aorta": "blood vessel", "artery": "blood vessel",
+    # Census calls this "vasculature"; "blood vessel" returns nothing and the 47 carotid, aorta
+    # and coronary sections would have had no reference at all.
+    "carotid_artery_segment": "vasculature", "ascending_aorta": "vasculature",
+    "coronary_artery": "vasculature", "aorta": "vasculature", "artery": "vasculature",
     "urinary_bladder": "urinary bladder", "cortex_of_kidney": "kidney",
     "caudate_lobe_of_liver": "liver",
-    "palatine_tonsil": "tonsil", "oropharynx": "tonsil",
-    "skeletal_muscle_tissue": "skeletal muscle tissue",
+    # Census names these differently from the atlas, and all three returned nothing under the
+    # obvious term: "musculature" not "skeletal muscle tissue", "reproductive system" not
+    # "vagina", and tonsil has no term of its own -- it is secondary lymphoid tissue, so the
+    # lymph node reference is the closest honest match and is noted as a substitution.
+    "skeletal_muscle_tissue": "musculature", "muscle_tissue": "musculature",
+    "mucosa_of_vagina": "reproductive system", "vagina": "reproductive system",
+    "tonsil": "lymph node", "palatine_tonsil": "lymph node", "oropharynx": "lymph node",
     "subcutaneous_adipose_tissue": "adipose tissue", "adipose_tissue": "adipose tissue",
-    "mucosa_of_vagina": "vagina", "vagina": "vagina",
-    "sural_nerve": "nerve", "peripheral_nerve": "nerve",
+    # Peripheral nerve has no tissue_general in Census (only "central nervous system", which is
+    # a different tissue). 8 sections are left without a reference rather than annotated from a
+    # CNS model that has never seen a Schwann cell.
 }
 
 
@@ -134,14 +143,40 @@ def census_reference(organ: str, genes: list[str], census_version: str = "stable
         logger.info("%s: %d Census cells, %d types -> sampling %d",
                     organ, len(obs), obs.cell_type.nunique(), len(coords))
 
-        a = cellxgene_census.get_anndata(
-            census, organism="Homo sapiens",
-            obs_coords=coords,
-            var_value_filter=f"feature_name in {list(map(str, genes))}",
-            column_names={"obs": ["cell_type", "assay", "donor_id"],
-                          "var": ["feature_name", "feature_id"]},
-        )
+        # Genes are selected by integer coordinate, not by a `feature_name in [...]` filter.
+        # A 480-term filter string is handed to the tiledbsoma C++ layer and the fetch died
+        # there with no Python traceback -- the silent-exit signature of a crash below the
+        # interpreter, not an exception. Resolving the names to indices once keeps the query
+        # trivial and makes the gene mapping inspectable.
+        var = cellxgene_census.get_var(census, "Homo sapiens",
+                                       column_names=["soma_joinid", "feature_name"])
+        want = set(map(str, genes))
+        hit = var[var.feature_name.astype(str).isin(want)]
+        if not len(hit):
+            raise ValueError(f"none of the {len(want)} panel genes are in Census")
+        var_coords = np.sort(hit.soma_joinid.to_numpy())
+        logger.info("%s: %d of %d panel genes resolved in Census", organ, len(hit), len(want))
+
+        # Fetched in blocks of cells: one request for tens of thousands of rows is the step that
+        # kept failing, and a failure part way through a single request leaves nothing.
+        import anndata as ad_
+        blocks, B = [], 5_000
+        for i in range(0, len(coords), B):
+            blocks.append(cellxgene_census.get_anndata(
+                census, organism="Homo sapiens",
+                obs_coords=coords[i:i + B], var_coords=var_coords,
+                column_names={"obs": ["cell_type", "assay", "donor_id"],
+                              "var": ["feature_name", "feature_id"]}))
+            logger.info("  fetched %d/%d cells", min(i + B, len(coords)), len(coords))
+        a = ad_.concat(blocks, join="outer", merge="first") if len(blocks) > 1 else blocks[0]
+        if "feature_name" not in a.var.columns:
+            a.var = blocks[0].var.reindex(a.var_names)
     a.var_names = a.var["feature_name"].astype(str)
+    # anndata refuses to write a var index whose name collides with a column of different values,
+    # so the column goes once it has been promoted to the index. The fetch itself had succeeded;
+    # only the write failed, which is the worst place to lose a 20-minute network call.
+    a.var = a.var.drop(columns=["feature_name"])
+    a.var.index.name = None
     a.var_names_make_unique()
     a.obs["cell_type"] = a.obs["cell_type"].astype(str)
     return a
@@ -164,6 +199,54 @@ def _balance(a, rng, max_cells=MAX_REF_CELLS, min_per_type=MIN_CELLS_PER_TYPE):
     return a[a.obs_names.isin(set(idx))].copy()
 
 
+def cached_reference(organ: str, genes: list[str], seed: int = 0, force: bool = False):
+    """Fetch an organ's reference once and reuse it for every panel in that organ.
+
+    A Census fetch is the slow step by a wide margin -- block times for one lung reference ranged
+    from 24 seconds to 13 minutes, all network -- and an organ carries several panels that mostly
+    overlap. Fetching per (organ, panel) pays that cost once per panel; fetching the UNION of the
+    organ's panel genes once and subsetting locally pays it once per organ.
+
+    The cache is keyed on the organ and checked for coverage, so a later panel with genes the
+    cached reference does not hold triggers one re-fetch of the widened union rather than
+    silently training on a subset of its own features.
+    """
+    import anndata as ad
+
+    REFS.mkdir(parents=True, exist_ok=True)
+    f = REFS / f"{organ.replace(' ', '_')}.h5ad"
+    want = {str(g) for g in genes}
+    if f.exists() and not force:
+        a = ad.read_h5ad(f)
+        # A cache file that opens is not a cache file that is usable. A write that failed after
+        # the obs axis left 20,000-cell references with ZERO genes on disk -- readable, the right
+        # n_obs, and worthless. Anything downstream would have trained on nothing.
+        if a.n_vars == 0 or a.n_obs == 0:
+            logger.warning("%s: cached reference is empty %s, refetching", organ, a.shape)
+            f.unlink(missing_ok=True)
+        else:
+            # Census does not carry every panel gene, so a gene missing from the cache is only a
+            # reason to refetch when the cache was built from a NARROWER request than this one --
+            # which is why the request itself is recorded at build time.
+            built_from = {str(x) for x in a.uns.get("requested_genes", [])}
+            if not (want - built_from):
+                return a
+            logger.info("%s: cache built from %d genes, now want %d; widening", organ,
+                        len(built_from), len(want))
+            want |= built_from
+    a = census_reference(organ, sorted(want), seed=seed)
+    a.uns["requested_genes"] = sorted(want)
+    if a.n_vars == 0 or a.n_obs == 0:
+        raise ValueError(f"{organ}: fetched reference is empty {a.shape}; refusing to cache")
+    a.write_h5ad(f, compression="gzip")
+    check = ad.read_h5ad(f, backed="r")          # read back: the write is the step that failed
+    if check.n_vars != a.n_vars or check.n_obs != a.n_obs:
+        f.unlink(missing_ok=True)
+        raise ValueError(f"{organ}: wrote {a.shape} but read back {check.shape}")
+    logger.info("%s: cached reference %s -> %s", organ, a.shape, f.name)
+    return a
+
+
 def train(organ: str, genes: list[str], seed: int = 0, force: bool = False):
     """Train (or load) a CellTypist model for one organ restricted to one panel."""
     import celltypist
@@ -177,7 +260,7 @@ def train(organ: str, genes: list[str], seed: int = 0, force: bool = False):
         return celltypist.models.Model.load(str(path)), json.loads(meta_path.read_text())
 
     rng = np.random.default_rng(seed)
-    ref = census_reference(organ, genes, seed=seed)
+    ref = cached_reference(organ, genes, seed=seed)
     ref = _balance(ref, rng)   # a second pass: types can still fall under the floor after the fetch
     present = [g for g in genes if g in set(ref.var_names)]
     if len(present) < MIN_GENES:
