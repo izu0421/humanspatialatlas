@@ -26,37 +26,44 @@ OUTFIG = ROOT / "figures"
 
 # (file stem, figure label, title, legend)
 FIGURES = [
-    ("f1a_framework", "Figure 1a", "An agent per stage",
-     "Seven agents, each re-run as new data is deposited. Every stage is labelled with the "
-     "number it produced, read from the manifest when the figure is drawn, so the schematic "
-     "cannot describe a pipeline different from the one that ran."),
-    ("f1b_per_organ", "Figure 1b", "Cells and spots per organ and platform",
-     "Measured units by organ and by platform, on a log scale. Cells and spots are shown "
-     "side by side and never summed: a Visium spot holds 1-10 cells and a segmented cell is "
-     "one cell, so a total of the two is a number that is neither. A Visium HD section that "
-     "bin2cell segmented contributes its cells, and its bins are excluded, because they are "
-     "the same tissue measured twice."),
-    ("f1a_cohort", "Figure 1c", "Cohort composition",
-     "Tissues sampled, the interaction classes in the CellPhoneDB universe, and how many "
-     "tissues each pair is measurable in. A pair is measurable only where both its genes are "
-     "detected, which is why the right-hand panel matters for every figure that follows."),
-    ("f2a_ppi_types", "Figure 2a", "Four physical events, one statistic",
-     "The interaction classes are not interchangeable. A secreted ligand reaching a receptor, "
-     "two adhesion molecules binding across a membrane, a metabolite produced by an enzyme "
-     "acting on a receptor, and two receptors engaging directly are different physical events, "
-     "and the same bivariate statistic is applied to all four."),
-    ("f2_auroc_panels", "Figure 2b-d", "Discrimination, against a shuffled null",
-     "AUROC from bootstrap resamples of pairs; hatched grey is the same statistic with the "
-     "predictions shuffled. Reported against the shuffled null rather than against 0.5, because "
-     "with 2,699 positives concentrated on well-annotated genes, 0.5 is not what a useless "
-     "predictor scores on this label set. <b>b</b> aggregation metric, <b>c</b> by interaction "
-     "class, <b>d</b> by tissue."),
-    ("f4_scaling_per_class", "Figure 3", "How much atlas each class needs",
-     "AUROC against atlas size, per interaction class. The pair set is fixed once over the whole "
-     "corpus so the curve cannot be confounded by pairs entering as N grows, and sections are "
+    ("FIG1", "Figure 1", "A cross-tissue human spatial atlas, assembled by agents",
+     "<b>A</b> Seven agents, each re-run weekly as new data is deposited. Every count in the "
+     "schematic is read from the manifest when the figure is drawn, so it cannot describe a "
+     "pipeline other than the one that ran. <b>B</b> Measured units per organ and "
+     "<b>C</b> per platform, on a log scale, shown as position rather than bar length because a "
+     "bar's extent is not proportional to its value on a logarithmic axis. Cells (red) and "
+     "spots or bins (blue) are never summed: a Visium spot holds 1\u201310 cells and a "
+     "segmented cell is one cell, so a total of the two is a number that is neither. A Visium "
+     "HD section that bin2cell segmented contributes its cells, and its bins are excluded, "
+     "because they are the same tissue measured twice."),
+    ("FIG2", "Figure 2", "Bivariate Moran's R discriminates annotated interactions weakly",
+     "<b>A</b> The four interaction classes are physically distinct events scored by one "
+     "statistic. <b>B\u2013D</b> Area under the receiver-operating-characteristic curve "
+     "(AUROC) from 200 bootstrap resamples of pairs; solid red boxes are observed and hatched "
+     "grey boxes a null computed with randomly shuffled predictions. The null is the reference "
+     "rather than 0.5, because with 2,699 annotated pairs concentrated on well-studied genes "
+     "0.5 is not what an uninformative predictor scores on this label set. <b>B</b> aggregation "
+     "metric, <b>C</b> interaction class, <b>D</b> tissue. Boxes show the median and "
+     "interquartile range; whiskers extend to 1.5\u00d7 the interquartile range."),
+    ("f4_scaling_per_class", "Figure 3",
+     "Metabolite\u2013receptor interactions are the class that an atlas buys",
+     "<b>A</b> AUROC against atlas size, per interaction class; shaded bands are the "
+     "interquartile range across resamples. The pair set is fixed once over the whole corpus so "
+     "the curve cannot be confounded by pairs becoming measurable as N grows, and sections are "
      "drawn by study rather than individually, since sections from one study share tissue, "
-     "protocol and often donor. Metabolite-Receptor gains +0.183 and is the only class still "
-     "improving past 100 sections; canonical Ligand-Receptor gains +0.060 and saturates by 32."),
+     "protocol and often donor. <b>B</b> AUROC gained between the smallest and the largest "
+     "atlas, per class. Metabolite\u2013receptor gains 0.183 and is the only class still "
+     "improving beyond 100 sections, reaching 95% of its plateau at ~128 sections against ~32 "
+     "for the others; canonical ligand\u2013receptor gains 0.060 and saturates early."),
+    ("f3_pvalue", "Figure 4", "A per-pair p-value from recurrence across tissues",
+     "<b>A</b> Observed against expected quantiles of the p-value. Decoy pairs lie on the "
+     "diagonal, which is the null being correct by construction, since the decoys define it. "
+     "<b>B</b> Annotated pairs are enriched in the small-p tail: 2.30-fold at p &lt; 0.05 and "
+     "4.01-fold at p &lt; 0.01. No pair survives Benjamini\u2013Hochberg correction, because "
+     "with ~12,500 decoys the smallest expressible p is ~1/(n+1) while correction over 15,191 "
+     "tests requires ~3 \u00d7 10\u207b\u2076; a fitted normal tail was tested against the "
+     "empirical one and rejected, so the result supports enrichment rather than per-pair "
+     "significance."),
 ]
 
 
@@ -99,13 +106,14 @@ def build() -> Path:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HSA &mdash; manuscript figures</title>
 <style>
- :root {{ --ink:#1a1a1a; --mut:#666; --line:#e4e4e8; --accent:#6a4c93; }}
+ :root {{ --ink:#1a1a1a; --mut:#666; --line:#e4e4e8; --accent:#B2182B; }}
  * {{ box-sizing:border-box }}
  body {{ margin:0; background:#fff; color:var(--ink);
         font:15px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }}
  .wrap {{ max-width:1080px; margin:0 auto; padding:34px 22px 80px; }}
  header {{ border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:26px; }}
- h1 {{ font-size:25px; margin:0 0 6px; letter-spacing:-.01em; }}
+ h1 {{ font-size:25px; margin:0 0 7px; letter-spacing:-.01em; line-height:1.28; }}
+ .authors {{ font-size:14.5px; color:var(--ink); margin:0 0 7px; }}
  .sub {{ color:var(--mut); font-size:13.5px; }}
  .stats {{ display:flex; flex-wrap:wrap; gap:26px; margin:18px 0 0; }}
  .stats div b {{ display:block; font-size:19px; color:var(--accent); }}
@@ -131,7 +139,8 @@ def build() -> Path:
 </style></head><body><div class="wrap">
 <a class="back" href="index.html">&larr; back to the atlas</a>
 <header>
-  <h1>Ligand&ndash;receptor inference across a cross-tissue spatial atlas</h1>
+  <h1>Human Spatial Atlas enables ligand&ndash;receptor deorphanisation</h1>
+  <div class="authors">Yizhou Yu, Maciej Wiatrak and Sarah A Teichmann</div>
   <div class="sub">Figures generated by
     <code>lr_atlas/1_2_per_class_prediction.ipynb</code>; this page embeds them unchanged.</div>
   <div class="stats">
