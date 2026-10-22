@@ -16,3 +16,7 @@ standard/
 standardised/
 quarantine/
 data_stereo_pilot/
+
+# Organ reference matrices fetched from CELLxGENE Census (797 MB, regenerable with
+# `python -m hsa.annotate_run`). Data, not code.
+celltype_refs/
