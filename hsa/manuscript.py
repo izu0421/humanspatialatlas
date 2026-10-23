@@ -48,7 +48,10 @@ FIGURES = [
      "rather than 0.5, because with 2,699 annotated pairs concentrated on well-studied genes "
      "0.5 is not what an uninformative predictor scores on this label set. <b>B</b> aggregation "
      "metric, <b>C</b> interaction class, <b>D</b> tissue. Boxes show the median and "
-     "interquartile range; whiskers extend to 1.5\u00d7 the interquartile range. These AUROCs "
+     "interquartile range; whiskers extend to 1.5\u00d7 the interquartile range. Aggregated "
+     "over 4,116 sections the mean reaches 0.611 against a null of 0.500, and "
+     "metabolite\u2013receptor, adhesion\u2013adhesion and receptor\u2013receptor all reach "
+     "0.67 while canonical ligand\u2013receptor reaches 0.60. These AUROCs "
      "should be read against a lookup baseline rather than against 0.5: a pair's degree in "
      "CellPhoneDB, that is how many annotated interactions each of its genes already appears "
      "in, predicts the label at AUROC 0.771 using no expression and no spatial information. "
@@ -63,8 +66,9 @@ FIGURES = [
      "drawn by study rather than individually, since sections from one study share tissue, "
      "protocol and often donor. <b>B</b> AUROC gained between the smallest and the largest "
      "atlas, per class. Metabolite\u2013receptor gains 0.183 and is the only class still "
-     "improving beyond 100 sections, reaching 95% of its plateau at ~128 sections against ~32 "
-     "for the others; canonical ligand\u2013receptor gains 0.060 and saturates early. Degree in "
+     "improving beyond 100 sections; canonical ligand\u2013receptor gains 0.061 and saturates "
+     "early. Over 4,116 sections metabolite\u2013receptor rises from 0.530 to 0.685 while "
+     "ligand\u2013receptor rises from 0.535 to 0.596. Degree in "
      "CellPhoneDB is uninformative for orphan receptors by construction, so the gain shown here "
      "is the part of the signal available to a deorphanisation question."),
 ]
