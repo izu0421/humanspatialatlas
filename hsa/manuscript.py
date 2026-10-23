@@ -26,16 +26,20 @@ OUTFIG = ROOT / "figures"
 
 # (file stem, figure label, title, legend)
 FIGURES = [
-    ("FIG1", "Figure 1", "A cross-tissue human spatial atlas, assembled by agents",
-     "<b>A</b> Seven agents, each re-run weekly as new data is deposited. Every count in the "
-     "schematic is read from the manifest when the figure is drawn, so it cannot describe a "
-     "pipeline other than the one that ran. <b>B</b> Measured units per organ and "
-     "<b>C</b> per platform, on a log scale, shown as position rather than bar length because a "
-     "bar's extent is not proportional to its value on a logarithmic axis. Cells (red) and "
-     "spots or bins (blue) are never summed: a Visium spot holds 1\u201310 cells and a "
-     "segmented cell is one cell, so a total of the two is a number that is neither. A Visium "
-     "HD section that bin2cell segmented contributes its cells, and its bins are excluded, "
-     "because they are the same tissue measured twice."),
+    ("FIG1", "Figure 1", "A continually updated cross-tissue human spatial atlas",
+     "<b>A</b> Seven agents, each re-run weekly as new data is deposited. Every count is read "
+     "from the manifest when the figure is drawn, so the schematic cannot describe a pipeline "
+     "other than the one that ran. <b>B</b> Measured units per tissue, coloured by the fraction "
+     "measured at cell resolution, and <b>C</b> per platform. Magnitude is shown by position "
+     "rather than bar length, since a bar's extent is not proportional to its value on a "
+     "logarithmic axis. Cells and spots are never summed: a Visium spot holds 1\u201310 cells "
+     "and a segmented cell is one cell, so a total of the two is a number that is neither; a "
+     "Visium HD section that bin2cell segmented contributes its cells and not its bins, because "
+     "they are the same tissue measured twice. <b>D</b> Cumulative measured units against "
+     "deposit date, by platform. Visium accounts for essentially all material deposited before "
+     "2024, after which imaging platforms enter and Xenium becomes the largest single "
+     "contributor. Restricted to the GEO-deposited subset, the only part of the atlas for which "
+     "a true deposit date is available."),
     ("FIG2", "Figure 2", "Bivariate Moran's R discriminates annotated interactions weakly",
      "<b>A</b> The four interaction classes are physically distinct events scored by one "
      "statistic. <b>B\u2013D</b> Area under the receiver-operating-characteristic curve "
