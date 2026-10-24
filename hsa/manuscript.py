@@ -60,20 +60,27 @@ FIGURES = [
      "(AUROC 0.500) while the spatial aggregate is at its strongest (0.637)."),
     ("f4_scaling_per_class", "Figure 3",
      "Metabolite\u2013receptor interactions are the class that an atlas buys",
-     "<b>A</b> AUROC against atlas size, per interaction class; shaded bands are the "
-     "interquartile range across resamples. The pair set is fixed once over the whole corpus so "
-     "the curve cannot be confounded by pairs becoming measurable as N grows, and sections are "
-     "drawn by study rather than individually, since sections from one study share tissue, "
-     "protocol and often donor. <b>B</b> AUROC gained between the smallest and the largest "
-     "atlas, per class. Metabolite\u2013receptor gains 0.162, nearly three times what the canonical "
-     "class gains, and is the slowest to saturate: it needs ~520 sections to reach 95% of "
-     "its plateau against 95 for adhesion\u2013adhesion and 254 for ligand\u2013receptor. "
-     "Over the whole corpus of 6,237 sections metabolite\u2013receptor rises from 0.527 to "
-     "0.689 while ligand\u2013receptor rises from 0.535 to 0.597. The curve is drawn on the "
-     "pooled corpus; the spot-only and cell-only arms are separate corpora and are not "
-     "mixed into it. Degree in "
-     "CellPhoneDB is uninformative for orphan receptors by construction, so the gain shown here "
-     "is the part of the signal available to a deorphanisation question."),
+     "<b>A</b> AUROC against the number of sections in the atlas, per interaction class; "
+     "shaded bands are the interquartile range across resamples. The pair set is fixed once "
+     "over the whole corpus so the curve cannot be confounded by pairs becoming measurable as "
+     "N grows, and sections are drawn by study rather than individually, since sections from "
+     "one study share tissue, protocol and often donor. <b>B</b> The same curves against "
+     "measured units \u2014 cells and spots \u2014 rather than sections. The two axes are not "
+     "a rescaling of each other: a Visium section carries a few thousand spots and a Xenium "
+     "section a few hundred thousand cells, so a corpus of 6,237 sections spans 544.6 million "
+     "measured units, 481.1 million of them spots and 63.5 million cells. <b>C</b> What a "
+     "pre-atlas study could reach and what the atlas adds, per class. The pale segment is the "
+     "AUROC at the smallest atlas sampled, two studies and a median of 7 sections, which is "
+     "about what a single paper assembles; the solid segment is the gain out to the whole "
+     "corpus. Bars start at 0.5 because that is what an uninformative score reaches. "
+     "Metabolite\u2013receptor gains 0.162, nearly three times the canonical class, and is "
+     "the slowest to saturate: it needs ~520 sections to reach 95% of its plateau against 95 "
+     "for adhesion\u2013adhesion and 254 for ligand\u2013receptor. Over the whole corpus "
+     "metabolite\u2013receptor rises from 0.527 to 0.689 while ligand\u2013receptor rises "
+     "from 0.535 to 0.597. The curves are drawn on the pooled corpus; the spot-only and "
+     "cell-only arms are separate corpora and are not mixed into them. Degree in CellPhoneDB "
+     "is uninformative for orphan receptors by construction, so the gain shown here is the "
+     "part of the signal available to a deorphanisation question."),
     ("FIG4", "Figure 4",
      "Two implementations of the same statistic reproduce the result and do not combine",
      "SpatialDM and LIANA+ were each run over the whole corpus, 6,188 and 6,206 sections, "
