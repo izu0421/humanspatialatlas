@@ -132,6 +132,35 @@ FIGURES = [
     ("FIGS2", "Supplementary Figure 2",
      "Spatial co-expression adds nothing over abundance for canonical ligand\u2013receptor pairs",
      "The control the original design implies: if a model given only how abundant a pair\u0027s two genes are matches one given only the spatial statistic, the spatial statistic is not what is doing the work. Five-fold cross-validation over all 15,193 pairs with a gene held out of training whenever it appears in the test fold. <b>A</b> Pooled, the spatial features reach 0.604 against abundance\u0027s 0.567 and observability\u0027s 0.587, where observability is how often a pair was measurable at all. That nuisance scoring within 0.017 of the statistic is itself a warning: it tracks the same well-studied genes the annotation does, so a model can look spatial while reading coverage. <b>B</b> Per class the pooled margin does not hold. For canonical ligand\u2013receptor, 9,806 of the pairs and the class this work is about, spatial scores 0.5886 against abundance\u0027s 0.5879 \u2014 a difference of 0.0007. The pooled win is carried entirely by receptor\u2013receptor (+0.144), adhesion\u2013adhesion (+0.139) and metabolite\u2013receptor (+0.061). On 539 sections this test was not decisive; on 6,188 it is, and the canonical class fails it. All of these should be read against the lookup baseline of 0.771 from CellPhoneDB degree alone, not against 0.5."),
+    ("FIGS3", "Supplementary Figure 3",
+     "Which component of the statistic each class leans on",
+     "Each method yields three pair-level components asking different questions: "
+     "z<sub>mean</sub>, how strongly a pair co-localises on average across tissues; "
+     "z<sub>max</sub>, how strongly in its best tissue, which is tissue-restriction; and the "
+     "called fraction, how often it passes the significance threshold at all. Between methods "
+     "z<sub>mean</sub> and the called fraction correlate at 0.997 and 0.996, and the tissue "
+     "count is identical at 1.000 because it is corpus structure rather than a method output, "
+     "so it is dropped; z<sub>max</sub> is the one component on which the two genuinely "
+     "disagree (0.899), because a maximum is set by a single tissue and the methods rank "
+     "tissues differently. <b>A</b> AUROC of each component alone, averaged over the two "
+     "methods; the dot marks the component a class leans on. Adhesion\u2013adhesion is the "
+     "only class that leans on z<sub>max</sub> (0.681 against 0.670 for z<sub>mean</sub>); "
+     "every other class leans on z<sub>mean</sub>. <b>B</b> LIANA+ minus SpatialDM per "
+     "component. The differences are confined almost entirely to z<sub>max</sub>, as the "
+     "correlations predict, and the largest is ligand\u2013ligand (+0.078), a class of 168 "
+     "pairs where a single tissue decides the ranking. <b>C</b> The two regimes, annotated "
+     "pairs only. Tissue-restricted complexes sit high on z<sub>max</sub> at low "
+     "z<sub>mean</sub> \u2014 the desmosomal cadherins DSG1\u2013DSC1 and DSG1\u2013DSC3, "
+     "and CEACAM5\u2013CEACAM6 \u2014 each enormous in one epithelium and absent elsewhere, "
+     "which is why averaging across 124\u2013174 tissues dilutes them and the maximum does "
+     "not. Ubiquitous pairs sit far to the right on z<sub>mean</sub>: PPIA\u2013BSG, "
+     "APOE\u2013TYROBP, APP\u2013CD74. That second group is the caution. The class that "
+     "leans hardest on z<sub>mean</sub> is canonical ligand\u2013receptor, and its top "
+     "z<sub>mean</sub> pairs are among the most abundant transcripts in any tissue, which is "
+     "the same signal Supplementary Figure 2 shows abundance alone reproduces. Fitted "
+     "coefficients are not plotted: over columns correlated at 0.997 a fit takes large "
+     "opposite-signed weights and is leaning on their difference, and 6 of 30 coefficients do "
+     "not hold their sign across folds. They are recorded in bench/component_weights.csv."),
 ]
 
 
