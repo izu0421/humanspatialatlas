@@ -74,6 +74,29 @@ FIGURES = [
      "mixed into it. Degree in "
      "CellPhoneDB is uninformative for orphan receptors by construction, so the gain shown here "
      "is the part of the signal available to a deorphanisation question."),
+    ("FIG4", "Figure 4",
+     "Two implementations of the same statistic reproduce the result and do not combine",
+     "SpatialDM and LIANA+ were each run over the whole corpus, 6,188 and 6,206 sections, "
+     "sharing 6,183; everything here is paired on those shared sections and both arms pass "
+     "through the identical transform, so a difference is the method and not the pipeline. "
+     "<b>A</b> Within a single section the two rank pairs at a median Spearman \u03c1 of 0.78 "
+     "(interquartile range 0.69\u20130.85, 790 randomly sampled sections), and their raw "
+     "statistics are different objects \u2014 SpatialDM reports a z spanning \u00b1164, LIANA "
+     "a local R spanning \u00b10.27. <b>B</b> Averaged over 6,183 sections that disagreement "
+     "cancels: the per-pair scores correlate at r = 0.997 and sit on the identity line. Axes "
+     "are clipped to the central 99.4% of pairs. <b>C</b> AUROC with 95% bootstrap intervals "
+     "over 400 resamples; the grey band is the shuffled-prediction null and the dotted line "
+     "SpatialDM alone. No combiner moves the result \u2014 equal weights lands on 0.613 and "
+     "rank averaging on 0.614, with a paired bootstrap difference of +0.001 whose interval "
+     "includes zero. A fitted logistic combiner, cross-validated with a gene held out of "
+     "training whenever it appears in the test fold, is worse at 0.603 (paired difference "
+     "\u22120.010, interval excluding zero). Its per-fold coefficients say why rather than "
+     "leaving it a mystery: \u22120.43 \u00b1 0.19 on SpatialDM against +0.72 \u00b1 0.18 on "
+     "LIANA, large weights of opposite sign on two columns correlated at 0.997, so the fit is "
+     "leaning on their difference, which is noise. That is unidentifiability, not an argument "
+     "against fitting. The reading that stands is the other one: two independent "
+     "implementations over 6,183 sections reproduce the result, so LIANA buys replication and "
+     "throughput rather than information."),
 ]
 
 
