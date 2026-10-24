@@ -73,9 +73,13 @@ FIGURES = [
      "AUROC at the smallest atlas sampled, two studies and a median of 7 sections, which is "
      "about what a single paper assembles; the solid segment is the gain out to the whole "
      "corpus. Bars start at 0.5 because that is what an uninformative score reaches. "
-     "Metabolite\u2013receptor gains 0.162, nearly three times the canonical class, and is "
-     "the slowest to saturate: it needs ~520 sections to reach 95% of its plateau against 95 "
-     "for adhesion\u2013adhesion and 254 for ligand\u2013receptor. Over the whole corpus "
+     "Metabolite\u2013receptor gains 0.162, nearly three times the canonical class. "
+     "Saturation is measured against the gain above chance rather than against the AUROC: "
+     "an uninformative score already reaches 0.5, so 95% of a 0.60 AUROC is a bar every "
+     "curve clears at its first point. On that footing metabolite\u2013receptor and "
+     "adhesion\u2013adhesion reach 95% of their gain by ~1,030 sections, while "
+     "ligand\u2013receptor and receptor\u2013receptor do not reach it anywhere in the "
+     "corpus and are still improving at its edge. Over the whole corpus "
      "metabolite\u2013receptor rises from 0.527 to 0.689 while ligand\u2013receptor rises "
      "from 0.535 to 0.597. The curves are drawn on the pooled corpus; the spot-only and "
      "cell-only arms are separate corpora and are not mixed into them. Degree in CellPhoneDB "
@@ -104,6 +108,27 @@ FIGURES = [
      "against fitting. The reading that stands is the other one: two independent "
      "implementations over 6,183 sections reproduce the result, so LIANA buys replication and "
      "throughput rather than information."),
+    ("FIGS1", "Supplementary Figure 1",
+     "Where each modality's evidence saturates",
+     "The same scaling question asked of each platform rather than each interaction class. "
+     "<b>A</b> Each platform is scored on its own pair set, the pairs measurable in at least "
+     "half of its sections; the plateau is then a statement about that platform, but the "
+     "AUROC levels are not comparable, because a targeted panel is scored on a smaller and "
+     "easier set. <b>B</b> The same curves on one shared set of 3,149 pairs (589 annotated), "
+     "so the levels can be compared. That set is the intersection over Visium, Xenium, Visium "
+     "HD and Slide-seq; CosMx and Stereo-seq are scored on it but did not define it, because "
+     "intersecting all six leaves 672 pairs \u2014 CosMx measures only 1,840 in half its "
+     "sections, and the narrowest panel should not set the terms for the rest. Open circles "
+     "mark where a curve reaches 95% of its gain above chance. <b>C</b> How many sections "
+     "that takes. Saturation is measured against the gain above chance, not against the "
+     "AUROC: taking 95% of the AUROC treats 0 as the floor, and 95% of a 0.535 plateau is "
+     "0.508, which every curve clears at its first point. Measured that way CosMx appeared "
+     "saturated at 2 sections; corrected it is 3, and the honest reading of that number is "
+     "that its curve never rises rather than that it saturates efficiently. Visium needs "
+     "2,590 sections, Xenium 246 and Visium HD 226; Stereo-seq does not get there within its "
+     "99. Three platforms are excluded rather than drawn flat: MERFISH (12 sections, only 89 "
+     "pairs measurable in half of them), Atera (6 studies) and one unidentified section. A "
+     "plateau estimated from 6 studies is not a plateau."),
 ]
 
 
@@ -129,6 +154,10 @@ def build() -> Path:
         svg = FIGDIR / f"{stem}.svg"
         if svg.exists():
             shutil.copy(svg, OUTFIG / svg.name)
+        if label.startswith("Supplementary") and not any(
+                "supplementary-divider" in b for b in blocks):
+            blocks.append('<hr class="supplementary-divider">'
+                          '<h2 class="supp">Supplementary figures</h2>')
         blocks.append(
             f'<figure id="{stem}">\n'
             f'  <img src="data:image/png;base64,{_b64(src)}" alt="{title}">\n'
@@ -163,6 +192,9 @@ def build() -> Path:
  figure img {{ width:100%; height:auto; border:1px solid var(--line); border-radius:7px;
                background:#fff; }}
  figcaption {{ font-size:13px; color:#333; margin-top:11px; line-height:1.58; }}
+ hr.supplementary-divider {{ border:0; border-top:1px solid #d8d8de; margin:54px 0 0; }}
+ h2.supp {{ font-size:15px; font-weight:600; letter-spacing:.06em;
+            text-transform:uppercase; color:#6b6b73; margin:26px 0 8px; }}
  figcaption b {{ color:var(--ink); }}
  .back {{ display:inline-block; margin-bottom:22px; font-size:13.5px; color:var(--accent);
           text-decoration:none; }}
@@ -175,6 +207,8 @@ def build() -> Path:
    figure img {{ background:#fff; }}
    .note {{ background:#1c1a20; color:#c8c8ce; }}
    figcaption {{ color:#c0c0c6; }}
+   hr.supplementary-divider {{ border-top-color:#3a3a42; }}
+   h2.supp {{ color:#9a9aa2; }}
  }}
 </style></head><body><div class="wrap">
 <a class="back" href="index.html">&larr; back to the atlas</a>
@@ -207,7 +241,8 @@ def build() -> Path:
         logger.warning("could not protect the manuscript page: %s", e)
         locked = None
     out.write_text(locked or html)
-    logger.info("wrote %s with %d figures (%s)", out, len(blocks),
+    logger.info("wrote %s with %d figures (%s)", out,
+                sum(1 for b in blocks if b.startswith("<figure")),
                 "encrypted" if locked else "PLAINTEXT - no password file")
     return out
 
