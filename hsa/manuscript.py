@@ -161,6 +161,38 @@ FIGURES = [
      "coefficients are not plotted: over columns correlated at 0.997 a fit takes large "
      "opposite-signed weights and is leaning on their difference, and 6 of 30 coefficients do "
      "not hold their sign across folds. They are recorded in bench/component_weights.csv."),
+    ("FIGS4", "Supplementary Figure 4",
+     "The statistic works in proportion to how far the interaction physically reaches",
+     "<b>A</b> Why range decides what a proximity statistic can see. Bivariate Moran\u0027s R "
+     "asks whether two transcripts are high in the same neighbourhood. For a junction that is "
+     "the mechanism \u2014 the two proteins must be at the same membrane in touching cells, "
+     "and a 55 \u00b5m spot contains both. For a synaptic transmitter, across a ~20 nm cleft, "
+     "the same holds. For a secreted ligand it does not: the molecule acts on cells far from "
+     "the one that released it, so a real interaction leaves no spatial correlation, while two "
+     "abundant genes sharing a compartment leave a strong one and interact not at all. "
+     "<b>B</b> Median z<sub>max</sub> of the annotated pairs in each signalling family, "
+     "ordered; the number beside each bar is the pairs in that family. The ordering is "
+     "interaction range almost exactly. Contact-dependent families lead \u2014 "
+     "collagen\u2013integrin 6.37, Notch 4.76, ephrin 3.78, semaphorin 3.41, all "
+     "membrane-anchored ligands requiring the cells to touch \u2014 followed by the synaptic "
+     "transmitters (GABA 3.80, glutamate 3.55). Everything that travels sits at the bottom: "
+     "chemokines 2.39, interleukin 1.42, interferon 0.67. Contact against diffusible families, "
+     "Mann\u2013Whitney p = 2\u00d710\u207b\u00b9\u2078. Families are compared on score "
+     "distributions rather than AUROC because CellPhoneDB populates the family label only for "
+     "annotated pairs, leaving no negatives. The monoamines are drawn but held out of that "
+     "test: they act by volume transmission, but their source neurons are small nuclei the "
+     "atlas samples poorly, so a low score there is as easily detectability as range. "
+     "<b>C</b> The same split inside one class, which is the sharper test \u2014 same "
+     "annotation source, same label set, only the ligand\u0027s physical form differs. Within "
+     "canonical ligand\u2013receptor, pairs whose ligand is not secreted beat those whose "
+     "ligand is, by +0.055 on z<sub>max</sub> and +0.046 on the called fraction, both with "
+     "bootstrap intervals excluding zero; the z<sub>mean</sub> gap of +0.024 does not. "
+     "Abundance does not explain it: contact pairs are slightly more abundant, so matching on "
+     "abundance quintiles widens every gap rather than removing it (+0.049, +0.054, +0.069). "
+     "This is the result that reframes the rest. The canonical class fails the abundance "
+     "control of Supplementary Figure 2 not because the method is implemented badly but "
+     "because proximity is the wrong observable for a diffusible ligand; what the atlas "
+     "measures well is contact-dependent interaction."),
 ]
 
 
