@@ -247,10 +247,53 @@ def cached_reference(organ: str, genes: list[str], seed: int = 0, force: bool = 
     return a
 
 
+def _patch_celltypist_sklearn() -> str:
+    """CellTypist 1.7.1 passes `multi_class='ovr'` to LogisticRegression; scikit-learn removed
+    that argument in 1.7, so training raises TypeError on any current install.
+
+    Downgrading scikit-learn is not an option here -- the ligand-receptor analysis in
+    lr_atlas/ is built against the current one -- so the argument is dropped instead. That is
+    not a no-op: without it scikit-learn fits a multinomial softmax rather than one-vs-rest,
+    so the probabilities are normalised across types instead of independent per type. For a
+    confidence read as `probability_matrix.max()` the multinomial form is the better behaved
+    of the two, but it IS a different model from a stock CellTypist one, so the fact is
+    recorded in every model's metadata rather than left implicit.
+    """
+    import sklearn
+    from sklearn.linear_model import LogisticRegression
+
+    import importlib
+
+    # celltypist/__init__.py does `from .train import train`, so the attribute
+    # `celltypist.train` is the FUNCTION, not the module the class lives in.
+    _ct = importlib.import_module("celltypist.train")
+
+    if getattr(_ct.LogisticRegression, "_hsa_shim", False):
+        return "multinomial (multi_class dropped)"
+    try:
+        LogisticRegression(multi_class="ovr")
+        return "ovr (sklearn still accepts multi_class)"
+    except TypeError:
+        pass
+
+    # A factory, not a subclass: scikit-learn introspects an estimator's __init__ signature
+    # and refuses one that takes *args, so a subclass that swallows the argument fails at fit.
+    def _LR(*a, multi_class=None, **kw):
+        return LogisticRegression(*a, **kw)
+
+    _LR._hsa_shim = True
+    _ct.LogisticRegression = _LR
+    logger.info("celltypist shimmed for scikit-learn %s: multinomial, not one-vs-rest",
+                sklearn.__version__)
+    return "multinomial (multi_class dropped)"
+
+
 def train(organ: str, genes: list[str], seed: int = 0, force: bool = False):
     """Train (or load) a CellTypist model for one organ restricted to one panel."""
     import celltypist
     import scanpy as sc
+
+    solver_note = _patch_celltypist_sklearn()
 
     MODELS.mkdir(parents=True, exist_ok=True)
     key = panel_key(genes)
@@ -273,7 +316,8 @@ def train(organ: str, genes: list[str], seed: int = 0, force: bool = False):
     model = celltypist.train(ref, labels="cell_type", n_jobs=8, feature_selection=False,
                              check_expression=False)
     model.write(str(path))
-    meta = {"organ": organ, "panel_key": key, "n_genes_requested": len(genes),
+    meta = {"organ": organ, "panel_key": key, "solver": solver_note,
+            "n_genes_requested": len(genes),
             "n_genes_used": len(present), "n_ref_cells": int(ref.n_obs),
             "n_types": int(ref.obs.cell_type.nunique()),
             "types": sorted(map(str, ref.obs.cell_type.unique()))}
@@ -303,21 +347,41 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
     col = "majority_voting" if majority_voting and "majority_voting" in lab.columns \
         else "predicted_labels"
     calls = lab[col].astype(str).to_numpy()
-    conf = (pred.probability_matrix.max(axis=1).to_numpy()
-            if hasattr(pred, "probability_matrix") else np.full(len(calls), np.nan))
+    raw = lab["predicted_labels"].astype(str).to_numpy()
+    # The model's own probability is NOT shipped as a confidence. On a panel it saturates:
+    # on the first section tested, 97% of cells exceeded 0.999, the whole range spanned
+    # 0.993-1.000 across 30 distinct values, and the top-to-second margin had a median of
+    # 6e-5 and did not separate the cells majority voting went on to overrule. A column that
+    # reads 1.0 for everything would be filtered on by someone downstream and tell them
+    # nothing. What does carry information is whether the cell's own call survived its
+    # neighbourhood consensus -- which it does not for about half of cells.
+    agrees = (raw == calls)
 
     import h5py
     with h5py.File(path, "r+") as h:
         g = h.require_group("obs")
         for name, vals, dt in (("cell_type", calls, h5py.string_dtype("utf-8")),
-                               ("cell_type_conf", conf.astype("float32"), "float32")):
+                               ("cell_type_raw", raw, h5py.string_dtype("utf-8")),
+                               ("cell_type_agrees", agrees.astype("int8"), "int8")):
             if name in g:
                 del g[name]
-            g.create_dataset(name, data=vals, dtype=dt)
+            ds = g.create_dataset(name, data=vals, dtype=dt)
+            # Without these the column is in the file and invisible to anndata: it reads the
+            # frame from `column-order`, and types each column from its own encoding attrs.
+            ds.attrs["encoding-type"] = ("string-array" if dt not in ("float32", "int8")
+                                         else "array")
+            ds.attrs["encoding-version"] = "0.2.0"
+        order = [str(c) for c in g.attrs.get("column-order", [])]
+        for name in ("cell_type", "cell_type_raw", "cell_type_agrees"):
+            if name not in order:
+                order.append(name)
+        g.attrs["column-order"] = np.array(order, dtype=object)
         u = h.require_group("uns/hsa")
         for k, v in (("celltype_model", f"{organ}__{meta['panel_key']}"),
                      ("celltype_n_genes_used", len(use)),
-                     ("celltype_n_types", meta["n_types"])):
+                     ("celltype_n_types", meta["n_types"]),
+                     ("celltype_solver", meta.get("solver", "")),
+                     ("celltype_frac_agrees", float(agrees.mean()))):
             if k in u:
                 del u[k]
             if isinstance(v, str):
@@ -328,4 +392,4 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
     return {"path": path, "organ": organ, "n_cells": int(a.n_obs), "n_genes_used": len(use),
             "n_types_called": int(vc.size), "top_type": str(vc.index[0]),
             "top_frac": float(vc.iloc[0] / len(calls)),
-            "median_conf": float(np.nanmedian(conf)), "model": meta["panel_key"]}
+            "frac_agrees": float(agrees.mean()), "model": meta["panel_key"]}

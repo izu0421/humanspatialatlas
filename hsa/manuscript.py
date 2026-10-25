@@ -28,7 +28,7 @@ OUTFIG = ROOT / "figures"
 FIGURES = [
     ('FIG1', 'Figure 1',
      'A continually updated cross-tissue human spatial atlas',
-     '<b>A</b> Seven agents, each re-run weekly as new data is deposited. Every count is read from '
+     '<b>A</b> Seven agents, each re-runnable as new data is deposited. Every count is read from '
      'the manifest when the figure is drawn, so the schematic cannot describe a pipeline other '
      'than the one that ran. <b>B</b> Measured units per tissue, coloured by the fraction measured '
      'at cell resolution, and <b>C</b> per platform. Magnitude is shown by position rather than '
