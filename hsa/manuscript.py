@@ -26,173 +26,215 @@ OUTFIG = ROOT / "figures"
 
 # (file stem, figure label, title, legend)
 FIGURES = [
-    ("FIG1", "Figure 1", "A continually updated cross-tissue human spatial atlas",
-     "<b>A</b> Seven agents, each re-run weekly as new data is deposited. Every count is read "
-     "from the manifest when the figure is drawn, so the schematic cannot describe a pipeline "
-     "other than the one that ran. <b>B</b> Measured units per tissue, coloured by the fraction "
-     "measured at cell resolution, and <b>C</b> per platform. Magnitude is shown by position "
-     "rather than bar length, since a bar's extent is not proportional to its value on a "
-     "logarithmic axis. Cells and spots are never summed: a Visium spot holds 1\u201310 cells "
-     "and a segmented cell is one cell, so a total of the two is a number that is neither; a "
-     "Visium HD section that bin2cell segmented contributes its cells and not its bins, because "
-     "they are the same tissue measured twice. <b>D</b> Cumulative measured units against "
-     "deposit date, by platform. Visium accounts for essentially all material deposited before "
-     "2024, after which imaging platforms enter and Xenium becomes the largest single "
-     "contributor. Restricted to the GEO-deposited subset, the only part of the atlas for which "
-     "a true deposit date is available."),
-    ("FIG2", "Figure 2", "Bivariate Moran's R discriminates annotated interactions weakly",
-     "<b>A</b> The four interaction classes are physically distinct events scored by one "
-     "statistic. <b>B\u2013D</b> Area under the receiver-operating-characteristic curve "
-     "(AUROC) from 200 bootstrap resamples of pairs; solid red boxes are observed and hatched "
-     "grey boxes a null computed with randomly shuffled predictions. The null is the reference "
-     "rather than 0.5, because with 2,678 annotated pairs concentrated on well-studied genes "
-     "0.5 is not what an uninformative predictor scores on this label set. <b>B</b> aggregation "
-     "metric, <b>C</b> interaction class, <b>D</b> tissue. Boxes show the median and "
-     "interquartile range; whiskers extend to 1.5\u00d7 the interquartile range. Aggregated "
-     "over 6,237 sections in 242 tissues and nine platforms the mean reaches 0.612 against a null of 0.500, and "
-     "metabolite\u2013receptor, adhesion\u2013adhesion and receptor\u2013receptor all reach "
-     "0.67 while canonical ligand\u2013receptor reaches 0.60. These AUROCs "
-     "should be read against a lookup baseline rather than against 0.5: a pair's degree in "
-     "CellPhoneDB, that is how many annotated interactions each of its genes already appears "
-     "in, predicts the label at AUROC 0.771 using no expression and no spatial information. "
-     "The comparisons here are unaffected, since every score is measured against the same "
-     "labels, and for an orphan receptor degree carries no information by construction "
-     "(AUROC 0.500) while the spatial aggregate is at its strongest (0.637)."),
-    ("f4_scaling_per_class", "Figure 3",
-     "Metabolite\u2013receptor interactions are the class that an atlas buys",
-     "<b>A</b> AUROC against the number of sections in the atlas, per interaction class; "
-     "shaded bands are the interquartile range across resamples. The pair set is fixed once "
-     "over the whole corpus so the curve cannot be confounded by pairs becoming measurable as "
-     "N grows, and sections are drawn by study rather than individually, since sections from "
-     "one study share tissue, protocol and often donor. <b>B</b> The same curves against "
-     "measured units \u2014 cells and spots \u2014 rather than sections. The two axes are not "
-     "a rescaling of each other: a Visium section carries a few thousand spots and a Xenium "
-     "section a few hundred thousand cells, so a corpus of 6,237 sections spans 544.6 million "
-     "measured units, 481.1 million of them spots and 63.5 million cells. <b>C</b> What a "
-     "pre-atlas study could reach and what the atlas adds, per class. The pale segment is the "
-     "AUROC at the smallest atlas sampled, two studies and a median of 7 sections, which is "
-     "about what a single paper assembles; the solid segment is the gain out to the whole "
-     "corpus. Bars start at 0.5 because that is what an uninformative score reaches. "
-     "Metabolite\u2013receptor gains 0.162, nearly three times the canonical class. "
-     "Saturation is measured against the gain above chance rather than against the AUROC: "
-     "an uninformative score already reaches 0.5, so 95% of a 0.60 AUROC is a bar every "
-     "curve clears at its first point. On that footing metabolite\u2013receptor and "
-     "adhesion\u2013adhesion reach 95% of their gain by ~1,030 sections, while "
-     "ligand\u2013receptor and receptor\u2013receptor do not reach it anywhere in the "
-     "corpus and are still improving at its edge. Over the whole corpus "
-     "metabolite\u2013receptor rises from 0.527 to 0.689 while ligand\u2013receptor rises "
-     "from 0.535 to 0.597. The curves are drawn on the pooled corpus; the spot-only and "
-     "cell-only arms are separate corpora and are not mixed into them. Degree in CellPhoneDB "
-     "is uninformative for orphan receptors by construction, so the gain shown here is the "
-     "part of the signal available to a deorphanisation question."),
-    ("FIG4", "Figure 4",
-     "Two implementations of the same statistic reproduce the result and do not combine",
-     "SpatialDM and LIANA+ were each run over the whole corpus, 6,188 and 6,206 sections, "
-     "sharing 6,183; everything here is paired on those shared sections and both arms pass "
-     "through the identical transform, so a difference is the method and not the pipeline. "
-     "<b>A</b> Within a single section the two rank pairs at a median Spearman \u03c1 of 0.78 "
-     "(interquartile range 0.69\u20130.85, 790 randomly sampled sections), and their raw "
-     "statistics are different objects \u2014 SpatialDM reports a z spanning \u00b1164, LIANA "
-     "a local R spanning \u00b10.27. <b>B</b> Averaged over 6,183 sections that disagreement "
-     "cancels: the per-pair scores correlate at r = 0.997 and sit on the identity line. Axes "
-     "are clipped to the central 99.4% of pairs. <b>C</b> AUROC with 95% bootstrap intervals "
-     "over 400 resamples; the grey band is the shuffled-prediction null and the dotted line "
-     "SpatialDM alone. No combiner moves the result \u2014 equal weights lands on 0.613 and "
-     "rank averaging on 0.614, with a paired bootstrap difference of +0.001 whose interval "
-     "includes zero. A fitted logistic combiner, cross-validated with a gene held out of "
-     "training whenever it appears in the test fold, is worse at 0.603 (paired difference "
-     "\u22120.010, interval excluding zero). Its per-fold coefficients say why rather than "
-     "leaving it a mystery: \u22120.43 \u00b1 0.19 on SpatialDM against +0.72 \u00b1 0.18 on "
-     "LIANA, large weights of opposite sign on two columns correlated at 0.997, so the fit is "
-     "leaning on their difference, which is noise. That is unidentifiability, not an argument "
-     "against fitting. The reading that stands is the other one: two independent "
-     "implementations over 6,183 sections reproduce the result, so LIANA buys replication and "
-     "throughput rather than information."),
-    ("FIGS1", "Supplementary Figure 1",
+    ('FIG1', 'Figure 1',
+     'A continually updated cross-tissue human spatial atlas',
+     '<b>A</b> Seven agents, each re-run weekly as new data is deposited. Every count is read from '
+     'the manifest when the figure is drawn, so the schematic cannot describe a pipeline other '
+     'than the one that ran. <b>B</b> Measured units per tissue, coloured by the fraction measured '
+     'at cell resolution, and <b>C</b> per platform. Magnitude is shown by position rather than '
+     "bar length, since a bar's extent is not proportional to its value on a logarithmic axis. "
+     'Cells and spots are never summed: a Visium spot holds 1–10 cells and a segmented cell is one '
+     'cell, so a total of the two is a number that is neither; a Visium HD section that bin2cell '
+     'segmented contributes its cells and not its bins, because they are the same tissue measured '
+     'twice. <b>D</b> Cumulative measured units against deposit date, by platform. Visium accounts '
+     'for essentially all material deposited before 2024, after which imaging platforms enter and '
+     'Xenium becomes the largest single contributor. Restricted to the GEO-deposited subset, the '
+     'only part of the atlas for which a true deposit date is available.'),
+    ('FIG2', 'Figure 2',
+     "Bivariate Moran's R discriminates annotated interactions weakly",
+     '<b>A</b> The four interaction classes are physically distinct events scored by one '
+     'statistic. <b>B–D</b> Area under the receiver-operating-characteristic curve (AUROC) from '
+     '200 bootstrap resamples of pairs; solid red boxes are observed and hatched grey boxes a null '
+     'computed with randomly shuffled predictions. The null is the reference rather than 0.5, '
+     'because with 2,678 annotated pairs concentrated on well-studied genes 0.5 is not what an '
+     'uninformative predictor scores on this label set. <b>B</b> aggregation metric, <b>C</b> '
+     'interaction class, <b>D</b> tissue. Boxes show the median and interquartile range; whiskers '
+     'extend to 1.5× the interquartile range. Aggregated over 6,237 sections in 242 tissues and '
+     'nine platforms the mean reaches 0.612 against a null of 0.500, and metabolite–receptor, '
+     'adhesion–adhesion and receptor–receptor all reach 0.67 while canonical ligand–receptor '
+     'reaches 0.60. These AUROCs should be read against a lookup baseline rather than against 0.5: '
+     "a pair's degree in CellPhoneDB, that is how many annotated interactions each of its genes "
+     'already appears in, predicts the label at AUROC 0.771 using no expression and no spatial '
+     'information. The comparisons here are unaffected, since every score is measured against the '
+     'same labels, and for an orphan receptor degree carries no information by construction (AUROC '
+     '0.500) while the spatial aggregate is at its strongest (0.637).'),
+    ('FIG3', 'Figure 3',
+     'Spatial co-expression sees an interaction in proportion to how far it reaches',
+     '<b>A</b> Why physical range decides what a proximity statistic can see. Bivariate Moran’s R '
+     'asks whether two transcripts are high in the same neighbourhood. For a junction that is the '
+     'mechanism — the two proteins must be at the same membrane in touching cells, and a 55 µm '
+     'spot contains both — and for a transmitter across a ~20 nm synaptic cleft the same holds. '
+     'For a secreted ligand it does not: the molecule acts on cells far from the one that released '
+     'it, so a real interaction leaves no spatial correlation, while two abundant genes sharing a '
+     'compartment leave a strong one and interact not at all. <b>B, C</b> The two regimes measured '
+     'directly, in one skin Xenium section of 14,700 cells and 5,101 genes. Every cell has '
+     'coordinates, so the separation between partners is observed rather than inferred. DSG1 '
+     'traces the epidermal basal layer with its desmosomal partner DSC3 sitting on it; CXCL12 and '
+     'CXCR4 are scattered through the same tissue. Absolute separation is not comparable between '
+     'pairs — a rare partner is far from everything by construction — so each is quoted beside the '
+     'distance expected at that prevalence. <b>D</b> Observed nearest-neighbour distance divided '
+     'by a null that holds prevalence fixed: the same number of receptor-positive cells drawn at '
+     'random from the same section, 25 permutations, ten sections. The ratio is 1 when the two '
+     'populations are arranged independently and below 1 when they sit together. Contact pairs '
+     'reach 0.62 against 0.96 for diffusible ones. <b>E</b> Effect sizes from the pair-level '
+     'analysis, with 95% bootstrap intervals; grey where the interval includes zero. Per class, '
+     'the spatial model beats one given only gene abundance by 0.137 for adhesion–adhesion and '
+     '0.061 for metabolite–receptor, but by 0.001 [−0.016, +0.020] for canonical ligand–receptor, '
+     'which is the class this work is named for; receptor–receptor is large but rests on 35 '
+     'annotated pairs and its interval crosses zero. Within ligand–receptor, splitting on whether '
+     'the ligand is secreted gives +0.054 on z<sub>max</sub> and +0.047 on the called fraction — '
+     'same class, same labels, only the ligand’s physical form differs. <b>The exception is the '
+     'informative one.</b> CCL19–CCR7 in <b>D</b> is diffusible and yet the most co-localised pair '
+     'measured, because both partners inhabit the same lymphoid niche. That is precisely the '
+     'failure mode this figure warns about: proximity cannot separate an interaction from a shared '
+     'compartment, and a pair can be co-localised for reasons that have nothing to do with the two '
+     'molecules meeting.'),
+    ('f4_scaling_per_class', 'Figure 4',
+     'Metabolite–receptor interactions are the class that an atlas buys',
+     '<b>A</b> AUROC against the number of sections in the atlas, per interaction class; shaded '
+     'bands are the interquartile range across resamples. The pair set is fixed once over the '
+     'whole corpus so the curve cannot be confounded by pairs becoming measurable as N grows, and '
+     'sections are drawn by study rather than individually, since sections from one study share '
+     'tissue, protocol and often donor. <b>B</b> The same curves against measured units — cells '
+     'and spots — rather than sections. The two axes are not a rescaling of each other: a Visium '
+     'section carries a few thousand spots and a Xenium section a few hundred thousand cells, so a '
+     'corpus of 6,237 sections spans 544.6 million measured units, 481.1 million of them spots and '
+     '63.5 million cells. <b>C</b> What a pre-atlas study could reach and what the atlas adds, per '
+     'class. The pale segment is the AUROC at the smallest atlas sampled, two studies and a median '
+     'of 7 sections, which is about what a single paper assembles; the solid segment is the gain '
+     'out to the whole corpus. Bars start at 0.5 because that is what an uninformative score '
+     'reaches. Metabolite–receptor gains 0.162, nearly three times the canonical class. Saturation '
+     'is measured against the gain above chance rather than against the AUROC: an uninformative '
+     'score already reaches 0.5, so 95% of a 0.60 AUROC is a bar every curve clears at its first '
+     'point. On that footing metabolite–receptor and adhesion–adhesion reach 95% of their gain by '
+     '~1,030 sections, while ligand–receptor and receptor–receptor do not reach it anywhere in the '
+     'corpus and are still improving at its edge. Over the whole corpus metabolite–receptor rises '
+     'from 0.527 to 0.689 while ligand–receptor rises from 0.535 to 0.597. The curves are drawn on '
+     'the pooled corpus; the spot-only and cell-only arms are separate corpora and are not mixed '
+     'into them. Degree in CellPhoneDB is uninformative for orphan receptors by construction, so '
+     'the gain shown here is the part of the signal available to a deorphanisation question.'),
+    ('FIGS1', 'Supplementary Figure 1',
      "Where each modality's evidence saturates",
-     "The same scaling question asked of each platform rather than each interaction class. "
-     "<b>A</b> Each platform is scored on its own pair set, the pairs measurable in at least "
-     "half of its sections; the plateau is then a statement about that platform, but the "
-     "AUROC levels are not comparable, because a targeted panel is scored on a smaller and "
-     "easier set. <b>B</b> The same curves on one shared set of 3,149 pairs (589 annotated), "
-     "so the levels can be compared. That set is the intersection over Visium, Xenium, Visium "
-     "HD and Slide-seq; CosMx and Stereo-seq are scored on it but did not define it, because "
-     "intersecting all six leaves 672 pairs \u2014 CosMx measures only 1,840 in half its "
-     "sections, and the narrowest panel should not set the terms for the rest. Open circles "
-     "mark where a curve reaches 95% of its gain above chance. <b>C</b> How many sections "
-     "that takes. Saturation is measured against the gain above chance, not against the "
-     "AUROC: taking 95% of the AUROC treats 0 as the floor, and 95% of a 0.535 plateau is "
-     "0.508, which every curve clears at its first point. Measured that way CosMx appeared "
-     "saturated at 2 sections; corrected it is 3, and the honest reading of that number is "
-     "that its curve never rises rather than that it saturates efficiently. Visium needs "
-     "2,590 sections, Xenium 246 and Visium HD 226; Stereo-seq does not get there within its "
-     "99. Three platforms are excluded rather than drawn flat: MERFISH (12 sections, only 89 "
-     "pairs measurable in half of them), Atera (6 studies) and one unidentified section. A "
-     "plateau estimated from 6 studies is not a plateau. <b>D\u2013G</b> The same sweep inside each interaction class, on each platform\u0027s own pair set. A platform appears in a class panel only where it clears the minimum pair and positive counts in that class, so the panels are deliberately uneven \u2014 CosMx measures 1,840 pairs in half its sections and cannot support metabolite\u2013receptor or receptor\u2013receptor at all, and drawing it flat would imply it had been tested. Receptor\u2013receptor survives on two platforms only. Within a class the platforms largely track each other: adhesion\u2013adhesion is the highest everywhere and is the one class every platform supports, while metabolite\u2013receptor separates sharply, with Visium reaching 0.687 over 2,590 sections and no other platform passing 0.59."),
-    ("FIGS2", "Supplementary Figure 2",
-     "Spatial co-expression adds nothing over abundance for canonical ligand\u2013receptor pairs",
-     "The control the original design implies: if a model given only how abundant a pair\u0027s two genes are matches one given only the spatial statistic, the spatial statistic is not what is doing the work. Five-fold cross-validation over all 15,193 pairs with a gene held out of training whenever it appears in the test fold. <b>A</b> Pooled, the spatial features reach 0.604 against abundance\u0027s 0.567 and observability\u0027s 0.587, where observability is how often a pair was measurable at all. That nuisance scoring within 0.017 of the statistic is itself a warning: it tracks the same well-studied genes the annotation does, so a model can look spatial while reading coverage. <b>B</b> Per class the pooled margin does not hold. For canonical ligand\u2013receptor, 9,806 of the pairs and the class this work is about, spatial scores 0.5886 against abundance\u0027s 0.5879 \u2014 a difference of 0.0007. The pooled win is carried entirely by receptor\u2013receptor (+0.144), adhesion\u2013adhesion (+0.139) and metabolite\u2013receptor (+0.061). On 539 sections this test was not decisive; on 6,188 it is, and the canonical class fails it. All of these should be read against the lookup baseline of 0.771 from CellPhoneDB degree alone, not against 0.5."),
-    ("FIGS3", "Supplementary Figure 3",
-     "Which component of the statistic each class leans on",
-     "Each method yields three pair-level components asking different questions: "
-     "z<sub>mean</sub>, how strongly a pair co-localises on average across tissues; "
-     "z<sub>max</sub>, how strongly in its best tissue, which is tissue-restriction; and the "
-     "called fraction, how often it passes the significance threshold at all. Between methods "
-     "z<sub>mean</sub> and the called fraction correlate at 0.997 and 0.996, and the tissue "
-     "count is identical at 1.000 because it is corpus structure rather than a method output, "
-     "so it is dropped; z<sub>max</sub> is the one component on which the two genuinely "
-     "disagree (0.899), because a maximum is set by a single tissue and the methods rank "
-     "tissues differently. <b>A</b> AUROC of each component alone, averaged over the two "
-     "methods; the dot marks the component a class leans on. Adhesion\u2013adhesion is the "
-     "only class that leans on z<sub>max</sub> (0.681 against 0.670 for z<sub>mean</sub>); "
-     "every other class leans on z<sub>mean</sub>. <b>B</b> LIANA+ minus SpatialDM per "
-     "component. The differences are confined almost entirely to z<sub>max</sub>, as the "
-     "correlations predict, and the largest is ligand\u2013ligand (+0.078), a class of 168 "
-     "pairs where a single tissue decides the ranking. <b>C</b> The two regimes, annotated "
-     "pairs only. Tissue-restricted complexes sit high on z<sub>max</sub> at low "
-     "z<sub>mean</sub> \u2014 the desmosomal cadherins DSG1\u2013DSC1 and DSG1\u2013DSC3, "
-     "and CEACAM5\u2013CEACAM6 \u2014 each enormous in one epithelium and absent elsewhere, "
-     "which is why averaging across 124\u2013174 tissues dilutes them and the maximum does "
-     "not. Ubiquitous pairs sit far to the right on z<sub>mean</sub>: PPIA\u2013BSG, "
-     "APOE\u2013TYROBP, APP\u2013CD74. That second group is the caution. The class that "
-     "leans hardest on z<sub>mean</sub> is canonical ligand\u2013receptor, and its top "
-     "z<sub>mean</sub> pairs are among the most abundant transcripts in any tissue, which is "
-     "the same signal Supplementary Figure 2 shows abundance alone reproduces. Fitted "
-     "coefficients are not plotted: over columns correlated at 0.997 a fit takes large "
-     "opposite-signed weights and is leaning on their difference, and 6 of 30 coefficients do "
-     "not hold their sign across folds. They are recorded in bench/component_weights.csv."),
-    ("FIGS4", "Supplementary Figure 4",
-     "The statistic works in proportion to how far the interaction physically reaches",
-     "<b>A</b> Why range decides what a proximity statistic can see. Bivariate Moran\u0027s R "
-     "asks whether two transcripts are high in the same neighbourhood. For a junction that is "
-     "the mechanism \u2014 the two proteins must be at the same membrane in touching cells, "
-     "and a 55 \u00b5m spot contains both. For a synaptic transmitter, across a ~20 nm cleft, "
-     "the same holds. For a secreted ligand it does not: the molecule acts on cells far from "
-     "the one that released it, so a real interaction leaves no spatial correlation, while two "
-     "abundant genes sharing a compartment leave a strong one and interact not at all. "
-     "<b>B</b> Median z<sub>max</sub> of the annotated pairs in each signalling family, "
-     "ordered; the number beside each bar is the pairs in that family. The ordering is "
-     "interaction range almost exactly. Contact-dependent families lead \u2014 "
-     "collagen\u2013integrin 6.37, Notch 4.76, ephrin 3.78, semaphorin 3.41, all "
-     "membrane-anchored ligands requiring the cells to touch \u2014 followed by the synaptic "
-     "transmitters (GABA 3.80, glutamate 3.55). Everything that travels sits at the bottom: "
-     "chemokines 2.39, interleukin 1.42, interferon 0.67. Contact against diffusible families, "
-     "Mann\u2013Whitney p = 2\u00d710\u207b\u00b9\u2078. Families are compared on score "
-     "distributions rather than AUROC because CellPhoneDB populates the family label only for "
-     "annotated pairs, leaving no negatives. The monoamines are drawn but held out of that "
-     "test: they act by volume transmission, but their source neurons are small nuclei the "
-     "atlas samples poorly, so a low score there is as easily detectability as range. "
-     "<b>C</b> The same split inside one class, which is the sharper test \u2014 same "
-     "annotation source, same label set, only the ligand\u0027s physical form differs. Within "
-     "canonical ligand\u2013receptor, pairs whose ligand is not secreted beat those whose "
-     "ligand is, by +0.055 on z<sub>max</sub> and +0.046 on the called fraction, both with "
-     "bootstrap intervals excluding zero; the z<sub>mean</sub> gap of +0.024 does not. "
-     "Abundance does not explain it: contact pairs are slightly more abundant, so matching on "
-     "abundance quintiles widens every gap rather than removing it (+0.049, +0.054, +0.069). "
-     "This is the result that reframes the rest. The canonical class fails the abundance "
-     "control of Supplementary Figure 2 not because the method is implemented badly but "
-     "because proximity is the wrong observable for a diffusible ligand; what the atlas "
-     "measures well is contact-dependent interaction."),
+     'The same scaling question asked of each platform rather than each interaction class. '
+     '<b>A</b> Each platform is scored on its own pair set, the pairs measurable in at least half '
+     'of its sections; the plateau is then a statement about that platform, but the AUROC levels '
+     'are not comparable, because a targeted panel is scored on a smaller and easier set. <b>B</b> '
+     'The same curves on one shared set of 3,149 pairs (589 annotated), so the levels can be '
+     'compared. That set is the intersection over Visium, Xenium, Visium HD and Slide-seq; CosMx '
+     'and Stereo-seq are scored on it but did not define it, because intersecting all six leaves '
+     '672 pairs — CosMx measures only 1,840 in half its sections, and the narrowest panel should '
+     'not set the terms for the rest. Open circles mark where a curve reaches 95% of its gain '
+     'above chance. <b>C</b> How many sections that takes. Saturation is measured against the gain '
+     'above chance, not against the AUROC: taking 95% of the AUROC treats 0 as the floor, and 95% '
+     'of a 0.535 plateau is 0.508, which every curve clears at its first point. Measured that way '
+     'CosMx appeared saturated at 2 sections; corrected it is 3, and the honest reading of that '
+     'number is that its curve never rises rather than that it saturates efficiently. Visium needs '
+     '2,590 sections, Xenium 246 and Visium HD 226; Stereo-seq does not get there within its 99. '
+     'Three platforms are excluded rather than drawn flat: MERFISH (12 sections, only 89 pairs '
+     'measurable in half of them), Atera (6 studies) and one unidentified section. A plateau '
+     'estimated from 6 studies is not a plateau. <b>D–G</b> The same sweep inside each interaction '
+     "class, on each platform's own pair set. A platform appears in a class panel only where it "
+     'clears the minimum pair and positive counts in that class, so the panels are deliberately '
+     'uneven — CosMx measures 1,840 pairs in half its sections and cannot support '
+     'metabolite–receptor or receptor–receptor at all, and drawing it flat would imply it had been '
+     'tested. Receptor–receptor survives on two platforms only. Within a class the platforms '
+     'largely track each other: adhesion–adhesion is the highest everywhere and is the one class '
+     'every platform supports, while metabolite–receptor separates sharply, with Visium reaching '
+     '0.687 over 2,590 sections and no other platform passing 0.59.'),
+    ('FIGS2', 'Supplementary Figure 2',
+     'Spatial co-expression adds nothing over abundance for canonical ligand–receptor pairs',
+     "The control the original design implies: if a model given only how abundant a pair's two "
+     'genes are matches one given only the spatial statistic, the spatial statistic is not what is '
+     'doing the work. Five-fold cross-validation over all 15,193 pairs with a gene held out of '
+     'training whenever it appears in the test fold. <b>A</b> Pooled, the spatial features reach '
+     "0.604 against abundance's 0.567 and observability's 0.587, where observability is how often "
+     'a pair was measurable at all. That nuisance scoring within 0.017 of the statistic is itself '
+     'a warning: it tracks the same well-studied genes the annotation does, so a model can look '
+     'spatial while reading coverage. <b>B</b> Per class the pooled margin does not hold. For '
+     'canonical ligand–receptor, 9,806 of the pairs and the class this work is about, spatial '
+     "scores 0.5886 against abundance's 0.5879 — a difference of 0.0007. The pooled win is carried "
+     'entirely by receptor–receptor (+0.144), adhesion–adhesion (+0.139) and metabolite–receptor '
+     '(+0.061). On 539 sections this test was not decisive; on 6,188 it is, and the canonical '
+     'class fails it. All of these should be read against the lookup baseline of 0.771 from '
+     'CellPhoneDB degree alone, not against 0.5.'),
+    ('FIGS3', 'Supplementary Figure 3',
+     'Which component of the statistic each class leans on',
+     'Each method yields three pair-level components asking different questions: z<sub>mean</sub>, '
+     'how strongly a pair co-localises on average across tissues; z<sub>max</sub>, how strongly in '
+     'its best tissue, which is tissue-restriction; and the called fraction, how often it passes '
+     'the significance threshold at all. Between methods z<sub>mean</sub> and the called fraction '
+     'correlate at 0.997 and 0.996, and the tissue count is identical at 1.000 because it is '
+     'corpus structure rather than a method output, so it is dropped; z<sub>max</sub> is the one '
+     'component on which the two genuinely disagree (0.899), because a maximum is set by a single '
+     'tissue and the methods rank tissues differently. <b>A</b> AUROC of each component alone, '
+     'averaged over the two methods; the dot marks the component a class leans on. '
+     'Adhesion–adhesion is the only class that leans on z<sub>max</sub> (0.681 against 0.670 for '
+     'z<sub>mean</sub>); every other class leans on z<sub>mean</sub>. <b>B</b> LIANA+ minus '
+     'SpatialDM per component. The differences are confined almost entirely to z<sub>max</sub>, as '
+     'the correlations predict, and the largest is ligand–ligand (+0.078), a class of 168 pairs '
+     'where a single tissue decides the ranking. <b>C</b> The two regimes, annotated pairs only. '
+     'Tissue-restricted complexes sit high on z<sub>max</sub> at low z<sub>mean</sub> — the '
+     'desmosomal cadherins DSG1–DSC1 and DSG1–DSC3, and CEACAM5–CEACAM6 — each enormous in one '
+     'epithelium and absent elsewhere, which is why averaging across 124–174 tissues dilutes them '
+     'and the maximum does not. Ubiquitous pairs sit far to the right on z<sub>mean</sub>: '
+     'PPIA–BSG, APOE–TYROBP, APP–CD74. That second group is the caution. The class that leans '
+     'hardest on z<sub>mean</sub> is canonical ligand–receptor, and its top z<sub>mean</sub> pairs '
+     'are among the most abundant transcripts in any tissue, which is the same signal '
+     'Supplementary Figure 2 shows abundance alone reproduces. Fitted coefficients are not '
+     'plotted: over columns correlated at 0.997 a fit takes large opposite-signed weights and is '
+     'leaning on their difference, and 6 of 30 coefficients do not hold their sign across folds. '
+     'They are recorded in bench/component_weights.csv.'),
+    ('FIGS4', 'Supplementary Figure 4',
+     'The statistic works in proportion to how far the interaction physically reaches',
+     "<b>A</b> Why range decides what a proximity statistic can see. Bivariate Moran's R asks "
+     'whether two transcripts are high in the same neighbourhood. For a junction that is the '
+     'mechanism — the two proteins must be at the same membrane in touching cells, and a 55 µm '
+     'spot contains both. For a synaptic transmitter, across a ~20 nm cleft, the same holds. For a '
+     'secreted ligand it does not: the molecule acts on cells far from the one that released it, '
+     'so a real interaction leaves no spatial correlation, while two abundant genes sharing a '
+     'compartment leave a strong one and interact not at all. <b>B</b> Median z<sub>max</sub> of '
+     'the annotated pairs in each signalling family, ordered; the number beside each bar is the '
+     'pairs in that family. The ordering is interaction range almost exactly. Contact-dependent '
+     'families lead — collagen–integrin 6.37, Notch 4.76, ephrin 3.78, semaphorin 3.41, all '
+     'membrane-anchored ligands requiring the cells to touch — followed by the synaptic '
+     'transmitters (GABA 3.80, glutamate 3.55). Everything that travels sits at the bottom: '
+     'chemokines 2.39, interleukin 1.42, interferon 0.67. Contact against diffusible families, '
+     'Mann–Whitney p = 2×10⁻¹⁸. Families are compared on score distributions rather than AUROC '
+     'because CellPhoneDB populates the family label only for annotated pairs, leaving no '
+     'negatives. The monoamines are drawn but held out of that test: they act by volume '
+     'transmission, but their source neurons are small nuclei the atlas samples poorly, so a low '
+     'score there is as easily detectability as range. <b>C</b> The same split inside one class, '
+     "which is the sharper test — same annotation source, same label set, only the ligand's "
+     'physical form differs. Within canonical ligand–receptor, pairs whose ligand is not secreted '
+     'beat those whose ligand is, by +0.055 on z<sub>max</sub> and +0.046 on the called fraction, '
+     'both with bootstrap intervals excluding zero; the z<sub>mean</sub> gap of +0.024 does not. '
+     'Abundance does not explain it: contact pairs are slightly more abundant, so matching on '
+     'abundance quintiles widens every gap rather than removing it (+0.049, +0.054, +0.069). This '
+     'is the result that reframes the rest. The canonical class fails the abundance control of '
+     'Supplementary Figure 2 not because the method is implemented badly but because proximity is '
+     'the wrong observable for a diffusible ligand; what the atlas measures well is contact- '
+     'dependent interaction.'),
+    ('FIG4', 'Supplementary Figure 5',
+     'Two implementations of the same statistic reproduce the result and do not combine',
+     'SpatialDM and LIANA+ were each run over the whole corpus, 6,188 and 6,206 sections, sharing '
+     '6,183; everything here is paired on those shared sections and both arms pass through the '
+     'identical transform, so a difference is the method and not the pipeline. <b>A</b> Within a '
+     'single section the two rank pairs at a median Spearman ρ of 0.78 (interquartile range '
+     '0.69–0.85, 790 randomly sampled sections), and their raw statistics are different objects — '
+     'SpatialDM reports a z spanning ±164, LIANA a local R spanning ±0.27. <b>B</b> Averaged over '
+     '6,183 sections that disagreement cancels: the per-pair scores correlate at r = 0.997 and sit '
+     'on the identity line. Axes are clipped to the central 99.4% of pairs. <b>C</b> AUROC with '
+     '95% bootstrap intervals over 400 resamples; the grey band is the shuffled-prediction null '
+     'and the dotted line SpatialDM alone. No combiner moves the result — equal weights lands on '
+     '0.613 and rank averaging on 0.614, with a paired bootstrap difference of +0.001 whose '
+     'interval includes zero. A fitted logistic combiner, cross-validated with a gene held out of '
+     'training whenever it appears in the test fold, is worse at 0.603 (paired difference −0.010, '
+     'interval excluding zero). Its per-fold coefficients say why rather than leaving it a '
+     'mystery: −0.43 ± 0.19 on SpatialDM against +0.72 ± 0.18 on LIANA, large weights of opposite '
+     'sign on two columns correlated at 0.997, so the fit is leaning on their difference, which is '
+     'noise. That is unidentifiability, not an argument against fitting. The reading that stands '
+     'is the other one: two independent implementations over 6,183 sections reproduce the result, '
+     'so LIANA buys replication and throughput rather than information.'),
 ]
 
 
