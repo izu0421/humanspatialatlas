@@ -46,6 +46,67 @@ MAX_REF_CELLS = 25_000    # per organ, balanced across types; the fetch is the s
 MIN_CELLS_PER_TYPE = 50
 
 
+# Census labels are far finer than a spatial panel can support. The lung reference carries 212
+# types -- "B cell", "B-1a B cell" and "B-1b B cell" as three separate classes, and
+# "hematopoietic stem cell" in lung -- and _balance() then gives each of them the same ~117
+# cells, so a hyper-specific subset is as prominent to the model as a real population. Trained
+# that way on a 957-gene panel the classifier scatters: 79% of per-cell calls were overruled by
+# the cluster consensus, no type exceeded 22% of a section, and "chondrocyte" came out dominant
+# in 7 lung sections.
+#
+# So fine labels are rolled up to major classes BEFORE balancing. The rules are ordered and the
+# first match wins, so the specific patterns must precede the general ones. Anything unmatched
+# keeps its own name, which is what preserves genuine organ epithelium (AT1, club, ciliated)
+# rather than flattening the whole reference to immune classes.
+COARSE_MIN_CELLS = 200   # a coarse class below this is dropped before training
+COARSE_RULES = [
+    (r"\bplasma\b|plasmablast", "plasma cell"),
+    (r"\b(t cell|thymocyte|t-cell)\b|cd4-positive|cd8-positive|regulatory t|"
+     r"gamma-delta|mucosal invariant|nkt|t-helper|t follicular|lymphocyte", "T cell"),
+    (r"natural killer|\bnk cell\b|innate lymphoid", "NK/ILC"),
+    (r"\bb cell\b|b-1a|b-1b|pre-b|pro-b|germinal center", "B cell"),
+    (r"macrophage|kupffer|histiocyte|mononuclear phagocyte|myeloid", "macrophage"),
+    (r"monocyte", "monocyte"),
+    (r"dendritic", "dendritic cell"),
+    (r"microglia", "microglia"),
+    (r"mast cell|basophil", "mast cell"),
+    (r"neutrophil|granulocyte", "neutrophil"),
+    (r"erythro|megakaryo|platelet|hematopoietic|myeloid progenitor|stem cell", "progenitor"),
+    (r"endothelial|vein|capillary|lymphatic", "endothelial cell"),
+    (r"pericyte", "pericyte"),
+    (r"smooth muscle|myofibroblast|contractile", "smooth muscle"),
+    (r"fibroblast|stromal cell|mesenchymal|adventitial", "fibroblast"),
+    (r"skeletal muscle|myocyte|cardiac muscle|cardiomyocyte", "muscle cell"),
+    (r"adipocyte", "adipocyte"),
+    (r"neuron|neural|glutamatergic|gabaergic", "neuron"),
+    (r"astrocyte", "astrocyte"),
+    (r"oligodendrocyte|opc", "oligodendrocyte"),
+    (r"schwann", "Schwann cell"),
+    (r"melanocyte", "melanocyte"),
+    (r"keratinocyte", "keratinocyte"),
+    (r"chondrocyte|osteo", "skeletal cell"),
+    (r"glandular|secretory|goblet|club cell|ciliated|basal cell|epithelial|enterocyte|"
+     r"hepatocyte|podocyte|pneumocyte|type i |type ii |secreting|ionocyte|hillock|"
+     r"deuterosomal|acinar|neuroendocrine|tuft cell|serous|mucus|luminal|"
+     r"myoepithelial", "epithelial cell"),
+]
+
+
+def coarsen(labels) -> "np.ndarray":
+    """Roll Census cell types up to major classes. Unmatched labels are kept as they are."""
+    import re
+    out = []
+    for lab in map(str, labels):
+        low = lab.lower()
+        for pat, coarse in COARSE_RULES:
+            if re.search(pat, low):
+                out.append(coarse)
+                break
+        else:
+            out.append(lab)
+    return np.array(out, dtype=object)
+
+
 def panel_key(genes: list[str]) -> str:
     """Stable id for a gene panel, so one model serves every section that shares it."""
     return hashlib.md5("|".join(sorted(set(map(str, genes)))).encode()).hexdigest()[:12]
@@ -304,6 +365,16 @@ def train(organ: str, genes: list[str], seed: int = 0, force: bool = False):
 
     rng = np.random.default_rng(seed)
     ref = cached_reference(organ, genes, seed=seed)
+    # Roll up BEFORE balancing. Balancing first would hand a hyper-specific Census subset the
+    # same weight as a real population, which is what made the first run unusable.
+    n_fine = int(ref.obs.cell_type.nunique())
+    ref.obs["cell_type"] = pd.Categorical(coarsen(ref.obs.cell_type))
+    vc = ref.obs.cell_type.value_counts()
+    keep = vc[vc >= COARSE_MIN_CELLS].index
+    ref = ref[ref.obs.cell_type.isin(keep)].copy()
+    ref.obs["cell_type"] = ref.obs.cell_type.cat.remove_unused_categories()
+    logger.info("%s: %d fine types -> %d coarse, %d cells kept",
+                organ, n_fine, len(keep), ref.n_obs)
     ref = _balance(ref, rng)   # a second pass: types can still fall under the floor after the fetch
     present = [g for g in genes if g in set(ref.var_names)]
     if len(present) < MIN_GENES:
@@ -317,6 +388,7 @@ def train(organ: str, genes: list[str], seed: int = 0, force: bool = False):
                              check_expression=False)
     model.write(str(path))
     meta = {"organ": organ, "panel_key": key, "solver": solver_note,
+            "label_granularity": f"coarse ({n_fine} Census types rolled up)",
             "n_genes_requested": len(genes),
             "n_genes_used": len(present), "n_ref_cells": int(ref.n_obs),
             "n_types": int(ref.obs.cell_type.nunique()),
