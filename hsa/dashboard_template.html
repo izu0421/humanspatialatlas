@@ -11,6 +11,7 @@
   --ok: #2f7d4f; --ok-soft: #e1f1e7; --warn: #a86a0c; --warn-soft: #f8ecd6; --bad: #b2412f; --bad-soft: #f6e1dc;
   --grey: #7a7c90; --grey-soft: #ececf2;
   --teal: #1f9b97; --teal-soft: #ddf2f1;
+  --sp-red: #B2182B; --sp-blue: #2166AC; --sp-grey: #9A9AA2;
   --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
   --f-body: "Source Sans 3", "Segoe UI", Roboto, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
@@ -24,6 +25,7 @@
   --accent: #9da3f2; --accent-soft: #2a2c52; --eosin: #ec8fb2; --eosin-soft: #46263a;
   --ok: #6fcf95; --ok-soft: #1f3a2a; --warn: #e5b45a; --warn-soft: #3d3020; --bad: #ef8a77; --bad-soft: #43251f;
   --grey: #9a9cb2; --grey-soft: #282838; --teal: #4ecdc8; --teal-soft: #15343a;
+  --sp-red: #d9636f; --sp-blue: #6ca2d8; --sp-grey: #7e7e8c;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px -8px rgba(0,0,0,.5);
   --shadow-lift: 0 2px 6px rgba(0,0,0,.4), 0 16px 36px -12px rgba(0,0,0,.65);
   color-scheme: dark } }
@@ -32,6 +34,7 @@
   --accent: #9da3f2; --accent-soft: #2a2c52; --eosin: #ec8fb2; --eosin-soft: #46263a;
   --ok: #6fcf95; --ok-soft: #1f3a2a; --warn: #e5b45a; --warn-soft: #3d3020; --bad: #ef8a77; --bad-soft: #43251f;
   --grey: #9a9cb2; --grey-soft: #282838; --teal: #4ecdc8; --teal-soft: #15343a;
+  --sp-red: #d9636f; --sp-blue: #6ca2d8; --sp-grey: #7e7e8c;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px -8px rgba(0,0,0,.5);
   --shadow-lift: 0 2px 6px rgba(0,0,0,.4), 0 16px 36px -12px rgba(0,0,0,.65);
   color-scheme: dark }
@@ -72,8 +75,7 @@ h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .headline b { display: block; font: 700 clamp(1.3rem, 2.9vw, 2.05rem)/1.25 var(--f-display);
   font-variant-numeric: tabular-nums; letter-spacing: -0.015em; text-wrap: balance; }
 .headline .n { color: #fff; }
-.headline .fine { margin-top: 12px; color: rgba(255,255,255,.82); font-size: 0.84rem; max-width: 78ch;
-  line-height: 1.55; position: relative; }
+.headline .fine { margin-top: 13px; position: relative; }
 .stack { display: flex; height: 18px; border-radius: 3px; overflow: hidden; background: var(--grey-soft); }
 .stack i { display: block; height: 100%; }
 .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 3px 0 10px; vertical-align: baseline; }
@@ -89,60 +91,80 @@ h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .atlasStat b { display: block; font: 700 1.5rem/1.15 var(--f-display); font-variant-numeric: tabular-nums;
   color: var(--teal); letter-spacing: -0.02em; }
 .atlasStat span { display: block; color: var(--muted); font-size: 0.78rem; margin-bottom: 9px; }
-.loopLabels { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; font-size: 0.78rem; color: var(--muted); }
-.loopLabels i { display: inline-block; width: 16px; height: 2px; margin-right: 7px; vertical-align: 4px; }
-.loopLabels .lt i { background: var(--teal); }
-.loopLabels .la i { background: var(--accent); }
+.hintbox .lt i, .hintbox .la i { display: inline-block; width: 16px; height: 2px;
+  margin-right: 7px; vertical-align: 4px; }
+.hintbox .lt i { background: var(--teal); } .hintbox .la i { background: var(--accent); }
 .agents .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 0;
   margin: 2px 0; position: relative; }
 .agents .flow::before { content: ""; position: absolute; left: 8%; right: 8%; top: 30px; height: 2px;
   background: linear-gradient(90deg, var(--accent), var(--teal)); opacity: .4; border-radius: 2px; }
-.stage { position: relative; text-align: center; padding: 0 6px; cursor: default; }
-.stage .disc { width: 46px; height: 46px; margin: 6px auto 0; border-radius: 16px; display: grid;
-  place-items: center; background: var(--panel); border: 2px solid var(--accent);
+/* The pipeline diagram. A stage's icon disc is a real button and the trigger for
+   that stage's explanation, so the detail is reachable by pointer, keyboard and tap. */
+.stage { position: relative; text-align: center; padding: 0 6px; }
+.stage .disc { width: 46px; height: 46px; margin: 6px auto 0; padding: 0; border-radius: 16px;
+  display: grid; place-items: center; background: var(--panel); border: 2px solid var(--accent);
+  cursor: help; -webkit-appearance: none; appearance: none;
   box-shadow: var(--shadow); transition: transform .2s cubic-bezier(.2,.8,.3,1.2), box-shadow .2s ease; }
 .stage:nth-child(n+5) .disc { border-color: var(--teal); }
 .stage svg { width: 26px; height: 26px; stroke-width: 1.7; fill: none; stroke: var(--accent); }
 .stage:nth-child(n+5) svg { stroke: var(--teal); }
 .stage b { display: block; margin-top: 9px; font: 700 0.78rem/1.2 var(--f-display);
   letter-spacing: .04em; text-transform: uppercase; }
-.stage em { display: block; font: 0.72rem var(--f-mono); color: var(--muted); font-style: normal; margin-top: 2px; }
-.stage:hover .disc { transform: translateY(-5px) scale(1.06); box-shadow: var(--shadow-lift); }
-.stage .pop { position: absolute; left: 50%; top: 100%; transform: translate(-50%, 6px) scale(.97);
-  width: 250px; background: var(--panel); border: 1px solid var(--line); border-radius: 11px;
-  padding: 11px 13px; font-size: 0.79rem; line-height: 1.5; color: var(--muted); text-align: left;
-  box-shadow: var(--shadow-lift); opacity: 0; pointer-events: none; z-index: 20;
-  transition: opacity .16s ease, transform .16s ease; }
-.stage:hover .pop, .stage:focus-within .pop { opacity: 1; transform: translate(-50%, 6px) scale(1); }
-@media (prefers-reduced-motion: reduce) { .stage .disc, .stage .pop { transition: none; } }
-.info.dark { border-color: var(--line); color: var(--muted); }
-.info { position: relative; display: inline-block; margin-left: 10px; padding: 1px 9px 2px;
-  border-radius: 99px; border: 1px solid rgba(255,255,255,.35); font-size: 0.74rem; cursor: help;
-  color: rgba(255,255,255,.92); }
-.info .pop { position: absolute; left: 0; top: 100%; transform: translateY(6px); width: 290px;
-  background: var(--panel); color: var(--muted); border: 1px solid var(--line); border-radius: 11px;
-  padding: 11px 13px; font-size: 0.78rem; line-height: 1.5; box-shadow: var(--shadow-lift);
-  opacity: 0; pointer-events: none; transition: opacity .16s ease; z-index: 30; text-align: left; }
-.info:hover .pop, .info:focus .pop { opacity: 1; }
-.agentnote { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line);
-  color: var(--muted); font-size: 0.84rem; line-height: 1.55; }
-.info.dark { border-color: var(--line); color: var(--muted); }
-.info { position: relative; display: inline-block; margin-left: 10px; padding: 1px 9px 2px;
-  border-radius: 99px; border: 1px solid rgba(255,255,255,.35); font-size: 0.74rem; cursor: help;
-  color: rgba(255,255,255,.92); }
-.info .pop { position: absolute; left: 0; top: 100%; transform: translateY(6px); width: 290px;
-  background: var(--panel); color: var(--muted); border: 1px solid var(--line); border-radius: 11px;
-  padding: 11px 13px; font-size: 0.78rem; line-height: 1.5; box-shadow: var(--shadow-lift);
-  opacity: 0; pointer-events: none; transition: opacity .16s ease; z-index: 30; text-align: left; }
-.info:hover .pop, .info:focus .pop { opacity: 1; }
-.agentnote { margin-top: 12px; color: var(--muted); font-size: 0.84rem; }
+.stage:hover .disc, .stage .disc:focus-visible, .stage .disc[aria-expanded="true"] {
+  transform: translateY(-5px) scale(1.06); box-shadow: var(--shadow-lift); }
+@media (prefers-reduced-motion: reduce) { .stage .disc { transition: none; } }
+
+/* ── One tooltip mechanism, for every piece of secondary text on the page ──────
+   A [data-hint] container holds a focusable trigger (button.hint, or a stage's
+   .disc) and a .hintbox[role=tooltip]. The box is always present in the document
+   and always named by the trigger's aria-describedby, so a screen reader reads it
+   whether or not it is painted. It opens on hover, on keyboard focus and on
+   click/tap (aria-expanded), and closes on Escape -- hover is never the only
+   route to it. It is positioned fixed, from script, so a box inside a scrolling
+   table is not clipped by that table. */
+[data-hint] { position: relative; }
+h3 > .hintwrap, td > .hintwrap { margin-left: 6px; }
+.hintwrap { display: inline-flex; align-items: baseline; gap: 6px; vertical-align: baseline; }
+button.hint { flex: none; -webkit-appearance: none; appearance: none; cursor: help;
+  width: 15px; height: 15px; padding: 0; border-radius: 50%; align-self: center;
+  border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+  font: 700 9px/1 var(--f-display); display: inline-grid; place-items: center;
+  letter-spacing: 0; text-transform: none;
+  transition: color .15s ease, border-color .15s ease, background .15s ease; }
+button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] {
+  border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.headline button.hint { border-color: rgba(255,255,255,.45); color: #fff;
+  background: rgba(255,255,255,.15); }
+.headline button.hint:hover, .headline button.hint:focus-visible,
+.headline button.hint[aria-expanded="true"] { background: rgba(255,255,255,.3);
+  border-color: #fff; color: #fff; }
+.hintbox { position: fixed; left: 0; top: 0; z-index: 60; width: max-content;
+  max-width: min(310px, calc(100vw - 24px)); padding: 10px 13px; background: var(--panel);
+  color: var(--muted); border: 1px solid var(--line); border-radius: 11px;
+  box-shadow: var(--shadow-lift); text-align: left; white-space: normal;
+  font: 400 0.79rem/1.5 var(--f-body); letter-spacing: normal; text-transform: none;
+  opacity: 0; transform: translateY(-3px); pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease; }
+[data-hint]:hover > .hintbox, [data-hint]:focus-within > .hintbox,
+[data-hint].open > .hintbox { opacity: 1; transform: none; }
+.hintbox b { color: var(--fg); font-weight: 600; }
+.hintbox .key { display: block; margin-top: 4px; }
+.hintbox .swatch { margin: 0 5px 0 0; }
+@media (prefers-reduced-motion: reduce) { .hintbox { transition: none; } }
+
+/* ── Hero: a capture array that folds itself together ──────────────────────────
+   A 2D canvas, no library and no network. Drawn at Visium's real geometry: 55 um
+   spots on a 100 um hexagonal lattice, so the gaps are the ones a real array has.
+   Three serial sections of one block, sharing one registered lattice. */
+.heroband { margin-top: -14px; }
+.heroband canvas { display: block; width: 100%; height: 212px; }
+@media (max-width: 760px) { .heroband canvas { height: 150px; } }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 15px 17px;
   display: grid; gap: 3px; box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease; }
 .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
 .kpi b { font: 700 1.75rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .kpi span { color: var(--muted); font-size: 0.85rem; }
-.kpi small { font: 0.75rem var(--f-mono); color: var(--muted); }
 .msbtn { display:inline-block; padding:9px 17px; border:1px solid var(--accent);
   border-radius:7px; color:var(--accent); text-decoration:none; font-weight:600;
   font-size:13.5px; transition:background .15s; }
@@ -184,8 +206,6 @@ td.ds { max-width: 420px; }
 td.ds a { font: 600 0.84rem var(--f-mono); }
 td.ds .src-chip { display: inline-block; margin-left: 7px; padding: 0 6px; border-radius: 99px;
   background: var(--grey-soft); color: var(--muted); font: 0.68rem var(--f-mono); vertical-align: 1px; }
-td.ds .ttl { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 2px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 410px; }
 td.tis { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dot { display: inline-block; width: 15px; height: 15px; border-radius: 50%;
   background: conic-gradient(var(--accent) var(--f), var(--grey-soft) 0); vertical-align: -2px;
@@ -230,7 +250,7 @@ a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: un
 .prog { font-family: var(--f-mono); font-size: 0.78rem; }
 .prog.full { color: var(--ok); }
 button.more { font: inherit; font-size: 0.88rem; margin-top: 10px; padding: 7px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--accent); cursor: pointer; }
-.src td:nth-child(3) { max-width: 520px; color: var(--muted); }
+.src td:nth-child(3) { max-width: 520px; }
 footer { color: var(--muted); font-size: 0.82rem; }
 code { font-family: var(--f-mono); font-size: 0.85em; }
 @media (prefers-reduced-motion: no-preference) { .bar .fill, .funnel div { transition: width .4s ease; } }
@@ -253,12 +273,22 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     </div>
   </header>
 
+  <section class="heroband">
+    <canvas id="heroCanvas" width="1080" height="212" role="img" aria-label="Three serial tissue sections drawn as a Visium capture array: 55 micrometre spots on a 100 micrometre hexagonal lattice, coloured by two spatial domains. The spots begin scattered and fold inward onto the lattice."></canvas>
+  </section>
+
   <section class="headline" id="headline" hidden></section>
 
   <section class="kpis" id="kpis" aria-label="Summary"></section>
 
   <section class="panel agents">
-    <h2>Agents <span class="count">and the Atlas they maintain &mdash; hover a stage</span></h2>
+    <h2>Agents<span class="hintwrap" data-hint><button class="hint" type="button"
+      aria-expanded="false" aria-describedby="hintLoop" aria-label="How to read the loop"
+      >i</button><span class="hintbox" role="tooltip" id="hintLoop"><span id="agentNote"></span>
+      <span class="key">Open a stage for what it does.</span></span></span></h2>
+    <p class="loopLabels"><span class="key lt"><i></i>acquire, standardise, derive</span>
+      <span class="key la"><i></i>the catalogue says what is already held, so each cycle queues
+      only new deposits</span></p>
     <div class="loop">
       <div class="node agentsNode">
         <b>Human Spatial Agents</b>
@@ -280,22 +310,19 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
         <div class="atlasStat" id="atlasStat"></div>
       </div>
     </div>
-    <div class="loopLabels">
-      <span class="lt"><i></i>acquire, standardise, derive</span>
-      <span class="la"><i></i>the catalogue says what is already held, so each cycle queues only new deposits</span>
-    </div>
-    <div class="agentnote" id="agentNote"></div>
   </section>
 
   <section class="panel" id="techPanel" hidden>
-    <h2>By technology <span class="count" id="techNote"></span></h2>
+    <h2>By technology<span class="hintwrap" data-hint><button class="hint" type="button"
+      aria-expanded="false" aria-describedby="techNote" aria-label="How to read these bars"
+      >i</button><span class="hintbox" role="tooltip" id="techNote"></span></span></h2>
     <div class="tabs" role="tablist">
       <button class="tab on" data-p="byUnits" role="tab">Measured units</button>
       <button class="tab" data-p="byLoad" role="tab">What opens</button>
       <button class="tab" data-p="byHdCell" role="tab">HD cells</button>
     </div>
     <div class="bars pane on" id="byUnits"></div>
-    <div class="bars pane" id="byLoad"><p class="fine" id="loadNote"></p></div>
+    <div class="bars pane" id="byLoad"></div>
     <div class="bars pane" id="byHdCell"></div>
   </section>
 
@@ -320,11 +347,18 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   </section>
 
   <section class="panel" id="metaPanel">
-    <h2>Sample metadata, harmonised to UBERON / MONDO / HsapDv / HANCESTRO</h2>
-    <p class="sub" id="metaSub"></p>
+    <h2>Sample metadata, harmonised to UBERON / MONDO / HsapDv / HANCESTRO<span
+      class="hintwrap" data-hint><button class="hint" type="button" aria-expanded="false"
+      aria-describedby="metaSub" aria-label="What is counted here">i</button><span
+      class="hintbox" role="tooltip" id="metaSub"></span></span></h2>
     <div class="grid3">
       <div><h3>Field completeness (% of human samples)</h3><div class="bars" id="mComplete"></div></div>
-      <div><h3>What the matrix holds <span class="count">measured from X, not from a label</span></h3><div class="bars" id="mMatrix"></div></div>
+      <div><h3>What the matrix holds<span class="hintwrap" data-hint><button class="hint"
+        type="button" aria-expanded="false" aria-describedby="hintMatrix"
+        aria-label="How this is determined">i</button><span class="hintbox" role="tooltip"
+        id="hintMatrix">Measured from X itself, not read off a label: a matrix is checked for
+        integer values, for negatives, and for the signature of a log transform.</span></span></h3
+        ><div class="bars" id="mMatrix"></div></div>
       <div><h3>Sex</h3><div class="bars" id="mSex"></div>
            <h3>Disease state</h3><div class="bars" id="mState"></div></div>
       <div><h3>Age group</h3><div class="bars" id="mAge"></div></div>
@@ -369,7 +403,13 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
 
   <footer>
 <a class="msbtn" href="manuscript.html">Manuscript figures &rarr;</a><br><br>
-Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are linked but not downloaded). Regenerate with <code>python -m hsa.export</code>. Code: <a href="https://github.com/izu0421/humanspatialatlas">github.com/izu0421/humanspatialatlas</a>. Full tables (datasets, files, samples, sources) are available from the HSA team on request.
+Code: <span class="hintwrap" data-hint><a href="https://github.com/izu0421/humanspatialatlas"
+>github.com/izu0421/humanspatialatlas</a><button class="hint" type="button" aria-expanded="false"
+aria-describedby="hintFoot" aria-label="What this page covers">i</button><span class="hintbox"
+role="tooltip" id="hintFoot">Matrices and coordinates only: images, FASTQ/BAM and per-transcript
+tables are linked but not downloaded. Regenerate this page with <code>python -m hsa.export</code>.
+Full tables (datasets, files, samples, sources) are available from the HSA team on
+request.</span></span>
   </footer>
 </div>
 
@@ -380,8 +420,64 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => Number(n).toLocaleString("en-GB");
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  /* One tooltip mechanism for every piece of secondary text on the page.
+     hint(text, label, lead) returns an optional visible lead, a trigger button,
+     and the text the button describes. The text is never deleted: it lives in a
+     .hintbox that the button names with aria-describedby, so a screen reader
+     reads it whether or not it is painted, and the button opens it on hover, on
+     keyboard focus and on tap. */
+  let hintN = 0, hintHot = null;
+  const hint = (text, label, lead) => {
+    const id = "hint" + (++hintN);
+    return `<span class="hintwrap" data-hint>${lead || ""}<button class="hint" type="button" ` +
+      `aria-expanded="false" aria-describedby="${id}" aria-label="${esc(label || "More detail")}"` +
+      `>i</button><span class="hintbox" role="tooltip" id="${id}">${text}</span></span>`;
+  };
+  // The box is position:fixed, so a box inside a scrolling table is not clipped
+  // by it; it is placed from its trigger and kept inside the viewport.
+  function placeHint(w) {
+    if (!w || !w.isConnected) { hintHot = null; return; }
+    const box = w.querySelector(":scope > .hintbox"), trg = w.querySelector("button") || w.querySelector("a");
+    if (!box || !trg) return;
+    const r = trg.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight;
+    let y = r.bottom + 7;
+    if (y + bh > innerHeight - 12 && r.top - 7 - bh > 12) y = r.top - 7 - bh;
+    box.style.left = Math.max(12, Math.min(r.left, innerWidth - 12 - bw)) + "px";
+    box.style.top = Math.max(8, y) + "px";
+  }
+  const hintTouch = (e) => {
+    const w = e.target.closest && e.target.closest("[data-hint]");
+    if (w) { hintHot = w; placeHint(w); }
+  };
+  function closeHints(keep) {
+    document.querySelectorAll("[data-hint].open").forEach((w) => {
+      if (w === keep) return;
+      w.classList.remove("open");
+      const b = w.querySelector("[aria-expanded]");
+      if (b) b.setAttribute("aria-expanded", "false");
+    });
+  }
+  document.addEventListener("pointerover", hintTouch, { passive: true });
+  document.addEventListener("focusin", hintTouch);
+  addEventListener("scroll", () => placeHint(hintHot), { passive: true });
+  addEventListener("resize", () => placeHint(hintHot), { passive: true });
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest && e.target.closest("[data-hint] > button");
+    closeHints(t && t.parentNode);
+    if (!t) return;
+    const w = t.parentNode, on = !w.classList.contains("open");
+    w.classList.toggle("open", on);
+    t.setAttribute("aria-expanded", String(on));
+    if (on) { hintHot = w; placeHint(w); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeHints(null); });
+
   const VERDICTS = ["ready", "bundle_only", "restricted", "no_processed_data", "not_spatial", "not_human"];
   const VLABEL = { ready: "Ready", bundle_only: "Archive only", restricted: "Restricted", no_processed_data: "No processed data", not_spatial: "Not spatial", not_human: "Not human" };
+  const TECH_HINT = "Bars are totals of measured units. A blue bar counts individually " +
+    "segmented <b>cells</b>; a pink bar counts <b>spots or bins</b> on a grid. The two are " +
+    "never summed, because a section that was segmented would otherwise be counted twice.";
   const VCOL = { ready: "var(--ok)", bundle_only: "var(--warn)", restricted: "var(--bad)", no_processed_data: "var(--grey)", not_spatial: "var(--grey-soft)", not_human: "var(--line)" };
 
   $("stamp").textContent = "Snapshot " + D.generated;
@@ -394,7 +490,8 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     ["", fmt(k.cand_done) + " / " + fmt(k.cand_total), "candidates curated", Math.round(100 * k.cand_done / Math.max(1, k.cand_total)) + "% of queue"],
     ["", "$" + Number(k.usd).toFixed(2), "agent spend", "Sonnet 5.5 API"],
   ];
-  $("kpis").innerHTML = tiles.map(([c, b, s, sm]) => `<div class="kpi ${c}"><b>${b}</b><span>${s}</span><small>${sm}</small></div>`).join("");
+  $("kpis").innerHTML = tiles.map(([c, b, lab, sm]) =>
+    `<div class="kpi ${c}"><b>${b}</b>${hint(esc(sm), lab, `<span>${lab}</span>`)}</div>`).join("");
 
   // funnel
   const vc = {}; D.datasets.forEach((d) => (vc[d.verdict] = (vc[d.verdict] || 0) + 1));
@@ -420,10 +517,10 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     $("headline").innerHTML =
       `<b><span class="n">${fmt(H.cells)}</span> single cells and <span class="n">${fmt(H.spots)}</span> spots/bins ` +
       `across <span class="n">&ge;${fmt(H.donors)}</span> donors in <span class="n">${fmt(H.tissues)}</span> tissues</b>` +
-      `<div class="fine">from ${fmt(H.samples_loaded)} human samples in the atlas \u00b7 ` +
-      `${fmt(H.datasets)} datasets` +
-      `<span class="info" tabindex="0">how cells and spots are counted` +
-      `<span class="pop"><b>Cells</b> are individually segmented: imaging platforms (Xenium, CosMx, ` +
+      `<div class="fine">` +
+      hint(`From ${fmt(H.samples_loaded)} human samples in the atlas, across ` +
+      `${fmt(H.datasets)} datasets. ` +
+      `<b>Cells</b> are individually segmented: imaging platforms (Xenium, CosMx, ` +
       `MERFISH) plus ${fmt(H.hd_segmented_cells || 0)} cells segmented with bin2cell from ` +
       `${fmt(H.hd_segmented_samples || 0)} Visium HD sections. <b>Spots/bins</b> are everything ` +
       `measured on a grid with no segmentation available \u2014 55\u00a0\u00b5m Visium spots, ` +
@@ -432,11 +529,11 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
       `counted twice. Unadjusted, the raw totals are ${fmt(H.cells_raw || 0)} and ` +
       `${fmt(H.spots_raw || 0)}. The donor figure is a lower bound: only ${H.donor_frac}% of ` +
       `samples state a donor, and donor identifiers are local to each study, so donors are ` +
-      `counted as (dataset, donor) pairs.</span></span></div>`;
+      `counted as (dataset, donor) pairs.`, "How cells and spots are counted") + `</div>`;
     const u = (H.per_tech || []).slice(0, 12), mx = u.length ? u[0][3] : 1;
     if (u.length) {
       $("techPanel").hidden = false;
-      $("techNote").textContent = "cells in blue, spots or bins in pink";
+      $("techNote").innerHTML = TECH_HINT;
 
       $("byUnits").innerHTML = u.map(([tech, unit, n, tot]) =>
         `<div class="bar"><span class="lab" title="${esc(tech)} &mdash; ${fmt(n)} samples">${esc(tech)}</span>` +
@@ -466,10 +563,15 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     ["Annotate", "per organ, per panel", "M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
      "Cell types for every cell-resolution section, from a CellTypist model trained on CELLxGENE Census for that organ and restricted to that panel\u2019s own genes. A 20,000-gene model applied to a 477-gene Xenium panel would impute 97% of its input as zero and score on absence \u2014 and absence in a targeted panel means \u201cnot on the panel\u201d, not \u201cnot expressed\u201d."],
   ];
-  $("agentFlow").innerHTML = STAGES.map(([name, sub, d, detail]) =>
-    `<div class="stage" tabindex="0"><div class="disc"><svg viewBox="0 0 24 24" aria-hidden="true">` +
-    `<path d="${d}" stroke-linecap="round" stroke-linejoin="round"/></svg></div>` +
-    `<b>${esc(name)}</b><em>${esc(sub)}</em><span class="pop">${detail}</span></div>`).join("");
+  $("agentFlow").innerHTML = STAGES.map(([name, cap, d, detail]) => {
+    const id = "hintStage" + (++hintN);
+    return `<div class="stage" data-hint><button class="disc" type="button" aria-expanded="false" ` +
+      `aria-describedby="${id}" aria-label="${esc(name)}: what this stage does">` +
+      `<svg viewBox="0 0 24 24" aria-hidden="true">` +
+      `<path d="${d}" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` +
+      `<b>${esc(name)}</b><span class="hintbox" role="tooltip" id="${id}">` +
+      `<b>${esc(cap)}.</b> ${detail}</span></div>`;
+  }).join("");
 
   // the Atlas side of the loop, in its own figures
   if (H.cells !== undefined) {
@@ -490,11 +592,11 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
   if (HC.files) {
     $("techPanel").hidden = false;
     _hdNote =
-      `${fmt(HC.cells)} cells \u00b7 ${fmt(HC.files)} samples` +
-      `<span class="info dark" tabindex="0">two label sources<span class="pop">H&amp;E segmentation sees ` +
+      `${fmt(HC.cells)} cells from ${fmt(HC.files)} Visium HD samples, segmented from 2 \u00b5m bins. ` +
+      `<span class="key"><b>Two label sources.</b> H&amp;E segmentation sees ` +
       `nuclei directly. The gene-expression route infers them from transcript density and recovers about ` +
       `half as many on a matched sample, so the two are reported separately and should not be pooled ` +
-      `uncritically.</span></span>`;
+      `uncritically.</span>`;
     const mx = Math.max(...HC.by_method.map((m) => m[2]));
     $("byHdCell").innerHTML = HC.by_method.map(([lab, nf, nc]) =>
       `<div class="bar"><span class="lab" title="${esc(lab)}">${esc(lab)}</span>` +
@@ -507,7 +609,7 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("on", x === t));
     document.querySelectorAll(".pane").forEach((x) => x.classList.toggle("on", x.id === t.dataset.p));
     $("techNote").innerHTML = t.dataset.p === "byLoad" ? _loadLegend
-      : t.dataset.p === "byHdCell" ? _hdNote : "cells in blue, spots or bins in pink";
+      : t.dataset.p === "byHdCell" ? _hdNote : TECH_HINT;
   }));
 
   // Load outcome per technology. The failure modes are distinct and worth distinguishing: GeoMx
@@ -519,13 +621,17 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     const cols = ["var(--ok)", "var(--eosin)", "var(--accent)", "var(--grey-soft)", "var(--grey-soft)"];
     const labs = ["in atlas", "no coordinates", "no matrix found", "read error", "excluded"];
     _loadLegend = labs.map((l, i) =>
-      `<span class="swatch" style="background:${cols[i]}"></span>${l}`).join("");
+      `<span class="key"><span class="swatch" style="background:${cols[i]}"></span>${l}</span>`).join("");
     const _noteTxt =
       "\u201cIn atlas\u201d is the same population the headline counts \u2014 human, "
       + "de-duplicated, and written to disk \u2014 so these bars sum to it. "
       + "\u201cExcluded\u201d samples opened but are kept out: quarantined, non-human, or a "
       + "second copy of a section already counted.";
-    $("byLoad").innerHTML = `<p class="fine" id="loadNote">${_noteTxt}</p>` +
+    // The prose note hides; the colour key does not. A stacked bar whose five colours are
+    // unlabelled until you hover is not decluttered, it is unreadable.
+    const _swatches = _loadLegend;
+    _loadLegend = `${_noteTxt}`;
+    $("byLoad").innerHTML = `<p class="loopLabels">${_swatches}</p>` +
       LS.map(([tech, a, b, c, e, x, n]) => {
       const parts = [a, b, c, e, x].map((v, i) =>
         `<i style="width:${(100 * v) / Math.max(1, n)}%;background:${cols[i]}" title="${labs[i]}: ${fmt(v)}"></i>`).join("");
@@ -533,17 +639,6 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
              `<span class="trk"><span class="stack">${parts}</span>` +
              `<span class="val">${fmt(a)} of ${fmt(n)}</span></span></div>`;
     }).join("");
-  }
-
-  // Which matrices are counts. 676 of 7,733 are not -- log1p, some other transform, or
-  // carrying negative values -- and nothing downstream announces it, so it belongs on the page
-  // beside the rest of the sample metadata rather than only in the exported table.
-  if ((S.matrix_kind || []).length) {
-    const mk = S.matrix_kind, mx = Math.max(...mk.map((r) => r[1]));
-    $("mMatrix").innerHTML = mk.map(([k, n]) =>
-      `<div class="bar"><span class="lab">${esc(k)}</span><span class="trk">` +
-      `<span class="fill${k === "raw_counts" ? "" : " alt"}" style="width:${(100 * n) / mx}%"></span>` +
-      `<span class="val">${fmt(n)}</span></span></div>`).join("");
   }
 
   // The consistency review: every file asked the same questions. A minority convention is what
@@ -592,6 +687,17 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
     pairs("mComplete", S.completeness, "ok", true);
     pairs("mSex", S.sex); pairs("mState", S.disease_state); pairs("mAge", S.age_group);
     pairs("mD1", S.disease_level1, "alt"); pairs("mD2", S.disease_level2, "alt"); pairs("mTissue", S.tissue);
+
+    // Which matrices are counts. A minority are not -- log1p, some other transform, or
+    // carrying negative values -- and nothing downstream announces it, so it belongs on the
+    // page beside the rest of the sample metadata rather than only in the exported table.
+    if ((S.matrix_kind || []).length) {
+      const mk = S.matrix_kind, mx = Math.max(...mk.map((r) => r[1]));
+      $("mMatrix").innerHTML = mk.map(([k, n]) =>
+        `<div class="bar"><span class="lab">${esc(k)}</span><span class="trk">` +
+        `<span class="fill${k === "raw_counts" ? "" : " alt"}" style="width:${(100 * n) / mx}%"></span>` +
+        `<span class="val">${fmt(n)}</span></span></div>`).join("");
+    }
   }
 
 
@@ -624,7 +730,7 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
         `${d.url ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.accession)}</a>`
                  : esc(d.accession)}` +
         `<span class="src-chip">${esc(d.source)}</span>` +
-        `<span class="ttl" title="${esc(d.title)}">${esc(d.title)}</span></td>` +
+        `<span class="ttl">${esc(d.title)}</span></td>` +
         `<td>${esc(d.technology_norm)}</td><td class="tis">${esc(d.tissue_norm)}</td>` +
         `<td><span class="pill v-${esc(d.verdict)}">${VLABEL[d.verdict] || esc(d.verdict)}</span></td>` +
         `<td class="num">${d.n_samples_with_files || ""}</td>` +
@@ -645,6 +751,194 @@ Matrices + coordinates only (images, FASTQ/BAM and per-transcript tables are lin
   render();
 
   $("srcRows").innerHTML = D.sources.sort((a, b) => (b.est_human_datasets || 0) - (a.est_human_datasets || 0)).map((s) =>
-    `<tr><td><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></td><td class="num">${s.est_human_datasets ? fmt(s.est_human_datasets) : ""}</td><td>${esc(s.access_method)}${s.notes ? "<br><small>" + esc(s.notes) + "</small>" : ""}</td></tr>`).join("");
+    `<tr><td><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></td><td class="num">${s.est_human_datasets ? fmt(s.est_human_datasets) : ""}</td><td>${s.notes ? hint(esc(s.notes), "Access notes", esc(s.access_method)) : esc(s.access_method)}</td></tr>`).join("");
+
+  /* ── Hero: a capture array that folds itself together ───────────────────────
+     Three serial sections of one tissue block, drawn on the lattice Visium
+     actually uses: 100 um centre to centre, 55 um spots, so a spot is 0.275 of
+     the pitch in radius and the gaps between spots are the real ones. The spots
+     start scattered and unregistered, spiral inward onto their own sites --
+     centre of each section first, rim last, so a section closes inward -- and
+     resolve from grey into two spatial domains as they land. The domain field is
+     evaluated at the section's depth through the block, so the pattern drifts
+     between serial sections instead of repeating.
+
+     It runs once, for under four seconds; it pauses whenever it is scrolled out
+     of view, and when it finishes it stops for good -- no timer outlives it, and
+     the assembled array is the page's resting state. Reduced motion is given
+     that resting state immediately and no frame loop at all. */
+  (function heroArray() {
+    const cv = $("heroCanvas");
+    if (!cv || !cv.getContext) return;
+    let ctx = null;
+    try { ctx = cv.getContext("2d"); } catch (e) { ctx = null; }
+    if (!ctx) return;
+
+    const SRX = 14, SRY = 9.6, GAP = 32;      // section half-extents and spacing, in pitch units
+    const SPOT = 0.275;                        // 55 um spot radius over 100 um pitch
+    const ROW = Math.sqrt(3) / 2;              // hex row spacing, in pitch units
+    const TAU = Math.PI * 2;
+    const RUN = 3.8, FLIGHT = 1.25, FADE = 0.3, RESOLVE = 0.62;
+
+    let seed = 0;                              // fixed seed: the same array every load
+    const rnd = () => {
+      seed = (seed + 0x6d2b79f5) | 0;
+      let t = seed;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+
+    const inSection = (x, y, z) => {
+      const a = Math.atan2(y / SRY, x / SRX), r = Math.hypot(x / SRX, y / SRY);
+      return r < 0.8 + 0.12 * Math.sin(a * 2 + 0.6 + z * 0.18) + 0.07 * Math.sin(a * 3 - 1.4)
+               + 0.045 * Math.sin(a * 5 + 2.1 + z * 0.3) - Math.abs(z) * 0.012;
+    };
+    const domain = (x, y, z) =>
+      Math.sin(x * 0.17 + z * 0.55) * Math.cos(y * 0.21 - z * 0.3)
+      + 0.5 * Math.sin((x * 0.8 + y) * 0.13 + z * 0.4 + 1.2)
+      + 0.28 * Math.sin(x * 0.33 - y * 0.27 + z * 0.8 - 0.4);
+    const expr = (x, y, z) =>
+      0.52 + 0.48 * (0.5 + 0.5 * Math.sin(x * 0.42 - z) * Math.sin(y * 0.5 + z * 1.1));
+
+    let N = 0, nSec = 0, unitW = 0, p = null, cols = ["#B2182B", "#2166AC", "#9A9AA2"];
+
+    function palette() {
+      const cs = getComputedStyle(document.documentElement);
+      cols = [["--sp-red", "#B2182B"], ["--sp-blue", "#2166AC"], ["--sp-grey", "#9A9AA2"]]
+        .map(([v, d]) => cs.getPropertyValue(v).trim() || d);
+    }
+
+    function build(sections) {
+      nSec = sections;
+      seed = 0x9e3779b9;
+      const cx = [], zs = [];
+      for (let i = 0; i < sections; i++) {
+        cx.push((i - (sections - 1) / 2) * GAP);
+        zs.push(sections === 1 ? 0 : i - (sections - 1) / 2);
+      }
+      unitW = cx[sections - 1] - cx[0] + 2 * SRX * 0.93;
+      const TR = [], SR = [], SA = [], DA = [], CX = [], DLY = [], BK = [], EX = [];
+      const rowMax = Math.ceil(SRY / ROW) + 2, colMax = Math.ceil(unitW / 2) + rowMax + 3;
+      for (let row = -rowMax; row <= rowMax; row++) {
+        const y = row * ROW;
+        for (let col = -colMax; col <= colMax; col++) {
+          const x = col + row / 2;
+          for (let si = 0; si < sections; si++) {
+            const lx = x - cx[si], z = zs[si];
+            if (!inSection(lx, y, z)) continue;
+            const tr = Math.hypot(lx, y), ta = Math.atan2(y, lx), spin = 0.55 + 0.5 * rnd();
+            TR.push(tr); CX.push(cx[si]);
+            SR.push(tr * (1.9 + 1.5 * rnd()) + 4 + 7 * rnd());   // scattered, unregistered
+            SA.push(ta + spin); DA.push(-spin);                   // and turned off true
+            DLY.push(si * 0.42 + 0.85 * (tr / (SRX * 0.95)) + 0.22 * rnd());
+            const v = domain(lx, y, z);
+            BK.push(rnd() < 0.04 ? 3 : v > 0.34 ? 0 : v < -0.34 ? 1 : 2);
+            EX.push(expr(lx, y, z));
+            break;
+          }
+        }
+      }
+      N = TR.length;
+      const f = (a) => Float32Array.from(a);
+      p = { TR: f(TR), SR: f(SR), SA: f(SA), DA: f(DA), CX: f(CX), DLY: f(DLY), EX: f(EX),
+            BK: Uint8Array.from(BK), x: new Float32Array(N), y: new Float32Array(N),
+            a: new Float32Array(N), c: new Float32Array(N) };
+    }
+
+    let W = 0, H = 0, dpr = 1, scale = 1;
+    function fit() {
+      const r = cv.getBoundingClientRect();
+      if (!r.width || !r.height) return false;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = r.width; H = r.height;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      const want = W / H >= 3.3 ? 3 : W / H >= 2 ? 2 : 1;   // fewer sections on a narrow page
+      if (want !== nSec) build(want);
+      scale = Math.min(W / (unitW + 3), H / (2 * SRY * 0.93 + 2.6));
+      return true;
+    }
+
+    function frame(t) {
+      const cx0 = W * dpr / 2, cy0 = H * dpr / 2, sc = scale * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      for (let i = 0; i < N; i++) {
+        const te = (t - p.DLY[i]) / FLIGHT;
+        if (te <= 0) { p.a[i] = 0; continue; }
+        const e = te >= 1 ? 1 : 1 - Math.pow(1 - te, 3);
+        const r = p.SR[i] + (p.TR[i] - p.SR[i]) * e, ang = p.SA[i] + p.DA[i] * e;
+        p.x[i] = cx0 + (p.CX[i] + r * Math.cos(ang)) * sc;
+        p.y[i] = cy0 + r * Math.sin(ang) * sc;
+        p.a[i] = te < FADE ? te / FADE : 1;
+        const c = (t - (p.DLY[i] + FLIGHT * 0.72)) / RESOLVE;
+        p.c[i] = c <= 0 ? 0 : c >= 1 ? 1 : c;
+      }
+      const rad = Math.max(0.9, SPOT * sc);
+      ctx.fillStyle = cols[2];                     // still in flight: grey, unsorted
+      for (let i = 0; i < N; i++) {
+        const al = p.a[i] * (1 - p.c[i]) * 0.8;
+        if (al < 0.01) continue;
+        ctx.globalAlpha = al;
+        ctx.beginPath(); ctx.arc(p.x[i], p.y[i], rad, 0, TAU); ctx.fill();
+      }
+      for (let b = 0; b < 3; b++) {                // landed: resolved into domains
+        ctx.fillStyle = cols[b];
+        for (let i = 0; i < N; i++) {
+          if (p.BK[i] !== b) continue;
+          const al = p.a[i] * p.c[i] * p.EX[i];
+          if (al < 0.01) continue;
+          ctx.globalAlpha = al;
+          ctx.beginPath(); ctx.arc(p.x[i], p.y[i], rad, 0, TAU); ctx.fill();
+        }
+      }
+      ctx.strokeStyle = cols[2];                   // sites with no tissue over them stay hollow
+      ctx.lineWidth = Math.max(0.7, rad * 0.42);
+      for (let i = 0; i < N; i++) {
+        if (p.BK[i] !== 3) continue;
+        const al = p.a[i] * p.c[i] * 0.55;
+        if (al < 0.01) continue;
+        ctx.globalAlpha = al;
+        ctx.beginPath(); ctx.arc(p.x[i], p.y[i], rad * 0.82, 0, TAU); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let t = 0, last = 0, raf = 0, done = false, io = null;
+
+    function step(now) {
+      raf = 0;
+      if (!last) last = now;
+      t = Math.min(RUN, t + Math.min(0.05, (now - last) / 1000));
+      last = now;
+      frame(t);
+      if (t >= RUN) { done = true; if (io) { io.disconnect(); io = null; } return; }
+      raf = requestAnimationFrame(step);
+    }
+    const play = () => { if (!done && !raf && !still.matches) { last = 0; raf = requestAnimationFrame(step); } };
+    const pause = () => { if (raf) { cancelAnimationFrame(raf); raf = 0; } };
+    const redraw = () => { if (fit()) frame(done || still.matches ? RUN : t); };
+
+    palette();
+    if (!fit()) return;
+    if (still.matches) { done = true; frame(RUN); }
+    else {
+      frame(0);
+      if ("IntersectionObserver" in window) {
+        io = new IntersectionObserver((es) => (es[0].isIntersecting ? play() : pause()));
+        io.observe(cv);
+      } else { play(); }
+    }
+    let rt = 0;
+    window.addEventListener("resize", () => {
+      clearTimeout(rt); rt = setTimeout(() => { palette(); redraw(); }, 120);
+    }, { passive: true });
+    const onTheme = () => { palette(); redraw(); };
+    if (window.matchMedia("(prefers-color-scheme: dark)").addEventListener)
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", onTheme);
+    if (still.addEventListener) still.addEventListener("change", redraw);
+  })();
 })();
+
 </script>
