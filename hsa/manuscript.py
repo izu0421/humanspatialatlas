@@ -72,7 +72,10 @@ FIGURES = [
      'traces the epidermal basal layer with its desmosomal partner DSC3 sitting on it; CXCL12 and '
      'CXCR4 are scattered through the same tissue. Absolute separation is not comparable between '
      'pairs — a rare partner is far from everything by construction — so each is quoted beside the '
-     'distance expected at that prevalence. <b>D</b> Observed nearest-neighbour distance divided '
+     'distance expected at that prevalence, and each panel is annotated with that ratio alone: '
+     'DSG1\u2013DSC3 sits 4.7 cell diameters from its partner against 9.6 expected, a ratio of '
+     '0.49, while CXCL12\u2013CXCR4 sits 3.5 against 4.0 expected, a ratio of 0.89. '
+     '<b>D</b> Observed nearest-neighbour distance divided '
      'by a null that holds prevalence fixed: the same number of receptor-positive cells drawn at '
      'random from the same section, 25 permutations, ten sections. The ratio is 1 when the two '
      'populations are arranged independently and below 1 when they sit together. Contact pairs '
@@ -192,35 +195,21 @@ FIGURES = [
      'leaning on their difference, and 6 of 30 coefficients do not hold their sign across folds. '
      'They are recorded in bench/component_weights.csv.'),
     ('FIGS4', 'Supplementary Figure 4',
-     'The statistic works in proportion to how far the interaction physically reaches',
-     "<b>A</b> Why range decides what a proximity statistic can see. Bivariate Moran's R asks "
-     'whether two transcripts are high in the same neighbourhood. For a junction that is the '
-     'mechanism — the two proteins must be at the same membrane in touching cells, and a 55 µm '
-     'spot contains both. For a synaptic transmitter, across a ~20 nm cleft, the same holds. For a '
-     'secreted ligand it does not: the molecule acts on cells far from the one that released it, '
-     'so a real interaction leaves no spatial correlation, while two abundant genes sharing a '
-     'compartment leave a strong one and interact not at all. <b>B</b> Median z<sub>max</sub> of '
-     'the annotated pairs in each signalling family, ordered; the number beside each bar is the '
-     'pairs in that family. The ordering is interaction range almost exactly. Contact-dependent '
-     'families lead — collagen–integrin 6.37, Notch 4.76, ephrin 3.78, semaphorin 3.41, all '
-     'membrane-anchored ligands requiring the cells to touch — followed by the synaptic '
-     'transmitters (GABA 3.80, glutamate 3.55). Everything that travels sits at the bottom: '
-     'chemokines 2.39, interleukin 1.42, interferon 0.67. Contact against diffusible families, '
-     'Mann–Whitney p = 2×10⁻¹⁸. Families are compared on score distributions rather than AUROC '
-     'because CellPhoneDB populates the family label only for annotated pairs, leaving no '
-     'negatives. The monoamines are drawn but held out of that test: they act by volume '
-     'transmission, but their source neurons are small nuclei the atlas samples poorly, so a low '
-     'score there is as easily detectability as range. <b>C</b> The same split inside one class, '
-     "which is the sharper test — same annotation source, same label set, only the ligand's "
-     'physical form differs. Within canonical ligand–receptor, pairs whose ligand is not secreted '
-     'beat those whose ligand is, by +0.055 on z<sub>max</sub> and +0.046 on the called fraction, '
-     'both with bootstrap intervals excluding zero; the z<sub>mean</sub> gap of +0.024 does not. '
-     'Abundance does not explain it: contact pairs are slightly more abundant, so matching on '
-     'abundance quintiles widens every gap rather than removing it (+0.049, +0.054, +0.069). This '
-     'is the result that reframes the rest. The canonical class fails the abundance control of '
-     'Supplementary Figure 2 not because the method is implemented badly but because proximity is '
-     'the wrong observable for a diffusible ligand; what the atlas measures well is contact- '
-     'dependent interaction.'),
+     'Interaction range across signalling families',
+     'Median z<sub>max</sub> of the annotated pairs in each CellPhoneDB signalling family, '
+     'ordered; the number beside each bar is the pairs in that family. Figure 3 establishes '
+     'the range effect by mechanism and by a within-class test, so neither is repeated here; '
+     'this is the same ordering across every annotated family, which is where it is most '
+     'visible. Contact-dependent families lead \u2014 collagen\u2013integrin 6.37, Notch '
+     '4.76, ephrin 3.78, semaphorin 3.41, all membrane-anchored ligands requiring the two '
+     'cells to touch \u2014 followed by the synaptic transmitters, GABA at 3.80 and glutamate '
+     'at 3.55 across a ~20 nm cleft. Everything that travels sits at the bottom: chemokines '
+     '2.39, interleukin 1.42, interferon 0.67. Contact against diffusible families, '
+     'Mann\u2013Whitney p = 2\u00d710\u207b\u00b9\u2078. Families are compared on score '
+     'distributions rather than AUROC because CellPhoneDB populates the family label only for '
+     'annotated pairs, leaving no negatives. The monoamines are drawn but held out of that '
+     'test: they act by volume transmission, but their source neurons are small nuclei the '
+     'atlas samples poorly, so a low score there is as easily detectability as range.'),
     ('FIG4', 'Supplementary Figure 5',
      'Two implementations of the same statistic reproduce the result and do not combine',
      'SpatialDM and LIANA+ were each run over the whole corpus, 6,188 and 6,206 sections, sharing '
@@ -238,7 +227,8 @@ FIGURES = [
      'training whenever it appears in the test fold, is worse at 0.603 (paired difference −0.010, '
      'interval excluding zero). Its per-fold coefficients say why rather than leaving it a '
      'mystery: −0.43 ± 0.19 on SpatialDM against +0.72 ± 0.18 on LIANA, large weights of opposite '
-     'sign on two columns correlated at 0.997, so the fit is leaning on their difference, which is '
+     'sign on two columns correlated at 0.997, so the fit is leaning on their difference \u2014 '
+     'its interval is drawn in red for that reason \u2014 which is '
      'noise. That is unidentifiability, not an argument against fitting. The reading that stands '
      'is the other one: two independent implementations over 6,183 sections reproduce the result, '
      'so LIANA buys replication and throughput rather than information.'),
