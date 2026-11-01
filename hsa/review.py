@@ -186,6 +186,14 @@ def _safe(path):
 def run(workers: int = 8, limit: int | None = None) -> pd.DataFrame:
     m = pd.read_csv(RUNS / "sample_manifest.csv", low_memory=False)
     m = m[m.h5ad_path.notna()]
+    # Sections removed on purpose are not review findings. Without this, deleting 28 confirmed
+    # duplicates turned them into 28 "unreadable file" structural errors on the next run --
+    # the review reporting the atlas's own housekeeping back to it as damage.
+    if "verdict" in m.columns:
+        removed = m.verdict.eq("duplicate")
+        if removed.any():
+            logger.info("skipping %d sections removed as duplicates", int(removed.sum()))
+            m = m[~removed]
     if limit:
         m = m.head(limit)
     key = ["source", "accession", "sample_id", "technology_resolved", "tissue"]
