@@ -124,7 +124,7 @@ h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
    table is not clipped by that table. */
 [data-hint] { position: relative; }
 h3 > .hintwrap, td > .hintwrap { margin-left: 6px; }
-.hintwrap { display: inline-flex; align-items: baseline; gap: 6px; vertical-align: baseline; }
+.hintwrap { position: relative; display: inline-flex; align-items: baseline; gap: 6px; vertical-align: baseline; }
 button.hint { flex: none; -webkit-appearance: none; appearance: none; cursor: help;
   width: 15px; height: 15px; padding: 0; border-radius: 50%; align-self: center;
   border: 1px solid var(--line); background: var(--panel); color: var(--muted);
@@ -138,7 +138,12 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
 .headline button.hint:hover, .headline button.hint:focus-visible,
 .headline button.hint[aria-expanded="true"] { background: rgba(255,255,255,.3);
   border-color: #fff; color: #fff; }
-.hintbox { position: fixed; left: 0; top: 0; z-index: 60; width: max-content;
+/* Positioned relative to its own trigger, so the tooltip is in the right place with no
+   script at all. The previous version was position:fixed at 0,0 and depended on a pointerover
+   handler to place it -- any hover the handler missed put the box in the corner of the
+   viewport, which is what "the hover doesn't work" looked like. Script now only nudges a box
+   that would overflow the right edge. */
+.hintbox { position: absolute; top: calc(100% + 7px); left: 0; z-index: 60; width: max-content;
   max-width: min(310px, calc(100vw - 24px)); padding: 10px 13px; background: var(--panel);
   color: var(--muted); border: 1px solid var(--line); border-radius: 11px;
   box-shadow: var(--shadow-lift); text-align: left; white-space: normal;
@@ -233,6 +238,8 @@ body::before { animation: drift 34s ease-in-out infinite; will-change: transform
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lockup img { filter: invert(1) brightness(1.6); } }
 :root[data-theme="dark"] .lockup img { filter: invert(1) brightness(1.6); }
 .lockup span { color: var(--muted); font-size: 0.8rem; }
+.tablebox:has([data-hint]:hover), .tablebox:has([data-hint].open),
+.tablebox:has([data-hint]:focus-within) { overflow: visible; }
 .tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
 table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
 th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -262,9 +269,13 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
       __HSA_LOGO__
       <div>
       <h1>Human Spatial Atlas <span>HSA</span></h1>
-      <div class="sub">Two things, built together: <b>the Atlas</b> &mdash; public human spatial transcriptomics,
-      downloaded per sample as cell- or spot-by-gene matrices with coordinates and harmonised metadata &mdash; and
-      <b>the Agents</b> that find, fetch and curate it, and keep doing so as new data is deposited.</div>
+      <div class="sub"><b>The Atlas</b>: public human spatial transcriptomics, curated per sample.
+      <b>The Agents</b>: the pipeline that keeps it current.<span class="hintwrap" data-hint><button
+      class="hint" type="button" aria-expanded="false" aria-describedby="hintWhat"
+      aria-label="What is in the Atlas">i</button><span class="hintbox" role="tooltip" id="hintWhat"
+      >Every sample is downloaded as a cell- or spot-by-gene matrix with coordinates and metadata
+      harmonised to UBERON, MONDO, HsapDv and HANCESTRO. The agents find, fetch and curate it, and
+      re-run as new data is deposited.</span></span></div>
       </div>
     </div>
     <div class="hdr-right">
@@ -330,29 +341,29 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <h2>Consistency review <span class="count" id="reviewNote"></span></h2>
     <div class="grid2">
       <div><h3>Structural integrity</h3><div class="bars" id="revErr"></div></div>
-      <div><h3>Conventions the corpus does not share</h3><div class="bars" id="revSplit"></div></div>
+      <div><h3>Conventions not shared</h3><div class="bars" id="revSplit"></div></div>
     </div>
   </section>
 
   <section class="panel">
-    <h2>Curation outcome, all recorded datasets</h2>
+    <h2>Curation outcome<span class="count">all recorded datasets</span></h2>
     <div class="funnel" id="funnel" role="img" aria-label="Datasets by verdict"></div>
     <div class="legend" id="funnelLegend"></div>
   </section>
 
   <section class="grid3">
-    <div class="panel"><h2>Ready datasets by technology</h2><div class="bars" id="byTech"></div></div>
-    <div class="panel"><h2>Ready datasets by source</h2><div class="bars" id="bySource"></div></div>
-    <div class="panel"><h2>Ready datasets by tissue (top 14)</h2><div class="bars" id="byTissue"></div></div>
+    <div class="panel"><h2>By technology</h2><div class="bars" id="byTech"></div></div>
+    <div class="panel"><h2>By source</h2><div class="bars" id="bySource"></div></div>
+    <div class="panel"><h2>By tissue<span class="count">top 14</span></h2><div class="bars" id="byTissue"></div></div>
   </section>
 
   <section class="panel" id="metaPanel">
-    <h2>Sample metadata, harmonised to UBERON / MONDO / HsapDv / HANCESTRO<span
+    <h2>Sample metadata<span
       class="hintwrap" data-hint><button class="hint" type="button" aria-expanded="false"
       aria-describedby="metaSub" aria-label="What is counted here">i</button><span
       class="hintbox" role="tooltip" id="metaSub"></span></span></h2>
     <div class="grid3">
-      <div><h3>Field completeness (% of human samples)</h3><div class="bars" id="mComplete"></div></div>
+      <div><h3>Field completeness</h3><div class="bars" id="mComplete"></div></div>
       <div><h3>What the matrix holds<span class="hintwrap" data-hint><button class="hint"
         type="button" aria-expanded="false" aria-describedby="hintMatrix"
         aria-label="How this is determined">i</button><span class="hintbox" role="tooltip"
@@ -436,15 +447,19 @@ request.</span></span>
   };
   // The box is position:fixed, so a box inside a scrolling table is not clipped
   // by it; it is placed from its trigger and kept inside the viewport.
+  // Progressive enhancement only: CSS already puts the box under its trigger. This shifts it
+  // left when it would run off the right edge, and flips it above when there is no room below.
   function placeHint(w) {
     if (!w || !w.isConnected) { hintHot = null; return; }
-    const box = w.querySelector(":scope > .hintbox"), trg = w.querySelector("button") || w.querySelector("a");
-    if (!box || !trg) return;
-    const r = trg.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight;
-    let y = r.bottom + 7;
-    if (y + bh > innerHeight - 12 && r.top - 7 - bh > 12) y = r.top - 7 - bh;
-    box.style.left = Math.max(12, Math.min(r.left, innerWidth - 12 - bw)) + "px";
-    box.style.top = Math.max(8, y) + "px";
+    const box = w.querySelector(":scope > .hintbox");
+    if (!box) return;
+    box.style.left = ""; box.style.top = "";
+    const b = box.getBoundingClientRect();
+    const over = b.right - (innerWidth - 12);
+    if (over > 0) box.style.left = -Math.min(over, b.left - 12) + "px";
+    if (b.bottom > innerHeight - 12 && b.top - b.height - 14 > 12) {
+      box.style.top = "auto"; box.style.bottom = "calc(100% + 7px)";
+    } else { box.style.bottom = ""; }
   }
   const hintTouch = (e) => {
     const w = e.target.closest && e.target.closest("[data-hint]");
