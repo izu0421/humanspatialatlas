@@ -150,7 +150,12 @@ def headline():
         # row order and demonstrably random) stayed in the headline while the load panel excluded
         # it.
         if "verdict" in mm.columns:
-            on_disk -= set(map(tuple, mm.loc[mm.verdict.eq("quarantined"), kk].values))
+            # "duplicate" belongs here with "quarantined": both are sections the atlas has
+            # decided not to count. Without it the headline kept counting 28 re-deposits whose
+            # files had already been deleted, and reported MORE units after a dedupe than
+            # before it.
+            on_disk -= set(map(tuple, mm.loc[mm.verdict.isin(["quarantined", "duplicate"]),
+                                             kk].values))
         k = list(zip(hum.source.astype(str), hum.accession.astype(str), hum.sample_id.astype(str)))
         hum = hum[[x in on_disk for x in k]]
     ok = hum[hum.status.eq("ok") & hum.n_cells.notna()].copy()
