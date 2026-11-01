@@ -6,7 +6,7 @@
 /* Layout: one column of stacked panels; summary tiles -> funnel -> breakdown grid -> coverage -> searchable table -> source registry.
    Palette borrows from H&E: hematoxylin indigo as accent, eosin pink as secondary, violet-biased neutrals. */
 :root {
-  --bg: #f6f6fa; --panel: #ffffff; --fg: #1d1d2e; --muted: #5d5f78; --line: #e1e1ec;
+  --bg: #f6f6fa; --panel-solid: #fff; --panel: #ffffff; --fg: #1d1d2e; --muted: #5d5f78; --line: #e1e1ec;
   --accent: #3a3f9a; --accent-soft: #e4e5f6; --eosin: #c24d7a; --eosin-soft: #f7e3ec;
   --ok: #2f7d4f; --ok-soft: #e1f1e7; --warn: #a86a0c; --warn-soft: #f8ecd6; --bad: #b2412f; --bad-soft: #f6e1dc;
   --grey: #7a7c90; --grey-soft: #ececf2;
@@ -48,7 +48,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto 0; height: 560px; b
 .brand > div { min-width: 0; }
 .logo { width: 68px; height: 68px; flex: none; filter: drop-shadow(0 4px 10px rgba(58,63,154,.22)); }
 @media (max-width: 520px) { .logo { width: 48px; height: 48px; } }
-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 28px; }
+header { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 28px; }
 .hdr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
 .hdr-right .tl { height: 26px; width: auto; }
 .tabs { display: flex; gap: 4px; margin: 2px 0 14px; border-bottom: 1px solid var(--line); }
@@ -73,7 +73,7 @@ h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .headline::after { content: ""; position: absolute; inset: auto -60px -120px auto; width: 320px; height: 320px;
   border-radius: 50%; background: rgba(255,255,255,.07); }
 .headline b { display: block; font: 700 clamp(1.3rem, 2.9vw, 2.05rem)/1.25 var(--f-display);
-  font-variant-numeric: tabular-nums; letter-spacing: -0.015em; text-wrap: balance; }
+  letter-spacing: -0.015em; text-wrap: balance; }
 .headline .n { color: #fff; }
 .headline .fine { margin-top: 13px; position: relative; }
 .stack { display: flex; height: 18px; border-radius: 3px; overflow: hidden; background: var(--grey-soft); }
@@ -88,7 +88,7 @@ h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   letter-spacing: .09em; margin-bottom: 10px; }
 .agentsNode > b { color: var(--accent); } .atlasNode > b { color: var(--teal); }
 .link { width: 120px; height: auto; align-self: center; }
-.atlasStat b { display: block; font: 700 1.5rem/1.15 var(--f-display); font-variant-numeric: tabular-nums;
+.atlasStat b { display: block; font: 700 1.5rem/1.15 var(--f-display);
   color: var(--teal); letter-spacing: -0.02em; }
 .atlasStat span { display: block; color: var(--muted); font-size: 0.78rem; margin-bottom: 9px; }
 .hintbox .lt i, .hintbox .la i { display: inline-block; width: 16px; height: 2px;
@@ -144,7 +144,9 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
    viewport, which is what "the hover doesn't work" looked like. Script now only nudges a box
    that would overflow the right edge. */
 .hintbox { position: absolute; top: calc(100% + 7px); left: 0; z-index: 60; width: max-content;
-  max-width: min(310px, calc(100vw - 24px)); padding: 10px 13px; background: var(--panel);
+  max-width: min(310px, calc(100vw - 24px)); padding: 10px 13px;
+  /* opaque: --panel carries alpha, and over the hero the spots showed through the text */
+  background: var(--panel-solid, #fff);
   color: var(--muted); border: 1px solid var(--line); border-radius: 11px;
   box-shadow: var(--shadow-lift); text-align: left; white-space: normal;
   font: 400 0.78rem/1.5 var(--f-body); letter-spacing: normal; text-transform: none;
@@ -153,6 +155,7 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
 [data-hint]:hover > .hintbox, [data-hint]:focus-within > .hintbox,
 [data-hint].open > .hintbox { opacity: 1; transform: none; }
 .hintbox b { color: var(--fg); font-weight: 600; }
+.hintbox code { font: 0.78rem var(--f-mono); }
 .hintbox .key { display: block; margin-top: 4px; }
 .hintbox .swatch { margin: 0 5px 0 0; }
 @media (prefers-reduced-motion: reduce) { .hintbox { transition: none; } }
@@ -161,14 +164,16 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
    A 2D canvas, no library and no network. Drawn at Visium's real geometry: 55 um
    spots on a 100 um hexagonal lattice, so the gaps are the ones a real array has.
    Three serial sections of one block, sharing one registered lattice. */
-.heroband { margin-top: -14px; }
+/* the band follows the header in the document, so without an explicit low z-index the
+   canvas painted over any tooltip opening downward out of the header */
+.heroband { margin-top: -14px; position: relative; z-index: 0; }
 .heroband canvas { display: block; width: 100%; height: 212px; }
 @media (max-width: 760px) { .heroband canvas { height: 150px; } }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 15px 17px;
   display: grid; gap: 3px; box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease; }
 .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
-.kpi b { font: 700 1.75rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.kpi b { font: 700 1.75rem/1.1 var(--f-display); letter-spacing: -0.02em; }
 .kpi span { color: var(--muted); font-size: 0.88rem; }
 .msbtn { display:inline-block; padding:9px 17px; border:1px solid var(--accent);
   border-radius:7px; color:var(--accent); text-decoration:none; font-weight:600;
@@ -191,7 +196,8 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
 .bar .fill { position: absolute; inset: 0 auto 0 0; border-radius: 5px;
   background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 72%, var(--eosin))); }
 .bar .fill.alt { background: linear-gradient(90deg, var(--eosin), color-mix(in srgb, var(--eosin) 70%, var(--accent))); }
-.bar .val { position: absolute; right: 6px; top: 0; line-height: 18px; font: 0.78rem var(--f-mono); color: var(--fg); font-variant-numeric: tabular-nums; }
+.bar .val { position: absolute; right: 6px; top: 0; line-height: 18px; font: 0.78rem var(--f-mono); color: var(--fg); font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 3px var(--panel), 0 0 3px var(--panel), 0 0 2px var(--panel); }
 
 .cov { display: grid; gap: 8px; }
 h3 { font: 600 0.78rem/1.2 var(--f-display); color: var(--fg); margin: 4px 0 8px; }
@@ -883,7 +889,7 @@ request.</span></span>
           DLY.push(0.95 * ((x / boxW) + 0.5) + 0.26 * rnd());
           const v = domain(x * 0.34, y * 0.34, 0);
           BK.push(!lit ? 2 : rnd() < 0.035 ? 3 : v > 0.1 ? 0 : v < -0.1 ? 1 : 2);
-          EX.push(lit ? expr(x, y, 0) : 0.42);
+          EX.push(lit ? 0.82 + 0.18 * expr(x, y, 0) : 0.2);
         }
       }
       N = TR.length;
