@@ -64,9 +64,20 @@ def run(limit_organ: list[str] | None = None, force: bool = False,
         max_sections: int | None = None) -> pd.DataFrame:
     c = plan(limit_organ)
     done = set()
-    if LOG.exists() and not force:
-        done = set(pd.read_csv(LOG).path)
-    rows, n = [], 0
+    prior = pd.DataFrame()
+    if LOG.exists():
+        prior = pd.read_csv(LOG)
+        if not force:
+            # Only successes are skipped. Keying on every logged path would make a failure
+            # permanent: the 41 sections that died on a missing cellxgene_census would have
+            # been skipped for good on the next run rather than retried.
+            done = set(prior.loc[prior.status == "ok", "path"])
+            n_retry = int((prior.status != "ok").sum())
+            if n_retry:
+                logger.info("retrying %d previously failed sections", n_retry)
+    rows = prior.to_dict("records") if len(prior) else []
+    rows = [r for r in rows if r.get("status") == "ok"]
+    n = 0
     groups = sorted(c.groupby(["organ", "panel"]), key=lambda kv: -len(kv[1]))
     for gi, ((organ, pk), sub) in enumerate(groups, 1):
         logger.info("[%d/%d] %s panel %s: %d sections", gi, len(groups), organ, pk, len(sub))

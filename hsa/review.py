@@ -19,6 +19,7 @@ A check is only worth having if it can fail, so each one states what it would ca
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 import re
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -244,6 +245,44 @@ def consistency(d: pd.DataFrame) -> dict:
     return out
 
 
+
+def _duplicate_section() -> list[str]:
+    """Report re-deposited samples as part of the review.
+
+    This is here, and not only in dedupe.py, because a duplicate is a consistency defect like
+    any other: it is invisible in a per-file check, it inflates every count drawn from the
+    manifest, and nothing else in the review would surface it. Running it here means a new
+    mirror shows up in the next report rather than in whatever analysis trips over it.
+
+    The expensive part (hashing expression values) runs only for the handful of candidates, so
+    this adds seconds to a review that already reads every file.
+    """
+    from . import dedupe
+
+    L = ["## Re-deposited samples", ""]
+    try:
+        d = dedupe.cross_archive()
+    except Exception as e:  # a review must still produce a report if this rule fails
+        return L + [f"Rule did not run: {str(e)[:120]}", ""]
+    if not len(d):
+        return L + ["None: no archive sample appears under more than one accession.", ""]
+
+    live = d[~d.h5ad_path.map(lambda p: Path(p).exists())] if "h5ad_path" in d else d
+    L.append(f"{len(d)} sections re-deposit a sample already held under another accession "
+             f"({d.n_cells.sum():,.0f} units). {len(live)} have already been removed.")
+    L.append("")
+    L.append("Identity is the archive accession embedded in the sample id (GSM, E-MTAB, SRS), "
+             "which survives reprocessing; the shape key used by the primary rule does not. "
+             "`identical` means the expression values were hashed and matched; `reprocessed` "
+             "means the same archive sample arrived with a different cell count.")
+    L.append("")
+    for kind, g in d.groupby("kind"):
+        L.append(f"- **{len(g)}** {kind} — {g.n_cells.sum():,.0f} units, "
+                 f"from {', '.join(sorted(set(g.accession))[:4])}")
+    L.append("")
+    return L
+
+
 def report(d: pd.DataFrame | None = None, path=REPORT) -> str:
     import json
     if d is None:
@@ -266,6 +305,8 @@ def report(d: pd.DataFrame | None = None, path=REPORT) -> str:
         L.append("")
         L += [f"- **{v}** — {k}" for k, v in ec.most_common(15)]
     L.append("")
+
+    L += _duplicate_section()
 
     warn = d[d.n_warnings > 0]
     L += ["## Warnings", "", f"{len(warn):,} samples carry at least one.", ""]
