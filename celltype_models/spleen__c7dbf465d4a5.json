@@ -1,0 +1,28 @@
+{
+ "organ": "spleen",
+ "panel_key": "c7dbf465d4a5",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (89 Census types rolled up)",
+ "n_genes_requested": 5093,
+ "n_genes_used": 5067,
+ "n_ref_cells": 22007,
+ "n_types": 16,
+ "types": [
+  "B cell",
+  "NK/ILC",
+  "T cell",
+  "dendritic cell",
+  "endothelial cell",
+  "fibroblast",
+  "macrophage",
+  "mast cell",
+  "mesothelial cell",
+  "monocyte",
+  "neutrophil",
+  "plasma cell",
+  "progenitor",
+  "progenitor cell",
+  "smooth muscle",
+  "unknown"
+ ]
+}

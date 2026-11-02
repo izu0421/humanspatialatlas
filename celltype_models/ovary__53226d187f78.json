@@ -1,0 +1,25 @@
+{
+ "organ": "ovary",
+ "panel_key": "53226d187f78",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (26 Census types rolled up)",
+ "n_genes_requested": 380,
+ "n_genes_used": 379,
+ "n_ref_cells": 17854,
+ "n_types": 13,
+ "types": [
+  "NK/ILC",
+  "T cell",
+  "endothelial cell",
+  "epithelial cell",
+  "fibroblast",
+  "granulosa cell",
+  "leukocyte",
+  "macrophage",
+  "pericyte",
+  "primordial germ cell",
+  "progenitor",
+  "smooth muscle",
+  "theca cell"
+ ]
+}

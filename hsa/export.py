@@ -341,6 +341,61 @@ def hd_cells():
     return out
 
 
+def annotation():
+    """What the cell-type annotation actually produced, read from runs/celltype_counts.csv.
+
+    The composition is the point of the Annotate stage and it was not on the page at all: the
+    roadmap tile described the method while the numbers lived only in a log. Built from the
+    per-section counts rather than from the log's dominant-type column, because "the top type in
+    each section" and "the composition of the atlas" are different quantities.
+
+    frac_agrees travels with it and is not optional decoration. CellTypist's own per-cell
+    probability saturates on a targeted panel -- 97% of cells above 0.999 on the first section
+    tested -- so it carries no information and is deliberately not shipped as a confidence. What
+    does move is whether a cell's own call survived its neighbourhood consensus, and at a median
+    of 0.60 that means roughly 40% of cells were relabelled by majority voting. A reader given
+    201M typed cells without that number would take the labels as firmer than they are.
+    """
+    f = RUNS / "celltype_counts.csv"
+    if not f.exists():
+        return {}
+    d = pd.read_csv(f)
+    if not len(d):
+        return {}
+    tot = int(d.n.sum())
+    s = d.groupby("cell_type").n.sum().sort_values(ascending=False)
+    # Top classes by name, then one honest aggregate for the tail. Truncating silently would
+    # make the bars sum to less than the headline with no cause a reader could find.
+    head = s.head(14)
+    tail = s.iloc[14:]
+    comp = [[k, int(v)] for k, v in head.items()]
+    if len(tail):
+        comp.append([f"{len(tail)} rarer types", int(tail.sum())])
+    sec = d.drop_duplicates("path")
+    by_organ = (d.groupby("organ")
+                 .agg(sections=("path", "nunique"), cells=("n", "sum"),
+                      types=("cell_type", "nunique"))
+                 .sort_values("cells", ascending=False))
+    return {
+        "cells": tot,
+        "sections": int(d.path.nunique()),
+        "organs": int(d.organ.nunique()),
+        "models": int(d.celltype_model.nunique()),
+        "types": int(d.cell_type.nunique()),
+        "composition": comp,
+        "by_organ": [[str(i), int(r.sections), int(r.cells), int(r.types)]
+                     for i, r in by_organ.head(14).iterrows()],
+        # the quality read-outs, as a distribution rather than one flattering number
+        "agrees_median": round(float(sec.celltype_frac_agrees.median()), 3),
+        "agrees_q1": round(float(sec.celltype_frac_agrees.quantile(0.25)), 3),
+        "agrees_q3": round(float(sec.celltype_frac_agrees.quantile(0.75)), 3),
+        "genes_median": int(sec.celltype_n_genes_used.median()),
+        "genes_min": int(sec.celltype_n_genes_used.min()),
+        "genes_max": int(sec.celltype_n_genes_used.max()),
+        "thin_panels": int((sec.celltype_n_genes_used <= 100).sum()),
+    }
+
+
 def run():
     OUT.mkdir(exist_ok=True)
     # Rebuild the master sheet first: it joins the QC table, the biological labels, the panel and
@@ -350,6 +405,12 @@ def run():
         manifest.build()
     except Exception as e:                       # a dashboard refresh should not die on this
         print(f"warning: master sheet not rebuilt ({type(e).__name__}: {e})")
+    # Same reason: the cell-type composition on the page must not lag the annotation run.
+    try:
+        from . import celltype_counts
+        celltype_counts.build()
+    except Exception as e:
+        print(f"warning: cell-type counts not rebuilt ({type(e).__name__}: {e})")
     DASH.mkdir(exist_ok=True)
     ds, fs, src, cand = tables()
     cols = ["source", "accession", "title", "technology_norm", "technology", "tissue", "disease", "verdict", "verdict_curator",
@@ -433,6 +494,7 @@ def run():
         "hd_cells": hd_cells(),
         "load_status": load_status(),
         "review": review_summary(),
+        "annotation": annotation(),
     }
     from .logo import svg
     body = (TEMPLATE.read_text().replace("__HSA_LOGO__", svg(inline=True))

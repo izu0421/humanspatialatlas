@@ -343,6 +343,19 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <div class="bars pane" id="byHdCell"></div>
   </section>
 
+  <section class="panel" id="annotPanel" hidden>
+    <h2>Cell types <span class="count" id="annotNote"></span><span class="hintwrap" data-hint><button class="hint" type="button"
+      aria-expanded="false" aria-describedby="annotHint" aria-label="How these labels were made"
+      >i</button><span class="hintbox" role="tooltip" id="annotHint"></span></span></h2>
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-p="byCellType" role="tab">Composition</button>
+      <button class="tab" data-p="byOrgan" role="tab">By organ</button>
+    </div>
+    <div class="bars pane on" id="byCellType"></div>
+    <div class="bars pane" id="byOrgan"></div>
+    <p class="loopLabels" id="annotCaveat"></p>
+  </section>
+
   <section class="panel" id="reviewPanel" hidden>
     <h2>Consistency review <span class="count" id="reviewNote"></span></h2>
     <div class="grid2">
@@ -581,7 +594,11 @@ request.</span></span>
      "Tissue, disease, sex, age, development stage and ethnicity resolved against UBERON, MONDO, HsapDv and HANCESTRO. Sex is also inferred from the XIST:Y-gene ratio where the panel carries those genes \u2014 97% agreement with stated labels, abstaining when it cannot tell."],
     ["Derive", "what is unsaid", "M12 3a9 9 0 0 0-5 16.5V21h10v-1.5A9 9 0 0 0 12 3Zm-3 18h6",
      "Gene-panel identity by hashing the gene set, bin size from the bin grid, coordinate scale in microns, platform corrected from file evidence rather than the depositor\u2019s label, and Visium HD segmented from 2 \u00b5m bins into cells."],
-    ["Annotate", "per organ, per panel", "M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
+    // The caption carries the live count: this stage has run, and a tile that still reads only
+    // "per organ, per panel" describes a method where the page can now state a result.
+    ["Annotate", (D.annotation && D.annotation.sections)
+      ? fmt(D.annotation.sections) + " sections" : "per organ, per panel",
+     "M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
      "Cell types for every cell-resolution section, from a CellTypist model trained on CELLxGENE Census for that organ and restricted to that panel\u2019s own genes. A 20,000-gene model applied to a 477-gene Xenium panel would impute 97% of its input as zero and score on absence \u2014 and absence in a targeted panel means \u201cnot on the panel\u201d, not \u201cnot expressed\u201d."],
   ];
   $("agentFlow").innerHTML = STAGES.map(([name, cap, d, detail]) => {
@@ -626,9 +643,16 @@ request.</span></span>
       `<span class="val">${fmt(nc)} cells &middot; ${fmt(nf)} samples</span></span></div>`).join("");
   }
 
+  // Scoped to the clicked tab's OWN panel. While there was one tabbed panel a document-wide
+  // query was the same thing; with two it is not -- selecting a cell-type tab would switch off
+  // the technology panel's tabs and hide its visible pane.
   document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("on", x === t));
-    document.querySelectorAll(".pane").forEach((x) => x.classList.toggle("on", x.id === t.dataset.p));
+    const panel = t.closest(".panel");
+    panel.querySelectorAll(".tab").forEach((x) => x.classList.toggle("on", x === t));
+    panel.querySelectorAll(".pane").forEach((x) => x.classList.toggle("on", x.id === t.dataset.p));
+    // Only the technology panel carries a per-tab note; the cell-type panel keeps one caveat
+    // under both of its tabs.
+    if (panel.id !== "techPanel") return;
     $("techNote").innerHTML = t.dataset.p === "byLoad" ? _loadLegend
       : t.dataset.p === "byHdCell" ? _hdNote : TECH_HINT;
   }));
@@ -660,6 +684,54 @@ request.</span></span>
              `<span class="trk"><span class="stack">${parts}</span>` +
              `<span class="val">${fmt(a)} of ${fmt(n)}</span></span></div>`;
     }).join("");
+  }
+
+  // Cell types. The composition is the Annotate stage's actual output, and the page described
+  // the method while showing none of it. frac_agrees is rendered beside the counts, not below
+  // the fold: CellTypist's per-cell probability saturates on a targeted panel and carries no
+  // information, so the quantity that moves is whether a cell's own call survived its
+  // neighbourhood consensus -- at a median of 0.60, about 40% of cells did not.
+  const A = D.annotation || {};
+  if (A.cells) {
+    $("annotPanel").hidden = false;
+    $("annotNote").textContent =
+      fmt(A.cells) + " cells typed across " + fmt(A.sections) + " sections";
+    $("annotHint").innerHTML =
+      `<b>One model per organ, per panel.</b> A CellTypist model trained on CELLxGENE Census ` +
+      `for that organ and restricted to that panel\u2019s own genes \u2014 ` +
+      `${fmt(A.models)} models over ${fmt(A.organs)} organs. Census labels are far finer than a ` +
+      `targeted panel can support, so they are rolled up to major classes <i>before</i> the ` +
+      `reference is balanced; left fine, a hyper-specific subset gets the same weight as a real ` +
+      `population and the classifier scatters.`;
+
+    const mxC = Math.max(...A.composition.map((r) => r[1]));
+    $("byCellType").innerHTML = A.composition.map(([lab, n]) => {
+      const rare = lab.indexOf("rarer") >= 0;
+      return `<div class="bar"><span class="lab" title="${esc(lab)}">${esc(lab)}</span>` +
+        `<span class="trk"><span class="fill${rare ? " alt" : ""}" style="width:${(100 * n) / mxC}%"></span>` +
+        `<span class="val">${fmt(n)} &middot; ${((100 * n) / A.cells).toFixed(1)}%</span></span></div>`;
+    }).join("");
+
+    const mxO = Math.max(...A.by_organ.map((r) => r[2]));
+    $("byOrgan").innerHTML = A.by_organ.map(([org, nsec, ncell, ntype]) =>
+      `<div class="bar"><span class="lab" title="${esc(org)}">${esc(org)}</span>` +
+      `<span class="trk"><span class="fill" style="width:${(100 * ncell) / mxO}%"></span>` +
+      `<span class="val">${fmt(ncell)} cells &middot; ${fmt(nsec)} sections &middot; ${ntype} types</span>` +
+      `</span></div>`).join("");
+
+    $("annotCaveat").innerHTML =
+      `<span class="key"><b>How firm are these labels?</b> For a median section ` +
+      `<b>${(100 * A.agrees_median).toFixed(0)}%</b> of cells kept their own call once the ` +
+      `neighbourhood consensus was applied (quartiles ${(100 * A.agrees_q1).toFixed(0)}\u2013` +
+      `${(100 * A.agrees_q3).toFixed(0)}%) \u2014 so roughly two cells in five were relabelled ` +
+      `by majority voting. That, not the model\u2019s own probability, is the confidence to read: ` +
+      `on a targeted panel the probability saturates above 0.999 for almost every cell and tells ` +
+      `you nothing.</span>` +
+      `<span class="key"><b>The panel sets the ceiling.</b> Calls rest on a median of ` +
+      `<b>${fmt(A.genes_median)}</b> genes (${fmt(A.genes_min)}\u2013${fmt(A.genes_max)}); ` +
+      `${fmt(A.thin_panels)} sections carry 100 or fewer. ${fmt(A.types)} distinct types are ` +
+      `called in all, but a 50-gene panel and a 6,000-gene panel both produce a column named ` +
+      `<code>cell_type</code>, and they are not the same evidence.</span>`;
   }
 
   // The consistency review: every file asked the same questions. A minority convention is what

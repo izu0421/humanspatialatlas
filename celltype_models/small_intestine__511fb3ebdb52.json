@@ -1,0 +1,26 @@
+{
+ "organ": "small intestine",
+ "panel_key": "511fb3ebdb52",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (147 Census types rolled up)",
+ "n_genes_requested": 471,
+ "n_genes_used": 470,
+ "n_ref_cells": 19055,
+ "n_types": 14,
+ "types": [
+  "B cell",
+  "NK/ILC",
+  "T cell",
+  "dendritic cell",
+  "endothelial cell",
+  "epithelial cell",
+  "fibroblast",
+  "macrophage",
+  "monocyte",
+  "neuron",
+  "pericyte",
+  "plasma cell",
+  "progenitor",
+  "smooth muscle"
+ ]
+}

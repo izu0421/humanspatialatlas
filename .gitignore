@@ -20,3 +20,9 @@ data_stereo_pilot/
 # Organ reference matrices fetched from CELLxGENE Census (797 MB, regenerable with
 # `python -m hsa.annotate_run`). Data, not code.
 celltype_refs/
+
+# Trained CellTypist models: 24M of pickles, regenerable from the cached Census references.
+# The per-model .json metadata IS kept -- it records the organ, the panel, how many of the
+# panel genes the reference carried, the label granularity and the solver, which is the
+# provenance a reader needs and the pickle does not provide.
+celltype_models/*.pkl

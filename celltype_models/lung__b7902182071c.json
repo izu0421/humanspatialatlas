@@ -1,0 +1,29 @@
+{
+ "organ": "lung",
+ "panel_key": "b7902182071c",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (212 Census types rolled up)",
+ "n_genes_requested": 392,
+ "n_genes_used": 392,
+ "n_ref_cells": 22127,
+ "n_types": 17,
+ "types": [
+  "B cell",
+  "NK/ILC",
+  "Schwann cell",
+  "T cell",
+  "dendritic cell",
+  "endothelial cell",
+  "epithelial cell",
+  "fibroblast",
+  "macrophage",
+  "mast cell",
+  "monocyte",
+  "neuron",
+  "neutrophil",
+  "pericyte",
+  "plasma cell",
+  "progenitor",
+  "smooth muscle"
+ ]
+}

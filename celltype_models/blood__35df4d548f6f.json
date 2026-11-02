@@ -1,0 +1,22 @@
+{
+ "organ": "blood",
+ "panel_key": "35df4d548f6f",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (129 Census types rolled up)",
+ "n_genes_requested": 5001,
+ "n_genes_used": 4975,
+ "n_ref_cells": 21328,
+ "n_types": 10,
+ "types": [
+  "B cell",
+  "NK/ILC",
+  "T cell",
+  "dendritic cell",
+  "macrophage",
+  "mast cell",
+  "monocyte",
+  "neutrophil",
+  "plasma cell",
+  "progenitor"
+ ]
+}

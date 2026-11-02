@@ -1,0 +1,22 @@
+{
+ "organ": "urinary bladder",
+ "panel_key": "e5cf0598914c",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (18 Census types rolled up)",
+ "n_genes_requested": 377,
+ "n_genes_used": 373,
+ "n_ref_cells": 11782,
+ "n_types": 10,
+ "types": [
+  "T cell",
+  "dendritic cell",
+  "endothelial cell",
+  "epithelial cell",
+  "fibroblast",
+  "intermediate cell of urothelium",
+  "macrophage",
+  "monocyte",
+  "smooth muscle",
+  "umbrella cell of urothelium"
+ ]
+}

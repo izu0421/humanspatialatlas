@@ -1,0 +1,22 @@
+{
+ "organ": "vasculature",
+ "panel_key": "13eae6051294",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (25 Census types rolled up)",
+ "n_genes_requested": 1178,
+ "n_genes_used": 941,
+ "n_ref_cells": 14578,
+ "n_types": 10,
+ "types": [
+  "T cell",
+  "endothelial cell",
+  "fibroblast",
+  "macrophage",
+  "mast cell",
+  "monocyte",
+  "neutrophil",
+  "pericyte",
+  "smooth muscle",
+  "unknown"
+ ]
+}

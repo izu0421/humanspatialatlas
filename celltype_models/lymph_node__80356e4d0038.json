@@ -1,0 +1,26 @@
+{
+ "organ": "lymph node",
+ "panel_key": "80356e4d0038",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (92 Census types rolled up)",
+ "n_genes_requested": 477,
+ "n_genes_used": 395,
+ "n_ref_cells": 21089,
+ "n_types": 14,
+ "types": [
+  "B cell",
+  "NK/ILC",
+  "T cell",
+  "dendritic cell",
+  "endothelial cell",
+  "fibroblast",
+  "macrophage",
+  "mast cell",
+  "monocyte",
+  "neutrophil",
+  "pericyte",
+  "plasma cell",
+  "progenitor cell",
+  "unknown"
+ ]
+}
