@@ -23,6 +23,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import re
 from pathlib import Path
 
 import numpy as np
@@ -105,6 +106,23 @@ def coarsen(labels) -> "np.ndarray":
         else:
             out.append(lab)
     return np.array(out, dtype=object)
+
+
+# Targeted-panel files carry the platform's control probes in var_names alongside the genes.
+# They are not genes: NegControlProbe/NegControlCodeword/UnassignedCodeword on Xenium, Blank-N on
+# MERSCOPE, DEPRECATED_ENSG* on whole-transcriptome references. 590 of 7,705 sections (7.7%) carry
+# them, 307,079 columns in all, and one 541-column Xenium file is 50 genes padded with 491 probes.
+# They never reach a model (Census has no such feature, so `present` drops them), but they DO
+# inflate every count taken off var_names -- which is how a 50-gene panel passed a MIN_GENES=50
+# gate and then crashed PCA. Counted and reported, not silently dropped from the panel hash:
+# re-hashing would change the identity of 137 trained models to merge 5 redundant ones.
+CONTROL_PROBE = re.compile(
+    r"^(neg_?control|unassigned|blank[-_]?\d|deprecated_ensg|intergenic|antisense_)", re.I)
+
+
+def real_genes(names) -> list[str]:
+    """The measured genes among var_names, with the platform's control probes removed."""
+    return [str(g) for g in names if not CONTROL_PROBE.match(str(g))]
 
 
 def panel_key(genes: list[str]) -> str:
@@ -349,12 +367,74 @@ def _patch_celltypist_sklearn() -> str:
     return "multinomial (multi_class dropped)"
 
 
+def _patch_celltypist_pca() -> str:
+    """CellTypist's majority-voting over-clustering hardcodes 50 principal components
+    (classifier.py: `pp.pca(adata, n_comps=50)`, then `pp.neighbors(adata, n_pcs=50)`).
+
+    PCA requires n_comps STRICTLY below min(n_cells, n_genes), so a section whose usable gene
+    count is 50 or fewer raises and the whole annotation dies. 27 sections of this corpus did:
+    all of them 50-gene Xenium custom panels padded out to 541 columns with control probes
+    (see CONTROL_PROBE). It is not a small-section failure -- those sections carry 17k-465k
+    cells, and the limiting dimension is the panel, not the cells. scanpy's own
+    filter_genes(min_cells=5) inside the same function can take the count down by one more,
+    which is why the identical cause also surfaced as "between 1 and 49".
+
+    So the component count is clamped to what the data can support rather than assumed. On any
+    ordinary panel min(n_cells, n_genes) is far above 50 and this changes nothing; on a thin
+    panel it is the difference between an annotation and an exception. A clamp is NOT a
+    silent improvement, though: fewer components means a coarser over-clustering, so the
+    number used is recorded on the section and warned about when it is below 50.
+    """
+    import celltypist.classifier as _cls
+    import scanpy as sc
+
+    if getattr(_cls.Classifier._construct_neighbor_graph, "_hsa_shim", False):
+        return "pca n_comps clamped to min(50, n_genes-1, n_cells-1)"
+
+    original = _cls.Classifier._construct_neighbor_graph
+
+    def _graph(adata, use_GPU: bool = False):
+        # The GPU path is a different code path in celltypist and is never taken here
+        # (annotate_one does not pass use_GPU); hand it back rather than reimplement it blind.
+        if use_GPU:
+            return original(adata, use_GPU)
+        if "log1p" in adata.uns and isinstance(adata.uns["log1p"], dict):
+            adata.uns["log1p"].setdefault("base", None)
+        if "X_pca" not in adata.obsm:
+            if adata.X[:1000].min() < 0:
+                adata = adata.raw.to_adata()
+            if "highly_variable" not in adata.var:
+                sc.pp.filter_genes(adata, min_cells=5)
+                sc.pp.highly_variable_genes(adata, n_top_genes=min(2500, adata.n_vars))
+            adata = adata[:, adata.var.highly_variable].copy()
+            sc.pp.scale(adata, max_value=10)
+            n_comps = min(50, adata.n_vars - 1, adata.n_obs - 1)
+            if n_comps < 2:
+                raise ValueError(f"{adata.n_vars} usable genes x {adata.n_obs} cells cannot "
+                                 "support an over-clustering; refusing to annotate")
+            if n_comps < 50:
+                logger.warning("thin panel: %d usable genes -> PCA clamped to %d components "
+                               "(celltypist assumes 50)", adata.n_vars, n_comps)
+            sc.pp.pca(adata, n_comps=n_comps)
+        n_pcs = min(50, adata.obsm["X_pca"].shape[1])
+        sc.pp.neighbors(adata, n_neighbors=10, n_pcs=n_pcs)
+        _patch_celltypist_pca.last_n_comps = int(adata.obsm["X_pca"].shape[1])
+        return (adata.obsm["X_pca"], adata.obsp["connectivities"],
+                adata.obsp["distances"], adata.uns["neighbors"])
+
+    _graph._hsa_shim = True
+    _cls.Classifier._construct_neighbor_graph = staticmethod(_graph)
+    logger.info("celltypist over-clustering shimmed: PCA components clamped to the data")
+    return "pca n_comps clamped to min(50, n_genes-1, n_cells-1)"
+
+
 def train(organ: str, genes: list[str], seed: int = 0, force: bool = False):
     """Train (or load) a CellTypist model for one organ restricted to one panel."""
     import celltypist
     import scanpy as sc
 
     solver_note = _patch_celltypist_sklearn()
+    pca_note = _patch_celltypist_pca()
 
     MODELS.mkdir(parents=True, exist_ok=True)
     key = panel_key(genes)
@@ -390,6 +470,8 @@ def train(organ: str, genes: list[str], seed: int = 0, force: bool = False):
     meta = {"organ": organ, "panel_key": key, "solver": solver_note,
             "label_granularity": f"coarse ({n_fine} Census types rolled up)",
             "n_genes_requested": len(genes),
+            "n_control_probes": len(genes) - len(real_genes(genes)),
+            "over_clustering": pca_note,
             "n_genes_used": len(present), "n_ref_cells": int(ref.n_obs),
             "n_types": int(ref.obs.cell_type.nunique()),
             "types": sorted(map(str, ref.obs.cell_type.unique()))}
@@ -408,9 +490,13 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
     a = ad.read_h5ad(path)
     a.var_names_make_unique()
     genes = [str(g) for g in a.var_names]
-    model, meta = train(organ, genes)
+    model, meta = train(organ, genes)      # also installs the celltypist shims
+    _patch_celltypist_pca()                # idempotent; train() may have returned a cached model
 
     use = [g for g in model.features if g in set(a.var_names)]
+    # Cleared before every section, so the component count written to the file below is this
+    # section's own and never a leftover from the previous one in the same process.
+    _patch_celltypist_pca.last_n_comps = None
     sub = a[:, use].copy()
     sc.pp.normalize_total(sub, target_sum=1e4)
     sc.pp.log1p(sub)
@@ -453,7 +539,8 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
                      ("celltype_n_genes_used", len(use)),
                      ("celltype_n_types", meta["n_types"]),
                      ("celltype_solver", meta.get("solver", "")),
-                     ("celltype_frac_agrees", float(agrees.mean()))):
+                     ("celltype_frac_agrees", float(agrees.mean())),
+                     ("celltype_n_pcs", int(_patch_celltypist_pca.last_n_comps or 0))):
             if k in u:
                 del u[k]
             if isinstance(v, str):
@@ -464,4 +551,5 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
     return {"path": path, "organ": organ, "n_cells": int(a.n_obs), "n_genes_used": len(use),
             "n_types_called": int(vc.size), "top_type": str(vc.index[0]),
             "top_frac": float(vc.iloc[0] / len(calls)),
-            "frac_agrees": float(agrees.mean()), "model": meta["panel_key"]}
+            "frac_agrees": float(agrees.mean()), "model": meta["panel_key"],
+            "n_pcs": int(_patch_celltypist_pca.last_n_comps or 0)}
