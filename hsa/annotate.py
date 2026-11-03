@@ -125,6 +125,112 @@ def real_genes(names) -> list[str]:
     return [str(g) for g in names if not CONTROL_PROBE.match(str(g))]
 
 
+# A var_names entry is not guaranteed to be a gene symbol, and nothing downstream checked.
+# Two forms in this corpus make a whole section unannotatable while failing loudly enough to look
+# like a thin panel:
+#
+#   * Xenium Prime probe ids. GSE315411 is 351,166 cells x 5,481 genes and matched 0 of 5,481
+#     against Census -- reported as "only 0 of 5481 panel genes in the lung reference", which
+#     reads as a coverage problem and is a string problem. It carries TWO decorations, not one:
+#     480 names as "ABHD16A-v1-prime" and 5,001 as "A2ML1-prime-with-v1-seg". A regex written
+#     for the first form silently left 91% of the panel unresolved, so the rule strips any run
+#     of trailing prime/with/seg/v<n> tokens and refuses to strip unless the removed run
+#     actually names a probe version -- a gene is never called "FOO-seg", but stripping a bare
+#     "-seg" on that assumption is how this kind of fix goes wrong.
+#   * Ensembl ids: "ENSG00000166535". The pipeline already DETECTS this and writes
+#     uns/hsa/gene_id_style = "ensembl"; annotate.py simply never read it.
+#
+# Normalisation is identity for every one of the 1,453 sections annotated before this was added,
+# so no existing panel_key or trained model changes.
+PROBE_SUFFIX = re.compile(r"((?:[-_](?:prime|with|seg|v\d+))+)$", re.I)
+_PROBE_REQUIRED = re.compile(r"prime|v\d+", re.I)   # the run must name a version, not just "-seg"
+ENSEMBL_ID = re.compile(r"^ENSG\d{11}(?:\.\d+)?$")
+_ens_map: dict[str, str] | None = None
+
+
+def ensembl_symbol_map() -> dict[str, str]:
+    """Ensembl gene id -> symbol, built from the cached Census references.
+
+    No network call: every reference in celltype_refs/ already carries a `feature_id` column
+    beside its symbol index, because census_reference() promotes feature_name to the index and
+    keeps feature_id. The union over the organs fetched so far is the map. Census is only
+    consulted if that union turns out not to cover the panel in hand.
+    """
+    global _ens_map
+    if _ens_map is not None:
+        return _ens_map
+    import anndata as ad
+
+    m: dict[str, str] = {}
+    for f in sorted(REFS.glob("*.h5ad")):
+        try:
+            a = ad.read_h5ad(f, backed="r")
+        except Exception:
+            continue
+        if "feature_id" not in a.var.columns:
+            continue
+        for sym, fid in zip(a.var_names, a.var["feature_id"]):
+            m.setdefault(str(fid).split(".")[0], str(sym))
+    logger.info("Ensembl->symbol map: %d ids from %d cached references", len(m), len(list(REFS.glob("*.h5ad"))))
+    _ens_map = m
+    return m
+
+
+def _census_symbol_map() -> dict[str, str]:
+    """The full Census feature table, for when the cached references do not cover a panel."""
+    import cellxgene_census
+
+    with cellxgene_census.open_soma(census_version="stable") as census:
+        var = cellxgene_census.get_var(census, "Homo sapiens",
+                                       column_names=["feature_id", "feature_name"])
+    m = {str(i).split(".")[0]: str(n) for i, n in zip(var.feature_id, var.feature_name)}
+    logger.info("Ensembl->symbol map widened from Census: %d ids", len(m))
+    return m
+
+
+def normalise_genes(names) -> list[str]:
+    """var_names as gene symbols: probe-version suffixes stripped, Ensembl ids resolved.
+
+    Returns a list the same length and order as `names`, so a caller can rename an AnnData's
+    var axis with it directly. Normalisation can collide (two probe versions of one gene), which
+    is the caller's job to de-duplicate -- silently dropping one here would change the matrix
+    without saying so.
+    """
+    def _strip(n: str) -> str:
+        m = PROBE_SUFFIX.search(n)
+        if not m or not _PROBE_REQUIRED.search(m.group(1)):
+            return n
+        base = n[: m.start()]
+        return base or n                 # never strip a name down to nothing
+
+    out = [_strip(str(n)) for n in names]
+    n_suffix = sum(1 for a, b in zip(names, out) if str(a) != b)
+
+    ens = [i for i, g in enumerate(out) if ENSEMBL_ID.match(g)]
+    if ens:
+        m = ensembl_symbol_map()
+        hit = sum(1 for i in ens if out[i].split(".")[0] in m)
+        if hit < 0.5 * len(ens):
+            # The cached references are organ-specific and may simply not hold this panel.
+            logger.info("cached map resolved only %d of %d Ensembl ids; asking Census", hit, len(ens))
+            try:
+                m = {**m, **_census_symbol_map()}
+            except Exception as e:
+                logger.warning("Census feature table unavailable (%s); keeping unresolved ids", str(e)[:60])
+        resolved = 0
+        for i in ens:
+            sym = m.get(out[i].split(".")[0])
+            if sym:
+                out[i] = sym
+                resolved += 1
+        logger.info("%d of %d Ensembl ids resolved to symbols", resolved, len(ens))
+    if n_suffix:
+        logger.info("%d of %d var_names carried a probe-version suffix (e.g. %s -> %s)",
+                    n_suffix, len(out), next(str(a) for a, b in zip(names, out) if str(a) != b),
+                    next(b for a, b in zip(names, out) if str(a) != b))
+    return out
+
+
 def panel_key(genes: list[str]) -> str:
     """Stable id for a gene panel, so one model serves every section that shares it."""
     return hashlib.md5("|".join(sorted(set(map(str, genes)))).encode()).hexdigest()[:12]
@@ -489,6 +595,42 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
 
     a = ad.read_h5ad(path)
     a.var_names_make_unique()
+
+    # What scale is X on? annotate_one applied normalize_total + log1p unconditionally, which is
+    # right for counts and wrong for everything else. Two consequences, both found 2026-11-03:
+    #
+    #   * a z-scored matrix (matrix_kind "scaled", min -5.5, max exactly 10.0 -- the signature of
+    #     scale(max_value=10)) gives log1p(negative) = NaN, which surfaced as a scikit-learn
+    #     complaint about missing values, three steps from the cause. Those files carry no raw
+    #     and no layers and counts_recoverable = "no", so the counts are gone and refusing is the
+    #     only honest outcome.
+    #   * an ALREADY log1p matrix was silently log1p'd a second time. That produces no error at
+    #     all and no NaN -- just a compressed matrix the model was not trained on. 22 of the
+    #     1,453 sections annotated before this check were in that state (19 log1p, 3 "other"),
+    #     which is why they are re-annotated with --force rather than left as they are.
+    #
+    # The matrix_kind is measured from the values by the standardise stage, not taken from a
+    # depositor label, so it is the right thing to branch on.
+    kind = str(a.uns.get("hsa", {}).get("matrix_kind", "")) or "unknown"
+    if kind in ("scaled", "other"):
+        raise ValueError(
+            f"matrix_kind={kind!r}: CellTypist needs log1p of library-size-normalised counts, "
+            f"and this matrix cannot be returned to that scale "
+            f"(counts_recoverable={a.uns.get('hsa', {}).get('counts_recoverable', '?')}, "
+            f"raw={a.raw is not None}, layers={list(a.layers)})")
+    needs_norm = kind != "log1p"
+
+    # var_names are not always gene symbols. Normalising collapses probe versions, so the axis is
+    # de-duplicated afterwards -- keeping the first occurrence, and saying how many were dropped.
+    norm = normalise_genes(list(a.var_names))
+    if norm != [str(g) for g in a.var_names]:
+        a.var["var_name_original"] = list(a.var_names)
+        a.var_names = pd.Index(norm)
+        dup = a.var_names.duplicated()
+        if dup.any():
+            logger.info("%d var_names collapsed onto an existing symbol and were dropped",
+                        int(dup.sum()))
+            a = a[:, ~dup].copy()
     genes = [str(g) for g in a.var_names]
     model, meta = train(organ, genes)      # also installs the celltypist shims
     _patch_celltypist_pca()                # idempotent; train() may have returned a cached model
@@ -498,8 +640,11 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
     # section's own and never a leftover from the previous one in the same process.
     _patch_celltypist_pca.last_n_comps = None
     sub = a[:, use].copy()
-    sc.pp.normalize_total(sub, target_sum=1e4)
-    sc.pp.log1p(sub)
+    if needs_norm:
+        sc.pp.normalize_total(sub, target_sum=1e4)
+        sc.pp.log1p(sub)
+    else:
+        logger.info("matrix is already log1p: skipping normalize_total + log1p")
     pred = celltypist.annotate(sub, model=model, majority_voting=majority_voting)
     lab = pred.predicted_labels
     col = "majority_voting" if majority_voting and "majority_voting" in lab.columns \
@@ -540,7 +685,8 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
                      ("celltype_n_types", meta["n_types"]),
                      ("celltype_solver", meta.get("solver", "")),
                      ("celltype_frac_agrees", float(agrees.mean())),
-                     ("celltype_n_pcs", int(_patch_celltypist_pca.last_n_comps or 0))):
+                     ("celltype_n_pcs", int(_patch_celltypist_pca.last_n_comps or 0)),
+                     ("celltype_input_scale", kind)):
             if k in u:
                 del u[k]
             if isinstance(v, str):

@@ -24,7 +24,7 @@ import anndata as ad
 import h5py
 import pandas as pd
 
-from .annotate import ORGAN_MAP, annotate_one, panel_key, train
+from .annotate import ORGAN_MAP, annotate_one, normalise_genes, panel_key, train
 from .annotate_run import targets
 from .config import RUNS
 
@@ -33,8 +33,10 @@ LOG = RUNS / "annotate_log.csv"
 
 
 def _panel_of(path: str) -> str | None:
+    # Normalised first, so a panel whose var_names are Ensembl ids or Xenium Prime probe ids
+    # hashes to the same key as the same panel written as symbols, and trains one model not two.
     try:
-        return panel_key([str(g) for g in ad.read_h5ad(path, backed="r").var_names])
+        return panel_key(normalise_genes(list(ad.read_h5ad(path, backed="r").var_names)))
     except Exception as e:
         logger.warning("panel read failed %s: %s", Path(path).name[:40], str(e)[:60])
         return None
@@ -82,8 +84,8 @@ def run(limit_organ: list[str] | None = None, force: bool = False,
     for gi, ((organ, pk), sub) in enumerate(groups, 1):
         logger.info("[%d/%d] %s panel %s: %d sections", gi, len(groups), organ, pk, len(sub))
         try:
-            genes = [str(g) for g in ad.read_h5ad(sub.h5ad_path.iloc[0],
-                                                  backed="r").var_names]
+            genes = normalise_genes(list(ad.read_h5ad(sub.h5ad_path.iloc[0],
+                                                      backed="r").var_names))
             t0 = time.time()
             train(organ, genes)                      # cached after the first call
             logger.info("    model ready in %.0fs", time.time() - t0)
