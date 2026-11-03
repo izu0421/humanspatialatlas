@@ -1,0 +1,22 @@
+{
+ "organ": "prostate gland",
+ "panel_key": "4e331f375976",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (36 Census types rolled up)",
+ "n_genes_requested": 5006,
+ "n_genes_used": 4980,
+ "n_ref_cells": 16655,
+ "n_types": 10,
+ "types": [
+  "T cell",
+  "endocrine cell",
+  "endothelial cell",
+  "epithelial cell",
+  "fibroblast",
+  "macrophage",
+  "neutrophil",
+  "pericyte",
+  "progenitor",
+  "smooth muscle"
+ ]
+}

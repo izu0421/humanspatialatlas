@@ -1,0 +1,26 @@
+{
+ "organ": "brain",
+ "panel_key": "298ef4d9ede6",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (161 Census types rolled up)",
+ "n_genes_requested": 316,
+ "n_control_probes": 0,
+ "over_clustering": "pca n_comps clamped to min(50, n_genes-1, n_cells-1)",
+ "n_genes_used": 315,
+ "n_ref_cells": 17170,
+ "n_types": 12,
+ "types": [
+  "Schwann cell",
+  "T cell",
+  "astrocyte",
+  "endothelial cell",
+  "epithelial cell",
+  "fibroblast",
+  "macrophage",
+  "microglia",
+  "neuron",
+  "oligodendrocyte",
+  "progenitor",
+  "smooth muscle"
+ ]
+}

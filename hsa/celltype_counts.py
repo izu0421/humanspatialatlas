@@ -37,6 +37,15 @@ OUT = RUNS / "celltype_counts.csv"
 LOG = RUNS / "annotate_log.csv"
 
 
+def _has_calls(path: str) -> bool:
+    """Cheap test: does this section already carry cell-type calls?"""
+    try:
+        with h5py.File(path, "r") as h:
+            return "cell_type" in h.get("obs", {})
+    except Exception:
+        return False
+
+
 def _read(path: str) -> tuple[dict, dict] | None:
     """(type -> n cells, section-level facts) for one annotated section, or None."""
     with h5py.File(path, "r") as h:
@@ -57,11 +66,31 @@ def _read(path: str) -> tuple[dict, dict] | None:
 
 
 def build(force: bool = False) -> pd.DataFrame:
+    """Every section carrying a cell_type column, taken from DISK rather than from the log.
+
+    The log is incomplete by design: annotate_apply skips a section that already carries
+    `uns/hsa/celltype_model` and writes no row for it, so a re-run to retry failures silently
+    drops the rows of everything it skipped. After the 2026-11-02 retry that was 37 sections --
+    annotated, on disk, and absent from the page -- which is the log under-reporting the atlas,
+    not the atlas missing them. The annotation itself is in the files, so the files are the
+    source of truth and the log only supplies the organ.
+    """
     if not LOG.exists():
         logger.warning("no %s: nothing annotated yet", LOG)
         return pd.DataFrame()
     log = pd.read_csv(LOG)
-    paths = sorted(set(log.loc[log.status == "ok", "path"]))
+    organ_of = dict(zip(log.path, log.organ))
+    paths = set(log.loc[log.status == "ok", "path"])
+    try:
+        from .annotate_run import targets
+        t = targets()
+        for pth, org in zip(t.h5ad_path, t.organ):
+            if pth not in paths and _has_calls(pth):
+                paths.add(pth)
+                organ_of.setdefault(pth, org)
+    except Exception as e:                      # the page must not die on a target-list failure
+        logger.warning("could not scan targets for unlogged annotations: %s", str(e)[:80])
+    paths = sorted(paths)
     rows, skipped = [], []
     for p in paths:
         try:
@@ -73,7 +102,7 @@ def build(force: bool = False) -> pd.DataFrame:
             skipped.append((p, "no obs/cell_type"))
             continue
         counts, fact = got
-        organ = log.loc[log.path == p, "organ"].iloc[0]
+        organ = organ_of.get(p, "unknown")
         for t, n in counts.items():
             rows.append({"path": p, "organ": organ, "cell_type": t, "n": n, **fact})
     d = pd.DataFrame(rows)

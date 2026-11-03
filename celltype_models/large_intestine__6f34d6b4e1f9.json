@@ -1,0 +1,33 @@
+{
+ "organ": "large intestine",
+ "panel_key": "6f34d6b4e1f9",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (72 Census types rolled up)",
+ "n_genes_requested": 480,
+ "n_genes_used": 478,
+ "n_ref_cells": 20656,
+ "n_types": 21,
+ "types": [
+  "B cell",
+  "BEST4+ colonocyte",
+  "NK/ILC",
+  "Schwann cell",
+  "T cell",
+  "colonocyte",
+  "dendritic cell",
+  "early colonocyte",
+  "endothelial cell",
+  "enteroglial cell",
+  "epithelial cell",
+  "fibroblast",
+  "gut absorptive cell",
+  "macrophage",
+  "mast cell",
+  "monocyte",
+  "pericyte",
+  "plasma cell",
+  "progenitor",
+  "smooth muscle",
+  "transit amplifying cell"
+ ]
+}

@@ -1,0 +1,33 @@
+{
+ "organ": "placenta",
+ "panel_key": "d7de04e02d11",
+ "solver": "multinomial (multi_class dropped)",
+ "label_granularity": "coarse (37 Census types rolled up)",
+ "n_genes_requested": 477,
+ "n_genes_used": 473,
+ "n_ref_cells": 21732,
+ "n_types": 21,
+ "types": [
+  "B cell",
+  "Hofbauer cell",
+  "NK/ILC",
+  "T cell",
+  "chorionic trophoblast cell",
+  "decidual cell",
+  "dendritic cell",
+  "endothelial cell",
+  "epithelial cell",
+  "extravillous trophoblast",
+  "fibroblast",
+  "macrophage",
+  "neutrophil",
+  "pericyte",
+  "perivascular cell",
+  "placental villous trophoblast",
+  "plasma cell",
+  "smooth muscle",
+  "syncytiotrophoblast cell",
+  "trophoblast giant cell",
+  "unknown"
+ ]
+}
