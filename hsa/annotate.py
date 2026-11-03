@@ -609,6 +609,14 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
     #     1,453 sections annotated before this check were in that state (19 log1p, 3 "other"),
     #     which is why they are re-annotated with --force rather than left as they are.
     #
+    # "log1p" does NOT mean "already what CellTypist wants". Measured on this corpus, expm1 row
+    # sums for log1p sections come out at 1e6 (log1p of CPM) and at ~413 (log1p of raw counts),
+    # not only at 1e4. Simply SKIPPING normalisation -- the first version of this fix -- was
+    # therefore wrong in both directions: CellTypist refused the CPM ones outright, and silently
+    # accepted the raw-scale ones and scored them on a matrix it was never trained on. So a
+    # log1p matrix is taken back to linear with expm1, renormalised to 10,000 and re-logged.
+    # That is a no-op when the matrix really is log1p(CP10K) and a repair otherwise.
+    #
     # The matrix_kind is measured from the values by the standardise stage, not taken from a
     # depositor label, so it is the right thing to branch on.
     kind = str(a.uns.get("hsa", {}).get("matrix_kind", "")) or "unknown"
@@ -618,7 +626,7 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
             f"and this matrix cannot be returned to that scale "
             f"(counts_recoverable={a.uns.get('hsa', {}).get('counts_recoverable', '?')}, "
             f"raw={a.raw is not None}, layers={list(a.layers)})")
-    needs_norm = kind != "log1p"
+    already_log = kind == "log1p"
 
     # var_names are not always gene symbols. Normalising collapses probe versions, so the axis is
     # de-duplicated afterwards -- keeping the first occurrence, and saying how many were dropped.
@@ -640,11 +648,17 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
     # section's own and never a leftover from the previous one in the same process.
     _patch_celltypist_pca.last_n_comps = None
     sub = a[:, use].copy()
-    if needs_norm:
-        sc.pp.normalize_total(sub, target_sum=1e4)
-        sc.pp.log1p(sub)
-    else:
-        logger.info("matrix is already log1p: skipping normalize_total + log1p")
+    if already_log:
+        import scipy.sparse as _sp
+        if _sp.issparse(sub.X):
+            sub.X.data = np.expm1(sub.X.data)
+        else:
+            sub.X = np.expm1(sub.X)
+        rs = np.asarray(sub.X.sum(1)).ravel()
+        logger.info("matrix is log1p; expm1 row sums median %.0f -> renormalising to 1e4",
+                    float(np.median(rs)))
+    sc.pp.normalize_total(sub, target_sum=1e4)
+    sc.pp.log1p(sub)
     pred = celltypist.annotate(sub, model=model, majority_voting=majority_voting)
     lab = pred.predicted_labels
     col = "majority_voting" if majority_voting and "majority_voting" in lab.columns \
@@ -686,7 +700,8 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
                      ("celltype_solver", meta.get("solver", "")),
                      ("celltype_frac_agrees", float(agrees.mean())),
                      ("celltype_n_pcs", int(_patch_celltypist_pca.last_n_comps or 0)),
-                     ("celltype_input_scale", kind)):
+                     ("celltype_input_scale", kind),
+                     ("celltype_renormalised", int(already_log))):
             if k in u:
                 del u[k]
             if isinstance(v, str):
@@ -698,4 +713,5 @@ def annotate_one(path: str, organ: str, majority_voting: bool = True, seed: int 
             "n_types_called": int(vc.size), "top_type": str(vc.index[0]),
             "top_frac": float(vc.iloc[0] / len(calls)),
             "frac_agrees": float(agrees.mean()), "model": meta["panel_key"],
-            "n_pcs": int(_patch_celltypist_pca.last_n_comps or 0)}
+            "n_pcs": int(_patch_celltypist_pca.last_n_comps or 0),
+            "input_scale": kind}
