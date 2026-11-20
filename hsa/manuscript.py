@@ -128,7 +128,10 @@ def build() -> Path:
         blocks.append(
             f'<figure id="{stem}">\n'
             f'  <img src="data:image/png;base64,{_b64(src)}" alt="{title}">\n'
-            f'  <figcaption><b>{label} &mdash; {title}.</b> {legend}</figcaption>\n'
+            # the legend from the notebook already opens with its own bold
+            # "<label> — <title>:" run, so the page must not prepend a second one
+            f'  <figcaption>{legend or f"<p><b>{label} &mdash; {title}.</b></p>"}'
+            f'</figcaption>\n'
             f'</figure>')
 
     n_cells = f"{h.get('cells', 0):,}"
