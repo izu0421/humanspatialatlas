@@ -59,6 +59,8 @@ FIGURES = [
      'Same-cell co-expression confounds spatial proximity'),
     ('edf6_recurrence_null', 'EDF9', 'Extended Data Figure 9',
      'Recurrence across tissues barely separates annotated pairs from decoys'),
+    ('edf10_pipeline_accounting', 'EDF10', 'Extended Data Figure 10',
+     'Where every candidate dataset and sample goes'),
 ]
 
 
