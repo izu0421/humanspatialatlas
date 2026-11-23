@@ -182,8 +182,22 @@ def build() -> Path:
    hr.supplementary-divider {{ border-top-color:#3a3a42; }}
    h2.supp {{ color:#9a9aa2; }}
  }}
+ .nav {{ display:flex; justify-content:space-between; align-items:baseline;
+          flex-wrap:wrap; gap:12px; margin:0 0 22px; }}
+ .nav .back {{ margin-bottom:0; }}
+ /* the outbound target is NOT behind this page's password, so it is styled as a
+    link off the page and opens in its own tab */
+ .nav .out {{ font-size:13px; color:#2166AC; text-decoration:none;
+              border-bottom:1px solid rgba(33,102,172,.35); }}
+ .nav .out:hover {{ border-bottom-color:#2166AC; }}
+ @media (prefers-color-scheme: dark) {{ .nav .out {{ color:#7fb0e0;
+          border-bottom-color:rgba(127,176,224,.35); }} }}
 </style></head><body><div class="wrap">
-<a class="back" href="index.html">&larr; back to the atlas</a>
+<nav class="nav">
+  <a class="back" href="index.html">&larr; back to the atlas</a>
+  <a class="out" href="https://www.yizhouyu.com/chaperone/reports/orphan_shortlist_2026-11-23/structures/"
+     target="_blank" rel="noopener">the poses behind Figure 4, in 3D &rarr;</a>
+</nav>
 <header>
   <h1>Human Spatial Atlas enables ligand&ndash;receptor deorphanisation</h1>
   <div class="authors">Yizhou Yu, Maciej Wiatrak and Sarah A Teichmann</div>
