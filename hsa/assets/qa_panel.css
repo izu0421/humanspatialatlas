@@ -1,0 +1,30 @@
+.askbar { display: flex; gap: 8px; margin: 2px 0 10px }
+.askbar input { flex: 1; min-width: 0; padding: 10px 13px; font: 400 15px/1.4 var(--f-body);
+  color: var(--fg); background: var(--panel-solid); border: 1px solid var(--line);
+  border-radius: 9px }
+.askbar input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent }
+.askbar button { padding: 10px 18px; font: 600 14px var(--f-body); color: #fff;
+  background: var(--accent); border: 0; border-radius: 9px; cursor: pointer }
+.askbar button:hover { filter: brightness(1.08) }
+.askchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px }
+.askchips button { font: 400 12.5px var(--f-body); color: var(--muted); background: transparent;
+  border: 1px solid var(--line); border-radius: 20px; padding: 4px 11px; cursor: pointer }
+.askchips button:hover { color: var(--accent); border-color: var(--accent) }
+.askout { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px }
+.askbig { font: 700 30px/1.15 var(--f-display); color: var(--fg); letter-spacing: -.01em }
+.askbig small { font: 400 15px var(--f-body); color: var(--muted); margin-left: 7px }
+.asksub { color: var(--muted); font-size: 13.5px; margin: 5px 0 0; max-width: 72ch }
+.askwarn { margin: 10px 0 0; padding: 9px 12px; border-radius: 8px; font-size: 13px;
+  background: var(--warn-soft); color: var(--warn); border: 1px solid transparent }
+.asknote { margin: 8px 0 0; padding: 9px 12px; border-radius: 8px; font-size: 13px;
+  background: var(--grey-soft); color: var(--muted) }
+.askfilters { display: flex; flex-wrap: wrap; gap: 6px; margin: 9px 0 0 }
+.askfilters span { font: 400 12.5px var(--f-mono); background: var(--accent-soft);
+  color: var(--accent); border-radius: 6px; padding: 3px 9px }
+.askfilters span i { font-style: normal; opacity: .7 }
+.askgrid { margin: 12px 0 0; display: grid; gap: 2px }
+.askrow { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;
+  font-size: 13px; padding: 3px 0 }
+.askrow b { font-weight: 600; font-variant-numeric: tabular-nums }
+.askrow i { font-style: normal; display: block; height: 4px; border-radius: 2px;
+  background: var(--accent); opacity: .45; margin-top: 3px }

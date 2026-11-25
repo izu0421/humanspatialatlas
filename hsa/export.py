@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from . import db
+from . import db, qa
 from .config import DATA, ROOT, RUNS
 
 OUT = ROOT / "exports"
@@ -495,6 +495,10 @@ def run():
         "load_status": load_status(),
         "review": review_summary(),
         "annotation": annotation(),
+        # the per-sample table the "Ask the atlas" panel queries, with per-field
+        # coverage travelling beside it so an answer can say how many samples
+        # could have answered at all
+        "qa": qa.build(sm) if len(sm) else None,
     }
     from .logo import svg
     body = (TEMPLATE.read_text().replace("__HSA_LOGO__", svg(inline=True))

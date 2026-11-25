@@ -1,0 +1,16 @@
+  <section class="panel" id="askPanel">
+    <h2>Ask the atlas<span class="count" id="askCount"></span><span class="hintwrap" data-hint>
+      <button class="hint" type="button" aria-expanded="false" aria-describedby="hintAsk"
+        aria-label="How this answers">i</button><span class="hintbox" role="tooltip" id="hintAsk">
+      Questions are resolved against the catalogue's own vocabulary and counted in your
+      browser. Nothing is sent anywhere and no model is called, so the answer is a query,
+      not an opinion. <span class="key">Every answer says how many samples could have
+      answered it: a blank field is not a negative.</span></span></span></h2>
+    <form class="askbar" id="askForm" autocomplete="off">
+      <input id="askInput" type="text" placeholder="how many Xenium breast cancer samples?"
+        aria-label="Ask a question about the atlas">
+      <button type="submit">Ask</button>
+    </form>
+    <div class="askchips" id="askChips"></div>
+    <div class="askout" id="askOut" hidden></div>
+  </section>
