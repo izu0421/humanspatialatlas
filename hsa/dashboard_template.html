@@ -214,6 +214,70 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
 .heroband { margin-top: -14px; position: relative; z-index: 0; }
 .heroband canvas { display: block; width: 100%; height: 212px; }
 @media (max-width: 760px) { .heroband canvas { height: 150px; } }
+
+/* ── The agent cycle, drawn as Fig 1a draws it ──────────────────────────────────
+   Seven stages on a ring around the Atlas itself, each a dark disc with its count
+   beside it, and a dashed return arc for the re-run. The previous version was a
+   left-to-right row of icons in a lavender box next to a teal box, which showed
+   the stages but not the thing that matters about them: it is a LOOP, and the
+   catalogue in the middle is what each cycle reads to decide what is new. */
+.cycle { position: relative; width: 100%; max-width: 620px; margin: 2px auto 0;
+  aspect-ratio: 1 / 0.86; }
+.cycleRing { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.cycleNodes { position: absolute; inset: 0; }
+.cstage { position: absolute; display: flex; align-items: center; gap: 9px;
+  transform: translate(-50%, -50%); }
+.cstage.right { flex-direction: row; }
+.cstage.left { flex-direction: row-reverse; }
+.cstage .cdisc { flex: none; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--fg); color: var(--panel-solid); display: grid; place-items: center;
+  border: 0; cursor: pointer; padding: 0; transition: transform .14s ease; }
+.cstage .cdisc:hover, .cstage .cdisc:focus-visible { transform: scale(1.07); }
+.cstage .cdisc svg { width: 23px; height: 23px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; }
+.cstage .ctext { min-width: 96px; line-height: 1.22; }
+.cstage.left .ctext { text-align: right; }
+.cstage .ctext .cname { font: 700 0.92rem var(--f-display); letter-spacing: -0.01em;
+  display: block; }
+.cstage .ctext .cnum { font: 700 1.02rem var(--f-display); color: var(--accent);
+  display: block; }
+.cstage .ctext .ccap { font-size: 0.72rem; color: var(--muted); display: block; }
+.cycleHub { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 33%; aspect-ratio: 1; border-radius: 50%; background: var(--accent);
+  color: #fff; display: grid; place-content: center; text-align: center;
+  padding: 10px 12px; line-height: 1.2; }
+.cycleHub b { font: 700 clamp(1rem, 2.3vw, 1.45rem)/1.08 var(--f-display);
+  letter-spacing: -0.02em; display: block; }
+.cycleHub span { font-size: 0.72rem; display: block; opacity: .92; }
+.cycleHub .sub { font-size: 0.68rem; opacity: .8; margin-top: 4px; }
+.cycleKey { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center;
+  margin: 6px 0 0; font-size: 0.76rem; color: var(--muted); }
+.cycleKey i.ck { display: inline-block; width: 15px; height: 11px; margin-right: 6px;
+  vertical-align: -1px; }
+.cycleKey i.disc { width: 11px; height: 11px; border-radius: 50%; background: var(--fg); }
+.cycleKey i.dash { border-top: 2px dashed var(--muted); height: 0; }
+@media (max-width: 720px) {
+  .cycle { aspect-ratio: 1 / 1.08; }
+  .cstage .ctext { min-width: 72px; }
+  .cstage .ctext .cname { font-size: 0.8rem; }
+  .cstage .ctext .ccap { display: none; }
+  .cstage .cdisc { width: 38px; height: 38px; }
+}
+
+/* ── Panels that open on click ──────────────────────────────────────────────────
+   The page opened with four long panels of bars already expanded, so the thing it
+   is for -- asking it a question -- was several screens below the fold. These
+   start closed and the whole heading is the control. Each one says how much is
+   inside before it is opened, so closed is not the same as empty. */
+.panel.fold > h2 { cursor: pointer; user-select: none; margin-bottom: 0; }
+.panel.fold.open > h2 { margin-bottom: 12px; }
+.panel.fold > h2::after { content: ""; width: 7px; height: 7px; margin-left: auto;
+  border-right: 1.8px solid var(--muted); border-bottom: 1.8px solid var(--muted);
+  transform: rotate(45deg) translate(-2px, -2px); transition: transform .16s ease;
+  flex: none; align-self: center; }
+.panel.fold.open > h2::after { transform: rotate(225deg) translate(-1px, -1px); }
+.panel.fold > h2:hover::after { border-color: var(--accent); }
+.panel.fold:not(.open) > *:not(h2) { display: none; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 15px 17px;
   display: grid; gap: 3px; box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease; }
@@ -392,7 +456,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     <div class="mastheadInner">
       <div class="headline" id="headline" hidden></div>
       <div class="askHero" id="askPanel">
-    <h2>Ask the atlas<span class="count" id="askCount"></span><span class="hintwrap" data-hint>
+    <h2>Query agent<span class="count" id="askCount"></span><span class="hintwrap" data-hint>
       <button class="hint" type="button" aria-expanded="false" aria-describedby="hintAsk"
         aria-label="How this answers">i</button><span class="hintbox" role="tooltip" id="hintAsk">
       Questions are resolved against the catalogue's own vocabulary and counted in your
@@ -410,38 +474,28 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
     </div>
   </section>
 
-  <section class="kpis" id="kpis" aria-label="Summary"></section>
-
   <section class="panel agents">
-    <h2>Agents<span class="hintwrap" data-hint><button class="hint" type="button"
+    <h2>Build agents<span class="hintwrap" data-hint><button class="hint" type="button"
       aria-expanded="false" aria-describedby="hintLoop" aria-label="How to read the loop"
       >i</button><span class="hintbox" role="tooltip" id="hintLoop"><span id="agentNote"></span>
       <span class="key">Open a stage for what it does.</span></span></span></h2>
     <p class="loopLabels"><span class="key lt"><i></i>acquire, standardise, derive</span>
       <span class="key la"><i></i>the catalogue says what is already held, so each cycle queues
       only new deposits</span></p>
-    <div class="loop">
-      <div class="node agentsNode">
-        <b>Human Spatial Agents</b>
-        <div class="flow" id="agentFlow"></div>
-      </div>
-      <svg class="link" viewBox="0 0 120 150" aria-hidden="true" preserveAspectRatio="none">
-        <defs>
-          <marker id="aT" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-            <path d="M0 0 L7 3.5 L0 7 z" fill="var(--teal)"/></marker>
-          <marker id="aA" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-            <path d="M0 0 L7 3.5 L0 7 z" fill="var(--accent)"/></marker>
-        </defs>
-        <path d="M4 48 H112" stroke="var(--teal)" stroke-width="2" fill="none" marker-end="url(#aT)"/>
-        <path d="M112 100 H4" stroke="var(--accent)" stroke-width="2" fill="none"
-              stroke-dasharray="5 4" marker-end="url(#aA)"/>
-      </svg>
-      <div class="node atlasNode">
-        <b>Human Spatial Atlas</b>
-        <div class="atlasStat" id="atlasStat"></div>
-      </div>
+    <div class="cycle" id="cycle">
+      <svg class="cycleRing" id="cycleRing" viewBox="0 0 600 600" aria-hidden="true"></svg>
+      <div class="cycleHub" id="cycleHub"></div>
+      <div class="cycleNodes" id="agentFlow"></div>
     </div>
+    <p class="cycleKey">
+      <span><i class="ck disc"></i>stage run by an LLM agent</span>
+      <span><i class="ck dash"></i>re-run when new deposits appear</span>
+    </p>
   </section>
+
+  <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+
 
 
   <section class="panel" id="techPanel" hidden>
@@ -716,23 +770,97 @@ request.</span></span>
      "M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
      "Cell types for every cell-resolution section, from a CellTypist model trained on CELLxGENE Census for that organ and restricted to that panel\u2019s own genes. A 20,000-gene model applied to a 477-gene Xenium panel would impute 97% of its input as zero and score on absence \u2014 and absence in a targeted panel means \u201cnot on the panel\u201d, not \u201cnot expressed\u201d."],
   ];
-  $("agentFlow").innerHTML = STAGES.map(([name, cap, d, detail]) => {
-    const id = "hintStage" + (++hintN);
-    return `<div class="stage" data-hint><button class="disc" type="button" aria-expanded="false" ` +
-      `aria-describedby="${id}" aria-label="${esc(name)}: what this stage does">` +
-      `<svg viewBox="0 0 24 24" aria-hidden="true">` +
-      `<path d="${d}" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` +
-      `<b>${esc(name)}</b><span class="hintbox" role="tooltip" id="${id}">` +
-      `<b>${esc(cap)}.</b> ${detail}</span></div>`;
-  }).join("");
+  // Each stage carries the count it is responsible for, the way Fig 1a does. These
+  // are read from the payload, never typed, so a stage cannot advertise a number the
+  // run did not produce; a stage with nothing to report shows no number at all.
+  const K = D.kpi || {}, AN = D.annotation || {}, RV = D.review || {};
+  const COUNTS = {
+    Scout:       [K.cand_total,  "candidates assessed"],
+    Curate:      [K.ready,       "datasets accepted"],
+    Fetch:       [K.files_done,  "files retrieved"],
+    Standardise: [K.samples,     "samples materialised"],
+    Harmonise:   [H.tissues,     "tissue terms"],
+    Derive:      [H.hd_segmented_samples, "HD samples segmented"],
+    Annotate:    [AN.sections || null, "sections typed"],
+    Review:      [RV.n,          "files checked"],
+  };
 
-  // the Atlas side of the loop, in its own figures
-  if (H.cells !== undefined) {
-    $("atlasStat").innerHTML =
-      `<b>${fmt(H.cells)}</b><span>single cells</span>` +
-      `<b>${fmt(H.spots)}</b><span>spots &amp; bins</span>` +
-      `<b>${fmt(H.datasets)}</b><span>datasets, ${fmt(H.tissues)} tissues</span>`;
-  }
+  // Ring geometry. The stages sit on a circle; the label goes outside it, and which
+  // side it goes on is decided by the node's own x, so nothing overlaps the hub.
+  (function drawCycle() {
+    const nodes = $("agentFlow"), ring = $("cycleRing");
+    if (!nodes || !ring) return;
+    const N = STAGES.length, R = 38;              // radius, in % of the box
+    const ang = i => (-90 + (360 / N) * i) * Math.PI / 180;
+    nodes.innerHTML = STAGES.map(([name, cap, d, detail], i) => {
+      const id = "hintStage" + (++hintN);
+      const a = ang(i), x = 50 + R * Math.cos(a), y = 50 + R * Math.sin(a) * 1.02;
+      const side = Math.cos(a) < -0.12 ? "left" : "right";
+      const [n, unit] = COUNTS[name] || [null, ""];
+      return `<div class="cstage ${side}" style="left:${x}%;top:${y}%" data-hint>` +
+        `<button class="cdisc" type="button" aria-expanded="false" aria-describedby="${id}" ` +
+        `aria-label="${esc(name)}: what this stage does">` +
+        `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" ` +
+        `stroke-linecap="round" stroke-linejoin="round"/></svg></button>` +
+        `<span class="ctext"><span class="cname">${esc(name)}</span>` +
+        (n ? `<span class="cnum">${fmt(n)}</span>` : "") +
+        `<span class="ccap">${esc(n ? unit : cap)}</span></span>` +
+        `<span class="hintbox" role="tooltip" id="${id}"><b>${esc(cap)}.</b> ${detail}</span>` +
+        `</div>`;
+    }).join("");
+
+    // one arc per step, stopping short of each disc so the arrowhead is visible
+    const cx = 300, cy = 300, rr = 228, pad = (360 / N) * 0.30;
+    const pt = deg => [cx + rr * Math.cos(deg * Math.PI / 180),
+                       cy + rr * Math.sin(deg * Math.PI / 180)];
+    let paths = "";
+    for (let i = 0; i < N; i++) {
+      const a0 = -90 + (360 / N) * i + pad, a1 = -90 + (360 / N) * (i + 1) - pad;
+      const [x0, y0] = pt(a0), [x1, y1] = pt(a1);
+      // the last step is the re-run: dashed, because it only fires on new deposits
+      const last = i === N - 1;
+      paths += `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} A${rr} ${rr} 0 0 1 ` +
+        `${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="var(--muted)" ` +
+        `stroke-width="1.6" opacity="${last ? .75 : .55}" ` +
+        (last ? `stroke-dasharray="6 5" ` : "") +
+        `marker-end="url(#cyArrow)"/>`;
+    }
+    ring.innerHTML =
+      `<defs><marker id="cyArrow" markerWidth="8" markerHeight="8" refX="6.5" refY="3.2" ` +
+      `orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--muted)"/></marker></defs>` +
+      paths;
+
+    if (H.samples_loaded !== undefined || K.samples !== undefined) {
+      $("cycleHub").innerHTML =
+        `<b>${fmt(K.samples !== undefined ? K.samples : H.samples_loaded)}</b>` +
+        `<span>samples</span>` +
+        `<span class="sub">${fmt(K.ready)} datasets</span>`;
+    }
+  })();
+
+
+  // Opening and closing is a class on the panel, so the markup each renderer writes
+  // is untouched and a panel that has not been rendered yet still toggles. The hint
+  // buttons inside a heading must not toggle it -- they have their own popover.
+  ["techPanel", "annotPanel", "reviewPanel", "metaPanel"].forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    el.classList.add("fold");
+    const head = el.querySelector("h2");
+    if (!head) return;
+    head.setAttribute("role", "button");
+    head.setAttribute("tabindex", "0");
+    head.setAttribute("aria-expanded", "false");
+    const toggle = ev => {
+      if (ev.target.closest(".hintwrap")) return;
+      const open = el.classList.toggle("open");
+      head.setAttribute("aria-expanded", open ? "true" : "false");
+    };
+    head.addEventListener("click", toggle);
+    head.addEventListener("keydown", ev => {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toggle(ev); }
+    });
+  });
 
   $("agentNote").innerHTML =
     `Run by <b>Claude Sonnet 5.5</b>. <b>$${Number(D.kpi.usd).toFixed(2)}</b> spent across ` +
