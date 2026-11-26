@@ -278,6 +278,29 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
 .panel.fold.open > h2::after { transform: rotate(225deg) translate(-1px, -1px); }
 .panel.fold > h2:hover::after { border-color: var(--accent); }
 .panel.fold:not(.open) > *:not(h2) { display: none; }
+
+/* ── The gallery ────────────────────────────────────────────────────────────────
+   A catalogue described only in bars and counts gives no sense of what is in it.
+   Every standardised sample already carries its own coordinates, so the cheapest
+   honest illustration is the measurement itself. */
+.gallery { display: grid; gap: 10px; margin-top: 2px;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+/* figure carries a browser-default margin of 1em 40px, which ate the grid column and
+   left every tile about 30px wide inside a 110px cell. */
+.gtile { margin: 0; position: relative; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--panel-solid); padding: 7px 7px 8px; display: grid; gap: 5px;
+  transition: border-color .14s ease, transform .14s ease; }
+.gtile:hover { border-color: var(--accent); transform: translateY(-2px); }
+.gtile img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain;
+  image-rendering: pixelated; background: var(--grey-soft); border-radius: var(--r-sm); }
+.gtile .gt { margin: 0; font-size: 0.7rem; line-height: 1.25; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gtile .gs { font: 0.64rem var(--f-mono); color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.galmore { margin-top: 12px; font: 600 13px var(--f-body); color: var(--accent);
+  background: transparent; border: 1px solid var(--line); border-radius: var(--r);
+  padding: 8px 16px; cursor: pointer; }
+.galmore:hover { border-color: var(--accent); }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 15px 17px;
   display: grid; gap: 3px; box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease; }
@@ -454,7 +477,6 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   <section class="masthead">
     <canvas id="heroCanvas" width="1080" height="212" role="img" aria-label="The words HUMAN SPATIAL ATLAS spelled out in Visium capture spots: 55 micrometre spots on a 100 micrometre hexagonal lattice, coloured by two spatial domains. The spots begin scattered and fold inward onto the lattice to form the name."></canvas>
     <div class="mastheadInner">
-      <div class="headline" id="headline" hidden></div>
       <div class="askHero" id="askPanel">
     <h2>Query agent<span class="count" id="askCount"></span><span class="hintwrap" data-hint>
       <button class="hint" type="button" aria-expanded="false" aria-describedby="hintAsk"
@@ -494,6 +516,19 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   </section>
 
   <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <section class="panel" id="galleryPanel" hidden>
+    <h2>What the atlas looks like<span class="count" id="galCount"></span>
+      <span class="hintwrap" data-hint><button class="hint" type="button"
+      aria-expanded="false" aria-describedby="hintGal" aria-label="How these are drawn"
+      >i</button><span class="hintbox" role="tooltip" id="hintGal">Each tile is one
+      section, drawn from the coordinates it was measured on, coloured by cell type where
+      the section has one and in a single colour where it does not. Points are subsampled
+      to at most 8,000, so a 600,000-cell Xenium section and a 2,000-spot Visium section
+      carry comparable ink. <span class="key">The scale is per section, so these are
+      shapes and not a size comparison.</span></span></span></h2>
+    <div class="gallery" id="gallery"></div>
+  </section>
 
 
 
@@ -716,8 +751,13 @@ request.</span></span>
   // Donors are a floor, not a count.
   const H = D.headline || {};
   if (H.cells !== undefined) {
-    $("headline").hidden = false;
-    $("headline").innerHTML =
+    // The headline statistic used to be set in 48px type across the hero. It is gone:
+    // the same numbers are in the summary row and the cycle hub, and the hero's job is
+    // the query agent. The node may not exist, so everything below is guarded.
+    const hl = $("headline");
+    if (hl) {
+    hl.hidden = false;
+    hl.innerHTML =
       `<b><span class="n">${fmt(H.cells)}</span> single cells and <span class="n">${fmt(H.spots)}</span> spots/bins ` +
       `across <span class="n">&ge;${fmt(H.donors)}</span> donors in <span class="n">${fmt(H.tissues)}</span> tissues</b>` +
       `<div class="fine">` +
@@ -733,6 +773,7 @@ request.</span></span>
       `${fmt(H.spots_raw || 0)}. The donor figure is a lower bound: only ${H.donor_frac}% of ` +
       `samples state a donor, and donor identifiers are local to each study, so donors are ` +
       `counted as (dataset, donor) pairs.`, "How cells and spots are counted") + `</div>`;
+    }
     const u = (H.per_tech || []).slice(0, 12), mx = u.length ? u[0][3] : 1;
     if (u.length) {
       $("techPanel").hidden = false;
@@ -861,6 +902,47 @@ request.</span></span>
       if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toggle(ev); }
     });
   });
+
+
+  // The gallery. Tiles are drawn from D.thumbs, which the exporter fills from each
+  // section's own coordinates; a section whose coordinates were unusable has no entry
+  // and simply does not appear, rather than being drawn as a dot.
+  (function gallery() {
+    const T = D.thumbs || {};
+    const keys = Object.keys(T);
+    if (!keys.length) return;
+    const panel = $("galleryPanel"), grid = $("gallery");
+    panel.hidden = false;
+    const FIRST = 36;
+    let shown = FIRST;
+    const tile = k => {
+      const v = T[k];
+      const where = [v.tissue, v.disease && v.disease !== "unknown" ? v.disease : ""]
+        .filter(Boolean).join(" \u00b7 ") || "unspecified";
+      return `<figure class="gtile" title="${esc(where)} \u2014 ${esc(v.tech || "")}, ` +
+        `${fmt(v.n)} ${v.typed ? "cells" : "units"}${v.accession ? ", " + esc(v.accession) : ""}">` +
+        `<img src="${v.png}" alt="${esc(where)}, ${esc(v.tech || "")}, ${fmt(v.n)} measured units" ` +
+        `loading="lazy" decoding="async">` +
+        `<figcaption class="gt">${esc(where)}</figcaption>` +
+        `<span class="gs">${esc(v.tech || "")} \u00b7 ${fmt(v.n)}</span></figure>`;
+    };
+    const paint = () => {
+      grid.innerHTML = keys.slice(0, shown).map(tile).join("");
+      let btn = panel.querySelector(".galmore");
+      if (shown >= keys.length) { if (btn) btn.remove(); return; }
+      if (!btn) {
+        btn = document.createElement("button");
+        btn.className = "galmore";
+        btn.type = "button";
+        btn.addEventListener("click", () => { shown = keys.length; paint(); });
+        panel.appendChild(btn);
+      }
+      btn.textContent = `Show the other ${fmt(keys.length - shown)} sections`;
+    };
+    $("galCount").textContent =
+      `${fmt(keys.length)} sections drawn from their own coordinates`;
+    paint();
+  })();
 
   $("agentNote").innerHTML =
     `Run by <b>Claude Sonnet 5.5</b>. <b>$${Number(D.kpi.usd).toFixed(2)}</b> spent across ` +
@@ -1224,7 +1306,9 @@ request.</span></span>
       const want = W / H >= 4.2 ? 1 : 2;      // one line when wide, two when the page narrows
       if (want !== nSec) build(want);
       const boxH = want === 1 ? 16 : 26;
-      scale = Math.min(W / (unitW + 2), H / (boxH + 1.5));
+      // +2 left the last S of ATLAS touching the edge once the canvas moved inside
+      // the masthead's padding; the lattice needs room beyond the glyphs themselves.
+      scale = Math.min(W / (unitW + 7), H / (boxH + 1.5));
       return true;
     }
 
