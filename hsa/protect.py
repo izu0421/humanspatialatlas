@@ -50,6 +50,7 @@ input{font:inherit;padding:9px 11px;border-radius:var(--r);border:1px solid var(
 button{justify-self:stretch;font:600 .95rem var(--f-body);padding:10px;border-radius:var(--r);border:0;background:var(--accent);color:var(--panel);cursor:pointer}
 input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .err{color:var(--bad);font-size:.85rem;min-height:1.2em}
+.build{color:var(--muted);font-size:.72rem;margin-top:1.1rem;font-variant-numeric:tabular-nums;letter-spacing:.01em}
 </style></head>
 <body>
 <form id="f" autocomplete="off">
@@ -59,6 +60,7 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline
   <label for="pw">Password<input id="pw" type="password" required autofocus></label>
   <button type="submit" id="go">View dashboard</button>
   <div class="err" id="err" role="alert"></div>
+  <div class="build" title="If this is older than you expect, your browser is serving a cached copy -- hard-reload">__BUILD__</div>
 </form>
 <script id="payload" type="application/json">__PAYLOAD__</script>
 <script>
@@ -95,9 +97,30 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline
 """
 
 
+def _build_stamp() -> str:
+    """Date and commit of the build, shown on the login page.
+
+    The dashboard is one encrypted blob, so a stale browser cache is invisible:
+    the page looks identical and a plaintext search for new markup finds nothing
+    because the content is ciphertext. This puts the build where it can be read
+    before logging in.
+    """
+    import datetime as _dt
+    import subprocess as _sp
+    when = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    try:
+        sha = _sp.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
+                      capture_output=True, text=True, timeout=5)
+        rev = sha.stdout.strip() if sha.returncode == 0 else ""
+    except Exception:                                           # noqa: BLE001
+        rev = ""
+    return f"build {when}" + (f" \u00b7 {rev}" if rev else "")
+
+
 def protect(full_html: str, favicon: str, logo_svg: str) -> str | None:
     if not PASSWORD_FILE.exists():
         return None
     pw = PASSWORD_FILE.read_text().strip()
     payload = json.dumps(encrypt(full_html, pw))
-    return LOGIN.replace("__PAYLOAD__", payload).replace("__FAVICON__", favicon).replace("__LOGO__", logo_svg)
+    return (LOGIN.replace("__PAYLOAD__", payload).replace("__FAVICON__", favicon)
+            .replace("__LOGO__", logo_svg).replace("__BUILD__", _build_stamp()))
