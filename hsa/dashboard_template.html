@@ -85,8 +85,12 @@ h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 @media (max-width: 760px) { .masthead canvas { height: 158px; } }
 .masthead::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
   background: linear-gradient(180deg, rgba(13,16,22,0) 0%, rgba(13,16,22,.72) 58%, #0d1016 100%); }
-.mastheadInner { position: relative; z-index: 1; margin-top: -96px; padding: 0 clamp(18px,3.2vw,36px) 26px; }
-@media (max-width: 760px) { .mastheadInner { margin-top: -54px; padding-bottom: 20px; } }
+/* -96px was sized to pull a three-line headline up over the array. With the headline
+   gone the query agent rose into the wordmark and printed on top of the letters. The
+   offset now only reaches into the gradient's dark end. */
+.mastheadInner { position: relative; z-index: 1; margin-top: -26px;
+  padding: 0 clamp(18px,3.2vw,36px) 26px; }
+@media (max-width: 760px) { .mastheadInner { margin-top: -16px; padding-bottom: 20px; } }
 .headline { color: #fff; padding: 0 0 20px; position: relative; }
 
 /* ASK THE ATLAS. It was a bordered grey panel below the KPI row, with a 0.78rem
@@ -246,10 +250,11 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
   width: 33%; aspect-ratio: 1; border-radius: 50%; background: var(--accent);
   color: #fff; display: grid; place-content: center; text-align: center;
   padding: 10px 12px; line-height: 1.2; }
-.cycleHub b { font: 700 clamp(1rem, 2.3vw, 1.45rem)/1.08 var(--f-display);
+.cycleHub { width: 34%; }
+.cycleHub b { font: 700 clamp(.95rem, 2.1vw, 1.3rem)/1.08 var(--f-display);
   letter-spacing: -0.02em; display: block; }
 .cycleHub span { font-size: 0.72rem; display: block; opacity: .92; }
-.cycleHub .sub { font-size: 0.68rem; opacity: .8; margin-top: 4px; }
+.cycleHub .sub { font-size: 0.74rem; opacity: 1; color: rgba(255,255,255,.85); margin-top: 6px; }
 .cycleKey { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center;
   margin: 6px 0 0; font-size: 0.76rem; color: var(--muted); }
 .cycleKey i.ck { display: inline-block; width: 15px; height: 11px; margin-right: 6px;
@@ -501,9 +506,6 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
       aria-expanded="false" aria-describedby="hintLoop" aria-label="How to read the loop"
       >i</button><span class="hintbox" role="tooltip" id="hintLoop"><span id="agentNote"></span>
       <span class="key">Open a stage for what it does.</span></span></span></h2>
-    <p class="loopLabels"><span class="key lt"><i></i>acquire, standardise, derive</span>
-      <span class="key la"><i></i>the catalogue says what is already held, so each cycle queues
-      only new deposits</span></p>
     <div class="cycle" id="cycle">
       <svg class="cycleRing" id="cycleRing" viewBox="0 0 600 600" aria-hidden="true"></svg>
       <div class="cycleHub" id="cycleHub"></div>
