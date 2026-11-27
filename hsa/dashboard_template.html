@@ -226,7 +226,7 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
    the stages but not the thing that matters about them: it is a LOOP, and the
    catalogue in the middle is what each cycle reads to decide what is new. */
 .cycle { position: relative; width: 100%; max-width: 620px; margin: 2px auto 0;
-  aspect-ratio: 1 / 0.86; }
+  aspect-ratio: 1 / 1.06; }
 .cycleRing { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .cycleNodes { position: absolute; inset: 0; }
 .cstage { position: absolute; display: flex; align-items: center; gap: 9px;
@@ -245,7 +245,25 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
   display: block; }
 .cstage .ctext .cnum { font: 700 1.02rem var(--f-display); color: var(--accent);
   display: block; }
-.cstage .ctext .ccap { font-size: 0.72rem; color: var(--muted); display: block; }
+.cstage .ctext .ccap { font-size: 0.76rem; color: var(--fg); opacity: .72; display: block; }
+
+/* THE QUERY AGENT. It is not a stage: the seven on the ring build the catalogue, and
+   this one reads it. So it hangs off the hub rather than sitting on the track, with a
+   connector that starts at the atlas and ends at the agent. Drawing it as an eighth
+   stage would say the loop runs through it, which is false. */
+.qnode { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  text-align: center; white-space: nowrap; }
+/* .cdisc was scoped to .cstage, so this node rendered as a floating label with no
+   disc at all. It needs the shape rules too, not just the colour. */
+.qnode .cdisc { flex: none; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--accent); color: #fff; display: grid; place-items: center; }
+.qnode .cdisc svg { width: 23px; height: 23px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; }
+.qnode .qtext .cname { font: 700 0.92rem var(--f-display); letter-spacing: -0.01em;
+  display: block; }
+.qnode .qtext .ccap { font-size: 0.76rem; color: var(--fg); opacity: .72; display: block; }
+@media (max-width: 720px) { .qnode .qtext .ccap { display: none; } }
 .cycleHub { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   width: 33%; aspect-ratio: 1; border-radius: 50%; background: var(--accent);
   color: #fff; display: grid; place-content: center; text-align: center;
@@ -255,8 +273,11 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
   letter-spacing: -0.02em; display: block; }
 .cycleHub span { font-size: 0.72rem; display: block; opacity: .92; }
 .cycleHub .sub { font-size: 0.74rem; opacity: 1; color: rgba(255,255,255,.85); margin-top: 6px; }
+@keyframes cyflow { to { stroke-dashoffset: -44; } }
+.cyflow { animation: cyflow 1.6s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .cyflow { animation: none; opacity: 0; } }
 .cycleKey { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center;
-  margin: 6px 0 0; font-size: 0.76rem; color: var(--muted); }
+  margin: 18px 0 0; font-size: 0.76rem; color: var(--fg); opacity: .78; }
 .cycleKey i.ck { display: inline-block; width: 15px; height: 11px; margin-right: 6px;
   vertical-align: -1px; }
 .cycleKey i.disc { width: 11px; height: 11px; border-radius: 50%; background: var(--fg); }
@@ -284,28 +305,6 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
 .panel.fold > h2:hover::after { border-color: var(--accent); }
 .panel.fold:not(.open) > *:not(h2) { display: none; }
 
-/* ── The gallery ────────────────────────────────────────────────────────────────
-   A catalogue described only in bars and counts gives no sense of what is in it.
-   Every standardised sample already carries its own coordinates, so the cheapest
-   honest illustration is the measurement itself. */
-.gallery { display: grid; gap: 10px; margin-top: 2px;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
-/* figure carries a browser-default margin of 1em 40px, which ate the grid column and
-   left every tile about 30px wide inside a 110px cell. */
-.gtile { margin: 0; position: relative; border: 1px solid var(--line); border-radius: var(--r);
-  background: var(--panel-solid); padding: 7px 7px 8px; display: grid; gap: 5px;
-  transition: border-color .14s ease, transform .14s ease; }
-.gtile:hover { border-color: var(--accent); transform: translateY(-2px); }
-.gtile img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain;
-  image-rendering: pixelated; background: var(--grey-soft); border-radius: var(--r-sm); }
-.gtile .gt { margin: 0; font-size: 0.7rem; line-height: 1.25; color: var(--fg);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gtile .gs { font: 0.64rem var(--f-mono); color: var(--muted);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.galmore { margin-top: 12px; font: 600 13px var(--f-body); color: var(--accent);
-  background: transparent; border: 1px solid var(--line); border-radius: var(--r);
-  padding: 8px 16px; cursor: pointer; }
-.galmore:hover { border-color: var(--accent); }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 15px 17px;
   display: grid; gap: 3px; box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease; }
@@ -370,10 +369,21 @@ input[type=search], select { font: inherit; font-size: 0.88rem; padding: 7px 10p
 input[type=search] { flex: 1 1 240px; min-width: 0; }
 input:focus-visible, select:focus-visible, button:focus-visible, th:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .count { font: 0.78rem var(--f-mono); color: var(--muted); }
-td.ds { max-width: 420px; }
-td.ds a { font: 600 0.88rem var(--f-mono); }
-td.ds .src-chip { display: inline-block; margin-left: 7px; padding: 0 6px; border-radius: var(--r-pill);
-  background: var(--grey-soft); color: var(--muted); font: 0.78rem var(--f-mono); vertical-align: 1px; }
+/* The dataset cell used to lead with the accession in bold mono blue and trail the
+   human title as unstyled body text -- .ttl had no rule at all. For a GEO accession
+   that is merely backwards; for a 10x one, where the "accession" is a full URL path
+   like adult-human-brain-1-cerebral-cortex-unknown-orientation-stains-anti-gfap-...,
+   it wrapped to three lines and made every row four lines tall. The title leads now
+   and the accession is one truncated line of metadata under it. */
+td.ds { max-width: 460px; }
+td.ds .dtitle { display: block; font: 600 0.92rem/1.32 var(--f-body); color: var(--fg);
+  text-decoration: none; }
+a.dtitle:hover, a.dtitle:focus-visible { color: var(--accent); text-decoration: underline; }
+td.ds .dmeta { display: block; margin-top: 2px; font: 0.73rem/1.3 var(--f-mono);
+  color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+td.ds .src-chip { display: inline-block; margin-right: 7px; padding: 0 6px;
+  border-radius: var(--r-pill); background: var(--grey-soft); color: var(--muted);
+  font: 0.71rem var(--f-mono); }
 td.tis { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dot { display: inline-block; width: 15px; height: 15px; border-radius: 50%;
   background: conic-gradient(var(--accent) var(--f), var(--grey-soft) 0); vertical-align: -2px;
@@ -464,13 +474,13 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
       __HSA_LOGO__
       <div>
       <h1>Human Spatial Atlas <span>HSA</span></h1>
-      <div class="sub"><b>The Atlas</b>: public human spatial transcriptomics, curated per sample.
-      <b>The Agents</b>: the pipeline that keeps it current.<span class="hintwrap" data-hint><button
+      <div class="sub">Public human spatial transcriptomics, curated one sample at a time
+      by a pipeline that runs again whenever something new is deposited.<span class="hintwrap" data-hint><button
       class="hint" type="button" aria-expanded="false" aria-describedby="hintWhat"
       aria-label="What is in the Atlas">i</button><span class="hintbox" role="tooltip" id="hintWhat"
       >Every sample is downloaded as a cell- or spot-by-gene matrix with coordinates and metadata
-      harmonised to UBERON, MONDO, HsapDv and HANCESTRO. The agents find, fetch and curate it, and
-      re-run as new data is deposited.</span></span></div>
+      harmonised to UBERON, MONDO, HsapDv and HANCESTRO. The stages below do the finding and the
+      fetching, and run again whenever something new is deposited.</span></span></div>
       </div>
     </div>
     <div class="hdr-right">
@@ -487,9 +497,9 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
       <button class="hint" type="button" aria-expanded="false" aria-describedby="hintAsk"
         aria-label="How this answers">i</button><span class="hintbox" role="tooltip" id="hintAsk">
       Questions are resolved against the catalogue's own vocabulary and counted in your
-      browser. Nothing is sent anywhere and no model is called, so the answer is a query,
-      not an opinion. <span class="key">Every answer says how many samples could have
-      answered it: a blank field is not a negative.</span></span></span></h2>
+      browser. Nothing is sent anywhere and no model is called, so what comes back is the
+      result of counting rows. <span class="key">Every answer says how many samples
+      could have answered it: a blank field is not a negative.</span></span></span></h2>
     <form class="askbar" id="askForm" autocomplete="off">
       <input id="askInput" type="text" placeholder="how many Xenium breast cancer samples?"
         aria-label="Ask a question about the atlas">
@@ -510,6 +520,13 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
       <svg class="cycleRing" id="cycleRing" viewBox="0 0 600 600" aria-hidden="true"></svg>
       <div class="cycleHub" id="cycleHub"></div>
       <div class="cycleNodes" id="agentFlow"></div>
+      <div class="qnode">
+        <span class="cdisc" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.3-4.3"
+            stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="qtext"><span class="cname">Query agent</span>
+          <span class="ccap">a question in, an answer out of the catalogue</span></span>
+      </div>
     </div>
     <p class="cycleKey">
       <span><i class="ck disc"></i>stage run by an LLM agent</span>
@@ -518,22 +535,6 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   </section>
 
   <section class="kpis" id="kpis" aria-label="Summary"></section>
-
-  <section class="panel" id="galleryPanel" hidden>
-    <h2>What the atlas looks like<span class="count" id="galCount"></span>
-      <span class="hintwrap" data-hint><button class="hint" type="button"
-      aria-expanded="false" aria-describedby="hintGal" aria-label="How these are drawn"
-      >i</button><span class="hintbox" role="tooltip" id="hintGal">Each tile is one
-      section, drawn from the coordinates it was measured on, coloured by cell type where
-      the section has one and in a single colour where it does not. Points are subsampled
-      to at most 8,000, so a 600,000-cell Xenium section and a 2,000-spot Visium section
-      carry comparable ink. <span class="key">The scale is per section, so these are
-      shapes and not a size comparison.</span></span></span></h2>
-    <div class="gallery" id="gallery"></div>
-  </section>
-
-
-
 
   <section class="panel" id="techPanel" hidden>
     <h2>By technology<span class="hintwrap" data-hint><button class="hint" type="button"
@@ -592,8 +593,9 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
       <div><h3>What the matrix holds<span class="hintwrap" data-hint><button class="hint"
         type="button" aria-expanded="false" aria-describedby="hintMatrix"
         aria-label="How this is determined">i</button><span class="hintbox" role="tooltip"
-        id="hintMatrix">Measured from X itself, not read off a label: a matrix is checked for
-        integer values, for negatives, and for the signature of a log transform.</span></span></h3
+        id="hintMatrix">Measured from X itself. Every matrix is checked for integer values, for
+        negatives, and for the signature of a log transform; the depositor's own
+        description of it is ignored.</span></span></h3
         ><div class="bars" id="mMatrix"></div></div>
       <div><h3>Sex</h3><div class="bars" id="mSex"></div>
            <h3>Disease state</h3><div class="bars" id="mState"></div></div>
@@ -756,26 +758,9 @@ request.</span></span>
     // The headline statistic used to be set in 48px type across the hero. It is gone:
     // the same numbers are in the summary row and the cycle hub, and the hero's job is
     // the query agent. The node may not exist, so everything below is guarded.
-    const hl = $("headline");
-    if (hl) {
-    hl.hidden = false;
-    hl.innerHTML =
-      `<b><span class="n">${fmt(H.cells)}</span> single cells and <span class="n">${fmt(H.spots)}</span> spots/bins ` +
-      `across <span class="n">&ge;${fmt(H.donors)}</span> donors in <span class="n">${fmt(H.tissues)}</span> tissues</b>` +
-      `<div class="fine">` +
-      hint(`From ${fmt(H.samples_loaded)} human samples in the atlas, across ` +
-      `${fmt(H.datasets)} datasets. ` +
-      `<b>Cells</b> are individually segmented: imaging platforms (Xenium, CosMx, ` +
-      `MERFISH) plus ${fmt(H.hd_segmented_cells || 0)} cells segmented with bin2cell from ` +
-      `${fmt(H.hd_segmented_samples || 0)} Visium HD sections. <b>Spots/bins</b> are everything ` +
-      `measured on a grid with no segmentation available \u2014 55\u00a0\u00b5m Visium spots, ` +
-      `Visium HD bins, Stereo-seq and Slide-seq arrays. The two are never summed, and a section ` +
-      `that was segmented counts its cells only: its bins are excluded so the same tissue is not ` +
-      `counted twice. Unadjusted, the raw totals are ${fmt(H.cells_raw || 0)} and ` +
-      `${fmt(H.spots_raw || 0)}. The donor figure is a lower bound: only ${H.donor_frac}% of ` +
-      `samples state a donor, and donor identifiers are local to each study, so donors are ` +
-      `counted as (dataset, donor) pairs.`, "How cells and spots are counted") + `</div>`;
-    }
+    // The headline statistic was removed from the masthead. Its renderer went with
+    // it: a guarded block writing into a node that no longer exists is prose nobody
+    // can read and a sentence that can be switched back on by accident.
     const u = (H.per_tech || []).slice(0, 12), mx = u.length ? u[0][3] : 1;
     if (u.length) {
       $("techPanel").hidden = false;
@@ -795,23 +780,23 @@ request.</span></span>
   // Agent pipeline, drawn rather than written: icon + verb, the detail on hover.
   const STAGES = [
     ["Scout", "13 lanes", "m11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.3-4.3",
-     "GEO, Zenodo, figshare, Mendeley, CELLxGENE, 10x, HuBMAP, HTAN, ArrayExpress, HCA, Broad SCP, vendor showcases, spatial aggregators \u2014 plus the primary literature, where data-availability statements name accessions no keyword search surfaces."],
+     "GEO, Zenodo, figshare, Mendeley, CELLxGENE, 10x, HuBMAP, HTAN, ArrayExpress, HCA, Broad SCP, vendor showcases and spatial aggregators. Also the primary literature, where a data-availability statement names an accession that no keyword search surfaces."],
     ["Curate", "one verdict", "M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
-     "Human? Spatial? Are the matrices and coordinates openly downloadable? Only then does a candidate become a dataset \u2014 and the verdict is recorded with its reasoning."],
+     "Human? Spatial? Are the matrices and coordinates openly downloadable? Only then does a candidate become a dataset, and the verdict is recorded with the reasoning behind it."],
     ["Fetch", "resume-safe", "M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2",
      "Matrix and coordinate files per sample. Resumable transfers with a throughput floor, remote-zip member reads, tar streaming, archives unpacked, name collisions resolved."],
     ["Standardise", "10 formats", "M4 7h16M4 12h16M4 17h10",
-     "Ten matrix formats read into one shape \u2014 10x h5 (plain and gzipped), mtx trios in several namings, h5ad, CSV, Xenium zarr stores, feature_slice. Coordinates found however the platform stores them, and every sample QC\u2019d so a failure is visible rather than silent."],
+     "Ten matrix formats read into one shape: 10x h5 (plain and gzipped), mtx trios in several namings, h5ad, CSV, Xenium zarr stores, feature_slice. Coordinates are found however the platform stores them, and every sample is QC\u2019d, so a failure shows up instead of passing quietly."],
     ["Harmonise", "4 ontologies", "M12 2v4m0 12v4M2 12h4m12 0h4M5 5l3 3m8 8 3 3m0-14-3 3m-8 8-3 3",
-     "Tissue, disease, sex, age, development stage and ethnicity resolved against UBERON, MONDO, HsapDv and HANCESTRO. Sex is also inferred from the XIST:Y-gene ratio where the panel carries those genes \u2014 97% agreement with stated labels, abstaining when it cannot tell."],
+     "Tissue, disease, sex, age, development stage and ethnicity resolved against UBERON, MONDO, HsapDv and HANCESTRO. Sex is also inferred from the XIST:Y-gene ratio where the panel carries those genes. It agrees with the stated label 97% of the time, and abstains when it cannot tell."],
     ["Derive", "what is unsaid", "M12 3a9 9 0 0 0-5 16.5V21h10v-1.5A9 9 0 0 0 12 3Zm-3 18h6",
-     "Gene-panel identity by hashing the gene set, bin size from the bin grid, coordinate scale in microns, platform corrected from file evidence rather than the depositor\u2019s label, and Visium HD segmented from 2 \u00b5m bins into cells."],
+     "Gene-panel identity by hashing the gene set, bin size from the bin grid, coordinate scale in microns, platform corrected from the file evidence when the depositor\u2019s label disagrees with it, and Visium HD segmented from 2 \u00b5m bins into cells."],
     // The caption carries the live count: this stage has run, and a tile that still reads only
     // "per organ, per panel" describes a method where the page can now state a result.
     ["Annotate", (D.annotation && D.annotation.sections)
       ? fmt(D.annotation.sections) + " sections" : "per organ, per panel",
      "M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
-     "Cell types for every cell-resolution section, from a CellTypist model trained on CELLxGENE Census for that organ and restricted to that panel\u2019s own genes. A 20,000-gene model applied to a 477-gene Xenium panel would impute 97% of its input as zero and score on absence \u2014 and absence in a targeted panel means \u201cnot on the panel\u201d, not \u201cnot expressed\u201d."],
+     "Cell types for every cell-resolution section, from a CellTypist model trained on CELLxGENE Census for that organ and restricted to that panel\u2019s own genes. A 20,000-gene model applied to a 477-gene Xenium panel would impute 97% of its input as zero and score on absence. Absence in a targeted panel means \u201cnot on the panel\u201d, not \u201cnot expressed\u201d."],
   ];
   // Each stage carries the count it is responsible for, the way Fig 1a does. These
   // are read from the payload, never typed, so a stage cannot advertise a number the
@@ -864,14 +849,26 @@ request.</span></span>
       const last = i === N - 1;
       paths += `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} A${rr} ${rr} 0 0 1 ` +
         `${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="var(--muted)" ` +
-        `stroke-width="1.6" opacity="${last ? .75 : .55}" ` +
+        `stroke-width="1.9" opacity="${last ? .9 : .78}" ` +
         (last ? `stroke-dasharray="6 5" ` : "") +
         `marker-end="url(#cyArrow)"/>`;
     }
     ring.innerHTML =
       `<defs><marker id="cyArrow" markerWidth="8" markerHeight="8" refX="6.5" refY="3.2" ` +
       `orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--muted)"/></marker></defs>` +
-      paths;
+      paths +
+      // The cycle is a cycle, so it moves. A dash pattern flowing clockwise over the
+      // same radius shows the direction without redrawing anything: the solid arcs and
+      // their arrowheads stay as the structure, and this rides on top. Honoured by
+      // prefers-reduced-motion, where it simply does not run.
+      `<circle class="cyflow" cx="${cx}" cy="${cy}" r="${rr}" fill="none" ` +
+      `stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" ` +
+      `stroke-dasharray="3 41" opacity=".55"/>` +
+      `<line class="qlink" x1="${cx}" y1="${cy + 76}" x2="${cx}" y2="${cy + 236}" ` +
+      `stroke="var(--accent)" stroke-width="1.9" opacity=".75" ` +
+      `marker-end="url(#cyArrowA)"/>` +
+      `<defs><marker id="cyArrowA" markerWidth="8" markerHeight="8" refX="6.5" refY="3.2" ` +
+      `orient="auto"><path d="M0 0 L7 3.2 L0 6.4 z" fill="var(--accent)"/></marker></defs>`;
 
     if (H.samples_loaded !== undefined || K.samples !== undefined) {
       $("cycleHub").innerHTML =
@@ -906,50 +903,10 @@ request.</span></span>
   });
 
 
-  // The gallery. Tiles are drawn from D.thumbs, which the exporter fills from each
-  // section's own coordinates; a section whose coordinates were unusable has no entry
-  // and simply does not appear, rather than being drawn as a dot.
-  (function gallery() {
-    const T = D.thumbs || {};
-    const keys = Object.keys(T);
-    if (!keys.length) return;
-    const panel = $("galleryPanel"), grid = $("gallery");
-    panel.hidden = false;
-    const FIRST = 36;
-    let shown = FIRST;
-    const tile = k => {
-      const v = T[k];
-      const where = [v.tissue, v.disease && v.disease !== "unknown" ? v.disease : ""]
-        .filter(Boolean).join(" \u00b7 ") || "unspecified";
-      return `<figure class="gtile" title="${esc(where)} \u2014 ${esc(v.tech || "")}, ` +
-        `${fmt(v.n)} ${v.typed ? "cells" : "units"}${v.accession ? ", " + esc(v.accession) : ""}">` +
-        `<img src="${v.png}" alt="${esc(where)}, ${esc(v.tech || "")}, ${fmt(v.n)} measured units" ` +
-        `loading="lazy" decoding="async">` +
-        `<figcaption class="gt">${esc(where)}</figcaption>` +
-        `<span class="gs">${esc(v.tech || "")} \u00b7 ${fmt(v.n)}</span></figure>`;
-    };
-    const paint = () => {
-      grid.innerHTML = keys.slice(0, shown).map(tile).join("");
-      let btn = panel.querySelector(".galmore");
-      if (shown >= keys.length) { if (btn) btn.remove(); return; }
-      if (!btn) {
-        btn = document.createElement("button");
-        btn.className = "galmore";
-        btn.type = "button";
-        btn.addEventListener("click", () => { shown = keys.length; paint(); });
-        panel.appendChild(btn);
-      }
-      btn.textContent = `Show the other ${fmt(keys.length - shown)} sections`;
-    };
-    $("galCount").textContent =
-      `${fmt(keys.length)} sections drawn from their own coordinates`;
-    paint();
-  })();
-
   $("agentNote").innerHTML =
     `Run by <b>Claude Sonnet 5.5</b>. <b>$${Number(D.kpi.usd).toFixed(2)}</b> spent across ` +
-    `${fmt(D.kpi.cand_total)} candidates assessed, and a cycle runs weekly, so the Atlas follows ` +
-    `new deposits rather than being a snapshot.`;
+    `${fmt(D.kpi.cand_total)} candidates assessed. A cycle runs weekly, so the Atlas keeps up ` +
+    `with new deposits.`;
 
   // Cell-level Visium HD: a derived product (2 um bins segmented with bin2cell), absent from the
   // QC table. The two label sources are not equivalent, so they are shown separately.
@@ -995,8 +952,8 @@ request.</span></span>
     _loadLegend = labs.map((l, i) =>
       `<span class="key"><span class="swatch" style="background:${cols[i]}"></span>${l}</span>`).join("");
     const _noteTxt =
-      "\u201cIn atlas\u201d is the same population the headline counts \u2014 human, "
-      + "de-duplicated, and written to disk \u2014 so these bars sum to it. "
+      "\u201cIn atlas\u201d is the same population the headline counts, which is "
+      + "human, de-duplicated and written to disk, so these bars sum to it. "
       + "\u201cExcluded\u201d samples opened but are kept out: quarantined, non-human, or a "
       + "second copy of a section already counted.";
     // The prose note hides; the colour key does not. A stacked bar whose five colours are
@@ -1025,8 +982,8 @@ request.</span></span>
       fmt(A.cells) + " cells typed across " + fmt(A.sections) + " sections";
     $("annotHint").innerHTML =
       `<b>One model per organ, per panel.</b> A CellTypist model trained on CELLxGENE Census ` +
-      `for that organ and restricted to that panel\u2019s own genes \u2014 ` +
-      `${fmt(A.models)} models over ${fmt(A.organs)} organs. Census labels are far finer than a ` +
+      `for that organ and restricted to that panel\u2019s own genes. ` +
+      `There are ${fmt(A.models)} models over ${fmt(A.organs)} organs. Census labels are far finer than a ` +
       `targeted panel can support, so they are rolled up to major classes <i>before</i> the ` +
       `reference is balanced; left fine, a hyper-specific subset gets the same weight as a real ` +
       `population and the classifier scatters.`;
@@ -1050,8 +1007,9 @@ request.</span></span>
       `<span class="key"><b>How firm are these labels?</b> For a median section ` +
       `<b>${(100 * A.agrees_median).toFixed(0)}%</b> of cells kept their own call once the ` +
       `neighbourhood consensus was applied (quartiles ${(100 * A.agrees_q1).toFixed(0)}\u2013` +
-      `${(100 * A.agrees_q3).toFixed(0)}%) \u2014 so roughly two cells in five were relabelled ` +
-      `by majority voting. That, not the model\u2019s own probability, is the confidence to read: ` +
+      `${(100 * A.agrees_q3).toFixed(0)}%), so roughly two cells in five were relabelled ` +
+      `by majority voting. Read that as the confidence, and not the model\u2019s own ` +
+      `probability: ` +
       `on a targeted panel the probability saturates above 0.999 for almost every cell and tells ` +
       `you nothing.</span>` +
       `<span class="key"><b>The panel sets the ceiling.</b> Calls rest on a median of ` +
@@ -1146,11 +1104,20 @@ request.</span></span>
       const frac = d.n_files ? d.n_files_downloaded / d.n_files : (d.n_bundles ? 1 : 0);
       const files = d.n_files ? `${d.n_files_downloaded}/${d.n_files}`
                   : d.n_bundles ? `${d.n_bundles} arch` : "";
+      // Title first. A 10x accession is a whole URL path, so it is middle-truncated
+      // rather than wrapped: the head says which dataset family and the tail carries
+      // the distinguishing suffix, and the full string is still the link and the
+      // title attribute.
+      const acc = String(d.accession || "");
+      const accShort = acc.length > 54 ? acc.slice(0, 26) + "\u2026" + acc.slice(-24) : acc;
+      const label = (d.title && String(d.title).trim()) ? d.title : acc;
       return `<tr><td class="ds">` +
-        `${d.url ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.accession)}</a>`
-                 : esc(d.accession)}` +
-        `<span class="src-chip">${esc(d.source)}</span>` +
-        `<span class="ttl">${esc(d.title)}</span></td>` +
+        (d.url
+          ? `<a class="dtitle" href="${esc(d.url)}" target="_blank" rel="noopener" ` +
+            `title="${esc(acc)}">${esc(label)}</a>`
+          : `<span class="dtitle" title="${esc(acc)}">${esc(label)}</span>`) +
+        `<span class="dmeta" title="${esc(acc)}">` +
+        `<span class="src-chip">${esc(d.source)}</span>${esc(accShort)}</span></td>` +
         `<td>${esc(d.technology_norm)}</td><td class="tis">${esc(d.tissue_norm)}</td>` +
         `<td><span class="pill v-${esc(d.verdict)}">${VLABEL[d.verdict] || esc(d.verdict)}</span></td>` +
         `<td class="num">${d.n_samples_with_files || ""}</td>` +

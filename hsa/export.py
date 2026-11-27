@@ -12,12 +12,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from . import db, qa, thumbs
+from . import db, qa
 from .config import DATA, ROOT, RUNS
-
-# How many sections the gallery draws. Each costs about 1.4 KB of base64 inside the
-# encrypted page, so this is a page-weight budget, not a limit on what could be drawn.
-THUMB_LIMIT = 240
 
 OUT = ROOT / "exports"
 PRIVATE = ROOT / "exports_private"     # gitignored: reference-list coverage, internal paths
@@ -503,10 +499,6 @@ def run():
         # coverage travelling beside it so an answer can say how many samples
         # could have answered at all
         "qa": qa.build(sm) if len(sm) else None,
-        # A picture of each section, drawn from its own coordinates. Embedded rather
-        # than served as files because the page is password-protected and a thumbnail
-        # written beside it would be fetched without that password.
-        "thumbs": thumbs.build(THUMB_LIMIT),
     }
     from .logo import svg
     body = (TEMPLATE.read_text().replace("__HSA_LOGO__", svg(inline=True))
