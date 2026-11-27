@@ -233,19 +233,25 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
   transform: translate(-50%, -50%); }
 .cstage.right { flex-direction: row; }
 .cstage.left { flex-direction: row-reverse; }
-.cstage .cdisc { flex: none; width: 46px; height: 46px; border-radius: 50%;
-  background: var(--fg); color: var(--panel-solid); display: grid; place-items: center;
-  border: 0; cursor: pointer; padding: 0; transition: transform .14s ease; }
-.cstage .cdisc:hover, .cstage .cdisc:focus-visible { transform: scale(1.07); }
-.cstage .cdisc svg { width: 23px; height: 23px; fill: none; stroke: currentColor;
-  stroke-width: 1.8; }
-.cstage .ctext { min-width: 96px; line-height: 1.22; }
+.cstage .cdisc { flex: none; width: 44px; height: 44px; border-radius: 50%;
+  background: var(--panel-solid); color: var(--fg); display: grid; place-items: center;
+  border: 1.5px solid var(--line); cursor: pointer; padding: 0;
+  transition: transform .14s ease, border-color .14s ease; }
+.cstage .cdisc:hover, .cstage .cdisc:focus-visible { transform: scale(1.07);
+  border-color: var(--accent); }
+.cstage .cdisc svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
+  stroke-width: 1.7; }
+/* nowrap so a two-word caption does not break and make one spoke taller than the
+   rest; the narrow-screen rule below hides the captions entirely, so nothing overflows */
+.cstage .ctext { min-width: 96px; line-height: 1.24; position: relative; z-index: 2;
+  white-space: nowrap;
+  background: var(--panel-solid); padding: 3px 5px; border-radius: var(--r-sm); }
 .cstage.left .ctext { text-align: right; }
 .cstage .ctext .cname { font: 700 0.92rem var(--f-display); letter-spacing: -0.01em;
   display: block; }
 .cstage .ctext .cnum { font: 700 1.02rem var(--f-display); color: var(--accent);
   display: block; }
-.cstage .ctext .ccap { font-size: 0.76rem; color: var(--fg); opacity: .72; display: block; }
+.cstage .ctext .ccap { font-size: 0.75rem; color: var(--muted); display: block; }
 
 /* THE QUERY AGENT. It is not a stage: the seven on the ring build the catalogue, and
    this one reads it. So it hangs off the hub rather than sitting on the track, with a
@@ -256,13 +262,14 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
   text-align: center; white-space: nowrap; }
 /* .cdisc was scoped to .cstage, so this node rendered as a floating label with no
    disc at all. It needs the shape rules too, not just the colour. */
-.qnode .cdisc { flex: none; width: 46px; height: 46px; border-radius: 50%;
-  background: var(--accent); color: #fff; display: grid; place-items: center; }
+.qnode .cdisc { flex: none; width: 44px; height: 44px; border-radius: 50%;
+  background: var(--accent); color: #fff; display: grid; place-items: center;
+  box-shadow: 0 0 0 4px var(--panel-solid); }
 .qnode .cdisc svg { width: 23px; height: 23px; fill: none; stroke: currentColor;
   stroke-width: 1.8; }
 .qnode .qtext .cname { font: 700 0.92rem var(--f-display); letter-spacing: -0.01em;
   display: block; }
-.qnode .qtext .ccap { font-size: 0.76rem; color: var(--fg); opacity: .72; display: block; }
+.qnode .qtext .ccap { font-size: 0.75rem; color: var(--muted); display: block; }
 @media (max-width: 720px) { .qnode .qtext .ccap { display: none; } }
 .cycleHub { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   width: 33%; aspect-ratio: 1; border-radius: 50%; background: var(--accent);
@@ -280,7 +287,8 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
   margin: 18px 0 0; font-size: 0.76rem; color: var(--fg); opacity: .78; }
 .cycleKey i.ck { display: inline-block; width: 15px; height: 11px; margin-right: 6px;
   vertical-align: -1px; }
-.cycleKey i.disc { width: 11px; height: 11px; border-radius: 50%; background: var(--fg); }
+.cycleKey i.disc { width: 12px; height: 12px; border-radius: 50%;
+  background: var(--panel-solid); border: 1.5px solid var(--line); }
 .cycleKey i.dash { border-top: 2px dashed var(--muted); height: 0; }
 @media (max-width: 720px) {
   .cycle { aspect-ratio: 1 / 1.08; }
@@ -849,7 +857,7 @@ request.</span></span>
       const last = i === N - 1;
       paths += `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} A${rr} ${rr} 0 0 1 ` +
         `${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="var(--muted)" ` +
-        `stroke-width="1.9" opacity="${last ? .9 : .78}" ` +
+        `stroke-width="1.5" opacity="${last ? .62 : .5}" ` +
         (last ? `stroke-dasharray="6 5" ` : "") +
         `marker-end="url(#cyArrow)"/>`;
     }
