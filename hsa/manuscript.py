@@ -193,8 +193,8 @@ def build() -> Path:
 </style></head><body><div class="wrap">
 <nav class="nav">
   <a class="back" href="index.html">&larr; back to the atlas</a>
-  <a class="out" href="https://www.yizhouyu.com/chaperone/reports/orphan_shortlist_2026-11-23/structures/"
-     target="_blank" rel="noopener">the poses behind Figure 4, in 3D &rarr;</a>
+  <a class="out" href="https://www.yizhouyu.com/chaperone/reports/hits/"
+     target="_blank" rel="noopener">the hits behind Figure 4, with their controls &rarr;</a>
 </nav>
 <header>
   <h1>Human Spatial Atlas enables ligand&ndash;receptor deorphanisation</h1>
