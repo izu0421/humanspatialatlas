@@ -9,8 +9,8 @@
   /* Neutral chrome, colour reserved for DATA. The old palette carried a lilac
      cast (#f6f6fa bg, #1d1d2e text) and ran five hues through the UI itself;
      the eosin/ok/warn/bad/teal tokens below are now for charts and badges only. */
-  --bg: #fbfbfc; --panel-solid: #fff; --panel: #ffffff; --fg: #16181d; --muted: #5b6170; --line: #e4e6ea;
-  --accent: #3454a3; --accent-soft: #e9eef8; --eosin: #c24d7a; --eosin-soft: #f7e3ec;
+  --bg: #f6f7f9; --panel-solid: #ffffff; --panel: #ffffff; --fg: #16181d; --muted: #5b6170; --line: #dfe2e7;
+  --accent: #0d4bb1; --on-accent: #ffffff; --accent-soft: #e9eef8; --eosin: #c24d7a; --eosin-soft: #f7e3ec;
   --ok: #2f7d4f; --ok-soft: #e1f1e7; --warn: #a86a0c; --warn-soft: #f8ecd6; --bad: #b2412f; --bad-soft: #f6e1dc;
   --grey: #7a7c90; --grey-soft: #ececf2;
   --teal: #1f9b97; --teal-soft: #ddf2f1;
@@ -29,9 +29,9 @@
   --wash: radial-gradient(1200px 440px at 50% -10%, rgba(52,84,163,.045) 0%, transparent 65%);
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0f1115; --panel: #181b21; --panel-solid: #181b21; --fg: #e6e8ec;
-  --muted: #9aa1ad; --line: #2a2e37;
-  --accent: #8fa8dd; --accent-soft: #1e2636; --eosin: #ec8fb2; --eosin-soft: #46263a;
+  --bg: #0e1013; --panel: #191b20; --panel-solid: #191b20; --fg: #e8eaee;
+  --muted: #9aa1ad; --line: #2c3038;
+  --accent: #8fb0f2; --on-accent: #0e1013; --accent-soft: #1e2636; --eosin: #ec8fb2; --eosin-soft: #46263a;
   --ok: #6fcf95; --ok-soft: #1f3a2a; --warn: #e5b45a; --warn-soft: #3d3020; --bad: #ef8a77; --bad-soft: #43251f;
   --grey: #9a9cb2; --grey-soft: #282838; --teal: #4ecdc8; --teal-soft: #15343a;
   --sp-red: #d9636f; --sp-blue: #6ca2d8; --sp-grey: #7e7e8c;
@@ -39,9 +39,9 @@
   --shadow-lift: 0 2px 6px rgba(0,0,0,.4), 0 16px 36px -12px rgba(0,0,0,.65);
   color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #0f1115; --panel: #181b21; --panel-solid: #181b21; --fg: #e6e8ec;
-  --muted: #9aa1ad; --line: #2a2e37;
-  --accent: #8fa8dd; --accent-soft: #1e2636; --eosin: #ec8fb2; --eosin-soft: #46263a;
+  --bg: #0e1013; --panel: #191b20; --panel-solid: #191b20; --fg: #e8eaee;
+  --muted: #9aa1ad; --line: #2c3038;
+  --accent: #8fb0f2; --on-accent: #0e1013; --accent-soft: #1e2636; --eosin: #ec8fb2; --eosin-soft: #46263a;
   --ok: #6fcf95; --ok-soft: #1f3a2a; --warn: #e5b45a; --warn-soft: #3d3020; --bad: #ef8a77; --bad-soft: #43251f;
   --grey: #9a9cb2; --grey-soft: #282838; --teal: #4ecdc8; --teal-soft: #15343a;
   --sp-red: #d9636f; --sp-blue: #6ca2d8; --sp-grey: #7e7e8c;
@@ -257,8 +257,8 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
 /* .cdisc was scoped to .cstage, so this node rendered as a floating label with no
    disc at all. It needs the shape rules too, not just the colour. */
 .qnode .cdisc { flex: none; width: 44px; height: 44px; border-radius: 50%;
-  background: var(--accent); color: #fff; display: grid; place-items: center;
-  box-shadow: 0 0 0 4px var(--bg); }
+  background: var(--accent); color: var(--on-accent); display: grid;
+  place-items: center; box-shadow: 0 0 0 4px var(--bg); }
 .qnode .cdisc svg { width: 23px; height: 23px; fill: none; stroke: currentColor;
   stroke-width: 1.8; }
 .qnode .qtext .cname { font: 700 0.92rem var(--f-display); letter-spacing: -0.01em;
@@ -267,13 +267,13 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
 @media (max-width: 720px) { .qnode .qtext .ccap { display: none; } }
 .cycleHub { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   width: 33%; aspect-ratio: 1; border-radius: 50%; background: var(--accent);
-  color: #fff; display: grid; place-content: center; text-align: center;
+  color: var(--on-accent); display: grid; place-content: center; text-align: center;
   padding: 10px 12px; line-height: 1.2; }
 .cycleHub { width: 34%; }
 .cycleHub b { font: 700 clamp(.95rem, 2.1vw, 1.3rem)/1.08 var(--f-display);
   letter-spacing: -0.02em; display: block; }
 .cycleHub span { font-size: 0.72rem; display: block; opacity: .92; }
-.cycleHub .sub { font-size: 0.74rem; opacity: 1; color: rgba(255,255,255,.85); margin-top: 6px; }
+.cycleHub .sub { font-size: 0.74rem; opacity: .82; color: var(--on-accent); margin-top: 6px; }
 @keyframes cyflow { to { stroke-dashoffset: -44; } }
 .cyflow { animation: cyflow 1.6s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .cyflow { animation: none; opacity: 0; } }
@@ -297,6 +297,7 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
    is for -- asking it a question -- was several screens below the fold. These
    start closed and the whole heading is the control. Each one says how much is
    inside before it is opened, so closed is not the same as empty. */
+.grid3 > .panel { border-top: 0; padding-top: 0; }
 .panel.fold > h2 { cursor: pointer; user-select: none; margin-bottom: 0; }
 .panel.fold.open > h2 { margin-bottom: 12px; }
 .panel.fold > h2::after { content: ""; width: 7px; height: 7px; margin-left: auto;
@@ -328,7 +329,7 @@ button.hint:hover, button.hint:focus-visible, button.hint[aria-expanded="true"] 
 .msbtn { display:inline-block; padding:9px 17px; border:1px solid var(--accent);
   border-radius: var(--r-sm); color:var(--accent); text-decoration:none; font-weight:600;
   font-size:13.5px; transition:background .15s; }
-.msbtn:hover { background:var(--accent); color:#fff; }
+.msbtn:hover { background:var(--accent); color:var(--on-accent); }
 
 .kpi.hero b { color: var(--accent); }
 
@@ -446,7 +447,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   color: var(--fg); background: var(--panel-solid); border: 1px solid var(--line);
   border-radius: var(--r) }
 .askbar input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent }
-.askbar button { padding: 10px 18px; font: 600 14px var(--f-body); color: #fff;
+.askbar button { padding: 10px 18px; font: 600 14px var(--f-body); color: var(--on-accent);
   background: var(--accent); border: 0; border-radius: var(--r); cursor: pointer }
 .askbar button:hover { filter: brightness(1.08) }
 .askchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px }
@@ -584,9 +585,9 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   </section>
 
   <section class="grid3">
-    <div class="panel"><h2>By technology</h2><div class="bars" id="byTech"></div></div>
-    <div class="panel"><h2>By source</h2><div class="bars" id="bySource"></div></div>
-    <div class="panel"><h2>By tissue<span class="count">top 14</span></h2><div class="bars" id="byTissue"></div></div>
+    <div class="panel" id="byTechPanel"><h2>By technology</h2><div class="bars" id="byTech"></div></div>
+    <div class="panel" id="bySourcePanel"><h2>By source</h2><div class="bars" id="bySource"></div></div>
+    <div class="panel" id="byTissuePanel"><h2>By tissue<span class="count">top 14</span></h2><div class="bars" id="byTissue"></div></div>
   </section>
 
   <section class="panel" id="metaPanel">
@@ -613,7 +614,7 @@ code { font-family: var(--f-mono); font-size: 0.85em; }
   </section>
 
 
-  <section class="panel">
+  <section class="panel" id="datasetsPanel">
     <h2>Datasets</h2>
     <div class="controls">
       <input type="search" id="q" placeholder="Search accession, title, tissue, disease" aria-label="Search datasets">
@@ -888,7 +889,8 @@ request.</span></span>
   // Opening and closing is a class on the panel, so the markup each renderer writes
   // is untouched and a panel that has not been rendered yet still toggles. The hint
   // buttons inside a heading must not toggle it -- they have their own popover.
-  ["techPanel", "annotPanel", "reviewPanel", "metaPanel"].forEach(id => {
+  ["techPanel", "annotPanel", "reviewPanel", "metaPanel",
+   "byTechPanel", "bySourcePanel", "byTissuePanel", "datasetsPanel"].forEach(id => {
     const el = $(id);
     if (!el) return;
     el.classList.add("fold");
